@@ -1,0 +1,210 @@
+@import url("droidarabickufi.css");
+@font-face {
+    font-family: DIN;
+    src: url(alfont_com_AlFont_com_DINArabic.ttf);
+    font-weight: normal;
+}
+
+* {
+    font-family: DIN;
+    /* font-family: "Droid Arabic Kufi", serif; */
+}
+
+form .error {
+    color: #ff0000;
+    width: 100%;
+}
+
+.img-tbl {
+    width: 100px;
+    border: 1px solid #dcdcdc;
+    padding: 3px;
+    border-radius: 20px;
+}
+
+.content-wrapper {
+    height: auto;
+}
+.breadcrumb-item + .breadcrumb-item::before {
+    float: inherit;
+}
+
+.todo-list > li .tools {
+    float: left;
+}
+
+.pagination {
+    margin-top: 15px;
+    margin-right: 15px;
+    text-align: center;
+}
+.blue {
+    color: #007bff;
+}
+.card-title {
+    /* width: 110px; */
+    width: 180px;
+}
+.card-title span {
+    padding-top: 8px;
+    float: right;
+}
+.control-btns {
+    margin-top: 10px;
+}
+.control-btns a,
+.control-btns button {
+    margin: 5px;
+}
+.badge-completed {
+    color: #fff;
+    background-color: #28a745;
+}
+.badge-pending {
+    background-color: #ffc107;
+    color: #000;
+}
+.badge-in_progress {
+    color: #fff;
+    background-color: #17a2b8;
+}
+.badge-canceled {
+    color: #fff;
+    background-color: #dc3545;
+}
+.badge-new_trip {
+    color: #fff;
+    background-color: #007bff;
+}
+.green-txt {
+    color: green;
+}
+.swal2-title {
+    font-size: 20px !important;
+}
+
+.login-box .nav-item {
+    list-style: none;
+}
+.callout-danger li,
+.callout-danger p {
+    color: #bd2130;
+}
+.callout-success p {
+    color: #1e7e34;
+}
+.img-size-50 {
+    border: 1px solid #dcdcdc;
+    padding: 3px;
+    border-radius: 100%;
+    width: 65px;
+    height: 65px;
+}
+.login-page {
+    background: url(../../front/images/1.png) no-repeat right,
+        url(../../front/images/3.png) no-repeat left bottom,
+        url(../../front/images/2.png) no-repeat 75% bottom;
+}
+
+.reg_frm .form-group {
+    margin-bottom: 20px;
+}
+
+.reg_frm .form-group label {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+#togglePassword,
+#togglePasswordOld,
+#togglePasswordNew,
+#togglePasswordOldConfirm,
+#toggleMoneyPassword,
+#toggleMoneyPasswordOld,
+#toggleMoneyPasswordNew,
+#toggleConfirmMoneyPassword {
+    margin-right: 10px;
+    margin-top: -27px;
+    float: right;
+    cursor: pointer;
+}
+.timeline_item {
+    background-color: #007bff;
+    padding: 5px;
+    margin: 4px;
+    border-radius: 5px;
+    list-style: none;
+}
+.timeline_item a {
+    color: #fff;
+}
+
+/*  UI Edits */
+
+@media only screen and (max-width: 600px) {
+    .card-body .col-3 {
+        -ms-flex: 0 0 50%;
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+    .form_wrapper {
+        flex-direction: column-reverse;
+    }
+    .form_wrapper .col-3 {
+        -ms-flex: 0 0 100%;
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    .form_wrapper .col-6 {
+        -ms-flex: 0 0 100%;
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    .form_wrapper2 {
+        width: 100%;
+        padding: 0;
+        margin: 0;
+    }
+    .form_wrapper2 .col-md-10.row {
+        width: 100%;
+        align-items: center;
+    }
+    .form_wrapper2 .col-md-10.row .form-control {
+        margin: 10px 0;
+        width: 75%;
+    }
+    .form_wrapper2 .col-md-10.row .btn-primar {
+        width: 22%;
+        /* height: 30px; */
+        height: calc(2.25rem + 2px);
+    }
+    .form_wrapper2 .col-md-10.row .col-md-2 .form-control {
+        margin: 10px 0;
+        width: 100%;
+    }
+    .card-body.row label {
+        width: 100%;
+    }
+
+    table {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        -ms-overflow-style: -ms-autohiding-scrollbar;
+    }
+}
+
+.table td,
+.table th {
+    white-space: nowrap;
+}
+
+.timeline_item_canceled {
+    background-color: red !important;
+    display: none !important;
+}
+
+.password-div a {
+    color: #fff;
+}

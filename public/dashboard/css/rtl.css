@@ -1,0 +1,231 @@
+@import url("droidarabickufi.css");
+@font-face {
+    font-family: DIN;
+    src: url(alfont_com_AlFont_com_DINArabic.ttf);
+    font-weight: normal;
+}
+
+* {
+    /* font-family: "Droid Arabic Kufi", serif; */
+    direction: rtl !important;
+    font-family: DIN;
+}
+
+form .error {
+    color: #ff0000;
+}
+
+.layout-fixed .main-sidebar {
+    right: 0;
+}
+.brand-image {
+    float: right;
+}
+.content-wrapper,
+.main-footer,
+.main-header {
+    margin-left: 0px !important;
+    margin-right: 250px !important;
+}
+.mr-auto-navbav {
+    margin-right: auto !important;
+}
+.navbar-expand .navbar-nav .nav-link {
+    padding-right: 1rem;
+    padding-left: 1rem;
+}
+
+[class*="icheck-"]
+    > input:first-child:checked
+    + input[type="hidden"]
+    + label::after,
+[class*="icheck-"] > input:first-child:checked + label::after {
+    right: 15px;
+    left: auto;
+}
+.nav-sidebar .nav-link > .right,
+.nav-sidebar .nav-link > p > .right {
+    left: 1rem;
+    right: auto;
+}
+.nav-sidebar .nav-link > .right:nth-child(2),
+.nav-sidebar .nav-link > p > .right:nth-child(2) {
+    left: 2.2rem;
+    right: auto;
+}
+.small-box .icon > i {
+    left: 15px;
+    right: auto;
+}
+@media (min-width: 992px) {
+    .sidebar-mini.sidebar-collapse .content-wrapper,
+    .sidebar-mini.sidebar-collapse .main-footer,
+    .sidebar-mini.sidebar-collapse .main-header {
+        margin-right: 4.6rem !important;
+    }
+    .sidebar-mini.sidebar-collapse .content-wrapper,
+    .sidebar-mini.sidebar-collapse .main-footer,
+    .sidebar-mini.sidebar-collapse .main-header {
+        margin-right: 4.6rem !important;
+        margin-left: 0 !important;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .main-sidebar,
+    .main-sidebar::before {
+        box-shadow: none !important;
+        margin-right: -250px;
+    }
+
+    .content-wrapper,
+    .content-wrapper::before,
+    .main-footer,
+    .main-footer::before,
+    .main-header,
+    .main-header::before {
+        margin-right: 0;
+    }
+
+    .sidebar-open .main-sidebar,
+    .sidebar-open .main-sidebar::before {
+        margin-right: 0;
+    }
+}
+
+.ml-auto,
+.mx-auto {
+    margin-left: 0px !important;
+}
+.card-title {
+    float: right;
+}
+.card-header > .card-tools {
+    float: left;
+}
+
+.products-list .product-img {
+    float: right;
+    padding-left: 20px;
+}
+
+[class*="icheck-"] > input:first-child + input[type="hidden"] + label::before,
+[class*="icheck-"] > input:first-child + label::before {
+    margin-left: 0px;
+    position: inherit;
+}
+
+#togglePassword,
+#togglePasswordOld,
+#togglePasswordNew,
+#togglePasswordOldConfirm,
+#toggleMoneyPassword,
+#toggleMoneyPasswordOld,
+#toggleMoneyPasswordNew,
+#toggleConfirmMoneyPassword {
+    margin-left: 10px;
+    margin-top: -27px;
+    float: left;
+    cursor: pointer;
+}
+.breadcrumb-item + .breadcrumb-item::before {
+    float: right;
+}
+
+.pagination {
+    margin-top: 15px;
+    margin-right: 15px;
+    text-align: center;
+}
+.blue {
+    color: #007bff;
+}
+.card-title {
+    /* width: 110px; */
+    width: 180px;
+}
+.card-title span {
+    padding-top: 8px;
+    float: right;
+}
+.control-btns {
+    margin-top: 10px;
+}
+.control-btns a,
+.control-btns button {
+    margin: 5px;
+}
+.badge-completed {
+    color: #fff;
+    background-color: #28a745;
+}
+.badge-pending {
+    background-color: #ffc107;
+    color: #000;
+}
+.badge-in_progress {
+    color: #fff;
+    background-color: #17a2b8;
+}
+.badge-canceled {
+    color: #fff;
+    background-color: #dc3545;
+}
+.badge-new_trip {
+    color: #fff;
+    background-color: #007bff;
+}
+.green-txt {
+    color: green;
+}
+.swal2-title {
+    font-size: 20px !important;
+}
+.timeline_item {
+    background-color: #007bff;
+    padding: 5px;
+    margin: 4px;
+    border-radius: 5px;
+    list-style: none;
+}
+.timeline_item a {
+    color: #fff;
+}
+
+@media only screen and (max-width: 600px) {
+    .content-wrapper,
+    .main-footer,
+    .main-header {
+        margin-left: 0px !important;
+        margin-right: 0px !important;
+    }
+    .card-header .btn-primary {
+        margin: 10px 0;
+    }
+    .card-body .col-3 {
+        -ms-flex: 0 0 50%;
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+
+    table {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        -ms-overflow-style: -ms-autohiding-scrollbar;
+    }
+}
+
+.table td,
+.table th {
+    white-space: nowrap;
+}
+
+.timeline_item_canceled {
+    /* background-color: red !important; */
+    display: none !important;
+}
+.password-div a {
+    color: #fff;
+}

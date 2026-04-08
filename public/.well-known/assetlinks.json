@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.raiyansoft.usell",
+      "sha256_cert_fingerprints": [
+        "CA:56:ED:6E:0C:40:D4:9F:D8:3A:F1:D3:88:31:82:7F:88:80:46:50:0F:E6:B7:02:1F:07:B4:CD:57:0F:35:06"
+      ]
+    }
+  }
+]
