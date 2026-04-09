@@ -64,111 +64,111 @@ Route::prefix('admin')->controller(AdminAuthController::class)->group(function (
 });
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(AdminUserController::class)->group(function () {
-    Route::get('users', 'index');
-    Route::get('users/{id}', 'show');
-    Route::get('users/{id}/devices', 'devices');
-    Route::get('users/{id}/favorites', 'favorites');
-    Route::put('users/{id}', 'update');
-    Route::delete('users/{id}', 'destroy');
+    Route::get('users', 'index')->middleware('permission:users.view');
+    Route::get('users/{id}', 'show')->middleware('permission:users.view');
+    Route::get('users/{id}/devices', 'devices')->middleware('permission:users.view');
+    Route::get('users/{id}/favorites', 'favorites')->middleware('permission:users.view');
+    Route::put('users/{id}', 'update')->middleware('permission:users.update');
+    Route::delete('users/{id}', 'destroy')->middleware('permission:users.delete');
 });
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(AdAdminController::class)->group(function () {
-    Route::get('ads', 'index');
-    Route::get('ads/{id}', 'show');
-    Route::put('ads/{id}', 'update');
-    Route::delete('ads/{id}', 'destroy');
+    Route::get('ads', 'index')->middleware('permission:categories.view');
+    Route::get('ads/{id}', 'show')->middleware('permission:categories.view');
+    Route::put('ads/{id}', 'update')->middleware('permission:categories.update');
+    Route::delete('ads/{id}', 'destroy')->middleware('permission:categories.delete');
 });
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(AdminController::class)->group(function () {
-    Route::get('dashboard/stats', 'dashboardStats');
-    Route::get('admins', 'index');
-    Route::post('admins', 'store');
-    Route::get('admins/{id}', 'show');
-    Route::put('admins/{id}', 'update');
-    Route::delete('admins/{id}', 'destroy');
+    Route::get('dashboard/stats', 'dashboardStats')->middleware('permission:dashboard.view');
+    Route::get('admins', 'index')->middleware('permission:admins.view');
+    Route::post('admins', 'store')->middleware('permission:admins.create');
+    Route::get('admins/{id}', 'show')->middleware('permission:admins.view');
+    Route::put('admins/{id}', 'update')->middleware('permission:admins.update');
+    Route::delete('admins/{id}', 'destroy')->middleware('permission:admins.delete');
     Route::get('profile', 'profile');
     Route::put('profile', 'updateProfile');
     Route::put('profile/password', 'updatePassword');
 });
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(RoleController::class)->group(function () {
-    Route::get('roles', 'index');
-    Route::post('roles', 'store');
-    Route::put('roles/{id}', 'update');
-    Route::delete('roles/{id}', 'destroy');
+    Route::get('roles', 'index')->middleware('permission:roles.view');
+    Route::post('roles', 'store')->middleware('permission:roles.create');
+    Route::put('roles/{id}', 'update')->middleware('permission:roles.update');
+    Route::delete('roles/{id}', 'destroy')->middleware('permission:roles.delete');
 });
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(PermissionController::class)->group(function () {
-    Route::get('permissions', 'index');
-    Route::post('permissions', 'store');
-    Route::put('permissions/{id}', 'update');
-    Route::delete('permissions/{id}', 'destroy');
+    Route::get('permissions', 'index')->middleware('permission:permissions.view');
+    Route::post('permissions', 'store')->middleware('permission:permissions.create');
+    Route::put('permissions/{id}', 'update')->middleware('permission:permissions.update');
+    Route::delete('permissions/{id}', 'destroy')->middleware('permission:permissions.delete');
 });
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(CountryController::class)->group(function () {
-    Route::get('countries', 'index');
-    Route::post('countries', 'store');
-    Route::put('countries/{id}', 'update');
-    Route::delete('countries/{id}', 'destroy');
+    Route::get('countries', 'index')->middleware('permission:countries.view');
+    Route::post('countries', 'store')->middleware('permission:countries.create');
+    Route::put('countries/{id}', 'update')->middleware('permission:countries.update');
+    Route::delete('countries/{id}', 'destroy')->middleware('permission:countries.delete');
 });
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(CategoryAdminController::class)->group(function () {
-    Route::get('categories', 'index');
-    Route::get('categories/{id}/image', 'image');
-    Route::post('categories', 'store');
-    Route::put('categories/{id}', 'update');
-    Route::delete('categories/{id}', 'destroy');
+    Route::get('categories', 'index')->middleware('permission:categories.view');
+    Route::get('categories/{id}/image', 'image')->middleware('permission:categories.view');
+    Route::post('categories', 'store')->middleware('permission:categories.create');
+    Route::put('categories/{id}', 'update')->middleware('permission:categories.update');
+    Route::delete('categories/{id}', 'destroy')->middleware('permission:categories.delete');
 });
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(CityAdminController::class)->group(function () {
-    Route::get('cities', 'index');
-    Route::post('cities', 'store');
-    Route::put('cities/{id}', 'update');
-    Route::delete('cities/{id}', 'destroy');
+    Route::get('cities', 'index')->middleware('permission:cities.view');
+    Route::post('cities', 'store')->middleware('permission:cities.create');
+    Route::put('cities/{id}', 'update')->middleware('permission:cities.update');
+    Route::delete('cities/{id}', 'destroy')->middleware('permission:cities.delete');
 });
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(PaymentMethodAdminController::class)->group(function () {
-    Route::get('payment-methods', 'index');
-    Route::post('payment-methods', 'store');
-    Route::put('payment-methods/{id}', 'update');
-    Route::delete('payment-methods/{id}', 'destroy');
+    Route::get('payment-methods', 'index')->middleware('permission:payment_methods.view');
+    Route::post('payment-methods', 'store')->middleware('permission:payment_methods.create');
+    Route::put('payment-methods/{id}', 'update')->middleware('permission:payment_methods.update');
+    Route::delete('payment-methods/{id}', 'destroy')->middleware('permission:payment_methods.delete');
 });
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(LanguageController::class)->group(function () {
-    Route::get('languages', 'index');
-    Route::post('languages', 'store');
-    Route::put('languages/{id}', 'update');
-    Route::delete('languages/{id}', 'destroy');
+    Route::get('languages', 'index')->middleware('permission:languages.view');
+    Route::post('languages', 'store')->middleware('permission:languages.create');
+    Route::put('languages/{id}', 'update')->middleware('permission:languages.update');
+    Route::delete('languages/{id}', 'destroy')->middleware('permission:languages.delete');
 });
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(LegalAffairController::class)->group(function () {
-    Route::get('legal-affairs', 'index');
-    Route::post('legal-affairs', 'store');
-    Route::put('legal-affairs/{id}', 'update');
-    Route::delete('legal-affairs/{id}', 'destroy');
+    Route::get('legal-affairs', 'index')->middleware('permission:legal_affairs.view');
+    Route::post('legal-affairs', 'store')->middleware('permission:legal_affairs.create');
+    Route::put('legal-affairs/{id}', 'update')->middleware('permission:legal_affairs.update');
+    Route::delete('legal-affairs/{id}', 'destroy')->middleware('permission:legal_affairs.delete');
 });
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(ContactReasonAdminController::class)->group(function () {
-    Route::get('contact-reasons', 'index');
-    Route::post('contact-reasons', 'store');
-    Route::put('contact-reasons/{id}', 'update');
-    Route::delete('contact-reasons/{id}', 'destroy');
+    Route::get('contact-reasons', 'index')->middleware('permission:contact_reasons.view');
+    Route::post('contact-reasons', 'store')->middleware('permission:contact_reasons.create');
+    Route::put('contact-reasons/{id}', 'update')->middleware('permission:contact_reasons.update');
+    Route::delete('contact-reasons/{id}', 'destroy')->middleware('permission:contact_reasons.delete');
 });
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(ContactUsAdminController::class)->group(function () {
-    Route::get('contact-us', 'index');
+    Route::get('contact-us', 'index')->middleware('permission:contact_us.view');
 });
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(TrustedSellerApplicationAdminController::class)->group(function () {
-    Route::get('trusted-seller-applications/pending-count', 'pendingCount');
-    Route::get('trusted-seller-applications', 'index');
-    Route::get('trusted-seller-applications/{id}', 'show');
-    Route::put('trusted-seller-applications/{id}', 'update');
+    Route::get('trusted-seller-applications/pending-count', 'pendingCount')->middleware('permission:users.view');
+    Route::get('trusted-seller-applications', 'index')->middleware('permission:users.view');
+    Route::get('trusted-seller-applications/{id}', 'show')->middleware('permission:users.view');
+    Route::put('trusted-seller-applications/{id}', 'update')->middleware('permission:users.update');
 });
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(AdminSettingController::class)->group(function () {
-    Route::get('settings', 'index');
-    Route::put('settings', 'update');
+    Route::get('settings', 'index')->middleware('permission:dashboard.view');
+    Route::put('settings', 'update')->middleware('permission:dashboard.view');
 });
 
 Route::get('contact-reasons', ContactReasonController::class);

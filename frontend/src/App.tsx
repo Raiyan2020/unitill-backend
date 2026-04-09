@@ -26,13 +26,20 @@ import { UserDetailsPage } from './pages/UserDetailsPage';
 import { UserFavoritesPage } from './pages/UserFavoritesPage';
 import { UserVerificationDetailsPage } from './pages/UserVerificationDetailsPage';
 import { UsersPage } from './pages/UsersPage';
-import { isAuthenticated } from './lib/auth';
+import { hasPermission, isAuthenticated } from './lib/auth';
 
 function PrivateRoute({ children }: { children: ReactElement }) {
   if (!isAuthenticated()) {
     return <Navigate to="/login" replace />;
   }
 
+  return children;
+}
+
+function PermissionRoute({ permission, children }: { permission: string; children: ReactElement }) {
+  if (!hasPermission(permission)) {
+    return <Navigate to="/profile" replace />;
+  }
   return children;
 }
 
@@ -48,29 +55,29 @@ export default function App() {
           </PrivateRoute>
         }
       >
-        <Route index element={<DashboardPage />} />
-        <Route path="users" element={<UsersPage />} />
-        <Route path="ads" element={<AdsPage />} />
-        <Route path="ads/:id" element={<AdDetailsPage />} />
-        <Route path="ads/user/:userId" element={<UserAdsPage />} />
-        <Route path="user-verifications" element={<TrustedSellerApplicationsPage />} />
-        <Route path="user-verifications/user/:userId" element={<UserVerificationDetailsPage />} />
-        <Route path="users/:id" element={<UserDetailsPage />} />
-        <Route path="users/:id/devices" element={<UserDevicesPage />} />
-        <Route path="users/:id/favorites" element={<UserFavoritesPage />} />
-        <Route path="admins" element={<AdminsPage />} />
-        <Route path="roles" element={<RolesPage />} />
-        <Route path="permissions" element={<PermissionsPage />} />
-        <Route path="countries" element={<CountriesPage />} />
-        <Route path="categories" element={<CategoriesPage />} />
-        <Route path="categories/:categoryId/subcategories" element={<SubCategoriesPage />} />
-        <Route path="languages" element={<LanguagesPage />} />
-        <Route path="legal-affairs" element={<LegalAffairsPage />} />
-        <Route path="contact-reasons" element={<ContactReasonsPage />} />
-        <Route path="contact-us" element={<ContactUsPage />} />
-        <Route path="cities" element={<CitiesPage />} />
-        <Route path="payment-methods" element={<PaymentMethodsPage />} />
-        <Route path="settings" element={<SettingsPage />} />
+        <Route index element={<PermissionRoute permission="dashboard.view"><DashboardPage /></PermissionRoute>} />
+        <Route path="users" element={<PermissionRoute permission="users.view"><UsersPage /></PermissionRoute>} />
+        <Route path="ads" element={<PermissionRoute permission="categories.view"><AdsPage /></PermissionRoute>} />
+        <Route path="ads/:id" element={<PermissionRoute permission="categories.view"><AdDetailsPage /></PermissionRoute>} />
+        <Route path="ads/user/:userId" element={<PermissionRoute permission="categories.view"><UserAdsPage /></PermissionRoute>} />
+        <Route path="user-verifications" element={<PermissionRoute permission="users.view"><TrustedSellerApplicationsPage /></PermissionRoute>} />
+        <Route path="user-verifications/user/:userId" element={<PermissionRoute permission="users.view"><UserVerificationDetailsPage /></PermissionRoute>} />
+        <Route path="users/:id" element={<PermissionRoute permission="users.view"><UserDetailsPage /></PermissionRoute>} />
+        <Route path="users/:id/devices" element={<PermissionRoute permission="users.view"><UserDevicesPage /></PermissionRoute>} />
+        <Route path="users/:id/favorites" element={<PermissionRoute permission="users.view"><UserFavoritesPage /></PermissionRoute>} />
+        <Route path="admins" element={<PermissionRoute permission="admins.view"><AdminsPage /></PermissionRoute>} />
+        <Route path="roles" element={<PermissionRoute permission="roles.view"><RolesPage /></PermissionRoute>} />
+        <Route path="permissions" element={<PermissionRoute permission="permissions.view"><PermissionsPage /></PermissionRoute>} />
+        <Route path="countries" element={<PermissionRoute permission="countries.view"><CountriesPage /></PermissionRoute>} />
+        <Route path="categories" element={<PermissionRoute permission="categories.view"><CategoriesPage /></PermissionRoute>} />
+        <Route path="categories/:categoryId/subcategories" element={<PermissionRoute permission="subcategories.view"><SubCategoriesPage /></PermissionRoute>} />
+        <Route path="languages" element={<PermissionRoute permission="languages.view"><LanguagesPage /></PermissionRoute>} />
+        <Route path="legal-affairs" element={<PermissionRoute permission="legal_affairs.view"><LegalAffairsPage /></PermissionRoute>} />
+        <Route path="contact-reasons" element={<PermissionRoute permission="contact_reasons.view"><ContactReasonsPage /></PermissionRoute>} />
+        <Route path="contact-us" element={<PermissionRoute permission="contact_us.view"><ContactUsPage /></PermissionRoute>} />
+        <Route path="cities" element={<PermissionRoute permission="cities.view"><CitiesPage /></PermissionRoute>} />
+        <Route path="payment-methods" element={<PermissionRoute permission="payment_methods.view"><PaymentMethodsPage /></PermissionRoute>} />
+        <Route path="settings" element={<PermissionRoute permission="dashboard.view"><SettingsPage /></PermissionRoute>} />
         <Route path="profile" element={<ProfilePage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

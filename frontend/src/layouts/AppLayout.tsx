@@ -3,26 +3,26 @@ import { useCallback, useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { api } from '../lib/api';
-import { clearAuthToken } from '../lib/auth';
+import { clearAuthToken, hasPermission } from '../lib/auth';
 import { cn } from '../lib/cn';
 import { useI18n } from '../providers/i18n-provider';
 
 const navItems = [
-  { to: '/', labelKey: 'dashboard', icon: LayoutDashboard },
-  { to: '/users', labelKey: 'users', icon: Users },
-  { to: '/ads', labelKey: 'ads', icon: Megaphone },
-  { to: '/user-verifications', labelKey: 'userVerifications', icon: BadgeCheck },
-  { to: '/admins', labelKey: 'admins', icon: UserCog },
-  { to: '/roles', labelKey: 'roles', icon: ShieldCheck },
-  { to: '/permissions', labelKey: 'permissions', icon: KeyRound },
-  { to: '/countries', labelKey: 'countries', icon: Building2 },
-  { to: '/categories', labelKey: 'categories', icon: FolderTree },
-  { to: '/languages', labelKey: 'languages', icon: Languages },
-  { to: '/legal-affairs', labelKey: 'legalAffairs', icon: FileText },
-  { to: '/contact-reasons', labelKey: 'contactReasons', icon: MessageSquare },
-  { to: '/contact-us', labelKey: 'contactUs', icon: Mail },
-  { to: '/payment-methods', labelKey: 'paymentMethods', icon: Wallet },
-  { to: '/settings', labelKey: 'settings', icon: Settings },
+  { to: '/', labelKey: 'dashboard', icon: LayoutDashboard, permission: 'dashboard.view' },
+  { to: '/users', labelKey: 'users', icon: Users, permission: 'users.view' },
+  { to: '/ads', labelKey: 'ads', icon: Megaphone, permission: 'categories.view' },
+  { to: '/user-verifications', labelKey: 'userVerifications', icon: BadgeCheck, permission: 'users.view' },
+  { to: '/admins', labelKey: 'admins', icon: UserCog, permission: 'admins.view' },
+  { to: '/roles', labelKey: 'roles', icon: ShieldCheck, permission: 'roles.view' },
+  { to: '/permissions', labelKey: 'permissions', icon: KeyRound, permission: 'permissions.view' },
+  { to: '/countries', labelKey: 'countries', icon: Building2, permission: 'countries.view' },
+  { to: '/categories', labelKey: 'categories', icon: FolderTree, permission: 'categories.view' },
+  { to: '/languages', labelKey: 'languages', icon: Languages, permission: 'languages.view' },
+  { to: '/legal-affairs', labelKey: 'legalAffairs', icon: FileText, permission: 'legal_affairs.view' },
+  { to: '/contact-reasons', labelKey: 'contactReasons', icon: MessageSquare, permission: 'contact_reasons.view' },
+  { to: '/contact-us', labelKey: 'contactUs', icon: Mail, permission: 'contact_us.view' },
+  { to: '/payment-methods', labelKey: 'paymentMethods', icon: Wallet, permission: 'payment_methods.view' },
+  { to: '/settings', labelKey: 'settings', icon: Settings, permission: 'dashboard.view' },
 ] as const;
 
 export function AppLayout() {
@@ -32,6 +32,7 @@ export function AppLayout() {
   const [pendingVerificationCount, setPendingVerificationCount] = useState(0);
   const [logoError, setLogoError] = useState(false);
   const projectLogoSrc = '/project-logo.png';
+  const visibleNavItems = navItems.filter((item) => hasPermission(item.permission));
 
   const loadPendingCount = useCallback(async () => {
     try {
@@ -107,7 +108,7 @@ export function AppLayout() {
 
           <p className="px-2 pb-2 pt-3 text-[11px] font-semibold uppercase tracking-wider text-[#a5a7b8]">Dashboards</p>
           <nav className="space-y-1">
-            {navItems.map((item) => {
+            {visibleNavItems.map((item) => {
               const Icon = item.icon;
               const label = t[item.labelKey];
 

@@ -65,6 +65,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'SetLanguage' => \App\Http\Middleware\SetLanguage::class,
             'admin.auth' => \App\Http\Middleware\RedirectIfNotAdmin::class,
             'school.auth' => \App\Http\Middleware\RedirectIfNotSchool::class,
+            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
         ]);
     })
     ->withSchedule(function (Schedule $schedule) {

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { api } from '../lib/api';
-import { setAuthToken } from '../lib/auth';
+import { setAdminAuthInfo, setAuthToken, type AdminAuthInfo } from '../lib/auth';
 import { useI18n } from '../providers/i18n-provider';
 
 export function LoginPage() {
@@ -24,8 +24,11 @@ export function LoginPage() {
     try {
       const res = await api.post('/admin/login', { email, password });
       const token = res?.data?.data?.token;
+      const admin = res?.data?.data?.admin as AdminAuthInfo | undefined;
       if (!token) throw new Error('Token not found');
+      if (!admin) throw new Error('Admin data not found');
       setAuthToken(token);
+      setAdminAuthInfo(admin);
       navigate('/', { replace: true });
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Login failed');

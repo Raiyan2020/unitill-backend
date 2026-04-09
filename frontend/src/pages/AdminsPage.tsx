@@ -258,34 +258,41 @@ export function AdminsPage() {
                 <X className="h-4 w-4" />
               </Button>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <Input placeholder="Name" value={form.name} onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))} />
-              <Input placeholder={t.email} value={form.email} onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))} />
-              <Input
-                type="password"
-                placeholder={editing ? 'New password (optional)' : 'Password'}
-                value={form.password}
-                onChange={(e) => setForm((s) => ({ ...s, password: e.target.value }))}
-              />
-              <Input
-                type="password"
-                placeholder={editing ? 'Confirm new password' : 'Confirm password'}
-                value={form.password_confirmation}
-                onChange={(e) => setForm((s) => ({ ...s, password_confirmation: e.target.value }))}
-              />
-              <select
-                value={form.role}
-                onChange={(e) => setForm((s) => ({ ...s, role: e.target.value }))}
-                className="h-10 rounded-xl border border-[#dbdbe8] bg-white px-3 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]"
-              >
-                <option value="">Select role</option>
-                {roles.map((role) => (
-                  <option key={role.id} value={role.name}>
-                    {role.name}
-                  </option>
-                ))}
-              </select>
-              <div className="flex justify-end gap-2">
+            <CardContent className="space-y-5">
+              <div className="grid gap-3.5 md:grid-cols-2">
+                <Input placeholder="Name" value={form.name} onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))} />
+                <Input placeholder={t.email} value={form.email} onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))} />
+                <Input
+                  type="password"
+                  placeholder={editing ? 'New password (optional)' : 'Password'}
+                  value={form.password}
+                  onChange={(e) => setForm((s) => ({ ...s, password: e.target.value }))}
+                />
+                <Input
+                  type="password"
+                  placeholder={editing ? 'Confirm new password' : 'Confirm password'}
+                  value={form.password_confirmation}
+                  onChange={(e) => setForm((s) => ({ ...s, password_confirmation: e.target.value }))}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-[#6f6b7d] dark:text-[#b6b8cc]">{t.roles}</label>
+                <select
+                  value={form.role}
+                  onChange={(e) => setForm((s) => ({ ...s, role: e.target.value }))}
+                  className="h-10 w-full rounded-xl border border-[#dbdbe8] bg-white px-3 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]"
+                >
+                  <option value="">Select role</option>
+                  {roles.map((role) => (
+                    <option key={role.id} value={role.name}>
+                      {role.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-1">
                 <Button
                   variant="secondary"
                   onClick={() => {
