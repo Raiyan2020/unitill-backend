@@ -1,5 +1,5 @@
 import { Edit, Trash2, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { TableFooter, TableLoadingRow } from '../components/table/TableHelpers';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -40,6 +40,7 @@ export function LegalAffairsPage() {
     sort_order: '0',
     translations: {} as Record<string, TranslationValue>,
   });
+  const didInitSearch = useRef(false);
 
   const fetchRows = async () => {
     setLoading(true);
@@ -67,6 +68,10 @@ export function LegalAffairsPage() {
   }, [page, pageSize]);
 
   useEffect(() => {
+    if (!didInitSearch.current) {
+      didInitSearch.current = true;
+      return;
+    }
     const timer = setTimeout(() => {
       setPage(1);
       fetchRows();

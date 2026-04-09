@@ -19,10 +19,11 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
             CitySeeder::class,
             SettingSeeder::class,
-            FilterGroupSeeder::class,
-            FilterSeeder::class,
+ 
             CategorySeeder::class,
             PaymentMethodSeeder::class,
+            AdSeeder::class,
+            TrustedSellerApplicationSeeder::class,
 
         ]);
     }

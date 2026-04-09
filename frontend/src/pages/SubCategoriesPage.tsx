@@ -1,5 +1,5 @@
 import { Edit, Trash2, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { TableFooter, TableLoadingRow } from '../components/table/TableHelpers';
 import { Button } from '../components/ui/button';
@@ -32,6 +32,7 @@ export function SubCategoriesPage() {
   const [deleting, setDeleting] = useState<Row | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ translations: {} as Record<string, string> });
+  const didInitSearch = useRef(false);
 
   const fetchRows = async () => {
     if (!parentId) return;
@@ -60,6 +61,10 @@ export function SubCategoriesPage() {
   }, [parentId, page, pageSize]);
 
   useEffect(() => {
+    if (!didInitSearch.current) {
+      didInitSearch.current = true;
+      return;
+    }
     const timer = setTimeout(() => {
       setPage(1);
       fetchRows();

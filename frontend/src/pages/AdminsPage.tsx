@@ -1,5 +1,5 @@
 import { Edit, Trash2, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
@@ -49,6 +49,7 @@ export function AdminsPage() {
     role: '',
   });
   const [saving, setSaving] = useState(false);
+  const didInitSearch = useRef(false);
 
   const fetchAdmins = async () => {
     setLoading(true);
@@ -77,6 +78,10 @@ export function AdminsPage() {
   }, []);
 
   useEffect(() => {
+    if (!didInitSearch.current) {
+      didInitSearch.current = true;
+      return;
+    }
     const timer = setTimeout(() => {
       setPage(1);
       fetchAdmins();

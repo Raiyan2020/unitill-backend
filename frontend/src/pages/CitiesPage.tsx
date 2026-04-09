@@ -1,5 +1,5 @@
 import { Edit, Trash2, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -44,6 +44,7 @@ export function CitiesPage() {
   const [deleting, setDeleting] = useState<CityRow | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ country_id: '', status: 'active', code: '', sort: '0', translations: {} as Record<string, string> });
+  const didInitSearch = useRef(false);
 
   const fetchRows = async () => {
     setLoading(true);
@@ -83,6 +84,10 @@ export function CitiesPage() {
   }, [page, pageSize]);
 
   useEffect(() => {
+    if (!didInitSearch.current) {
+      didInitSearch.current = true;
+      return;
+    }
     const timer = setTimeout(() => {
       setPage(1);
       fetchRows();

@@ -7,10 +7,13 @@ type Dictionary = {
   appName: string;
   dashboard: string;
   users: string;
+  ads: string;
+  userVerifications: string;
   admins: string;
   roles: string;
   permissions: string;
   profile: string;
+  settings: string;
   countries: string;
   cities: string;
   paymentMethods: string;
@@ -55,10 +58,13 @@ const dictionaries: Record<Locale, Dictionary> = {
     appName: 'Unitill Admin',
     dashboard: 'Dashboard',
     users: 'Users',
+    ads: 'Ads',
+    userVerifications: 'User Verifications',
     admins: 'Admins',
     roles: 'Roles',
     permissions: 'Permissions',
     profile: 'Profile',
+    settings: 'Settings',
     countries: 'Countries',
     cities: 'Cities',
     paymentMethods: 'Payment Methods',
@@ -101,10 +107,13 @@ const dictionaries: Record<Locale, Dictionary> = {
        appName: 'لوحة يونيتل',
     dashboard: 'لوحة التحكم',
     users: 'المستخدمون',
+    ads: 'الإعلانات',
+    userVerifications: 'طلبات التوثيق',
     admins: 'المدراء',
     roles: 'الأدوار',
     permissions: 'الصلاحيات',
     profile: 'الملف الشخصي',
+    settings: 'الإعدادات',
     countries: 'الدول',
     cities: 'المدن',
     paymentMethods: 'طرق الدفع',

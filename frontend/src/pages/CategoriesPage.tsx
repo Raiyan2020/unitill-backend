@@ -1,5 +1,5 @@
 import { FolderTree, Edit, Trash2, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TableFooter, TableLoadingRow } from '../components/table/TableHelpers';
 import { Button } from '../components/ui/button';
@@ -39,6 +39,7 @@ export function CategoriesPage() {
   const [saving, setSaving] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [form, setForm] = useState({ status: 'active', sort: '0', translations: {} as Record<string, string> });
+  const didInitSearch = useRef(false);
 
   const fetchRows = async () => {
     setLoading(true);
@@ -66,6 +67,10 @@ export function CategoriesPage() {
   }, [page, pageSize]);
 
   useEffect(() => {
+    if (!didInitSearch.current) {
+      didInitSearch.current = true;
+      return;
+    }
     const timer = setTimeout(() => {
       setPage(1);
       fetchRows();

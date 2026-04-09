@@ -23,15 +23,7 @@ class SettingSeeder extends Seeder
             'set_group' => 'app',
             'is_object' => '1',
         ]);
-
-        Setting::create([
-            'key_id' => 'post_duration',
-            'title_en'=>'Post Duration',
-            'title_ar'=>'مدة الاعلان',
-            'value' => '30',
-            'set_group' => 'app',
-            'is_object' => '1',
-        ]);
+ 
         Setting::create([
             'key_id'     => 'terms_conditions',
             'title_en'   => 'Terms & Conditions',

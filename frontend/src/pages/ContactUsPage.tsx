@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { TableFooter, TableLoadingRow } from '../components/table/TableHelpers';
 import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
@@ -27,6 +27,7 @@ export function ContactUsPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
+  const didInitSearch = useRef(false);
 
   const fetchRows = async () => {
     setLoading(true);
@@ -47,6 +48,10 @@ export function ContactUsPage() {
   }, [page, pageSize]);
 
   useEffect(() => {
+    if (!didInitSearch.current) {
+      didInitSearch.current = true;
+      return;
+    }
     const timer = setTimeout(() => {
       setPage(1);
       fetchRows();

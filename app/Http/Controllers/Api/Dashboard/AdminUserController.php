@@ -88,4 +88,64 @@ class AdminUserController extends Controller
 
         return sendResponse([], 'User deleted');
     }
+
+    public function devices(Request $request, int $id)
+    {
+        $user = User::find($id);
+        if (! $user) {
+            return sendError('User not found', [], 404);
+        }
+
+        $perPage = max(1, min((int) $request->input('per_page', 10), 100));
+
+        $rows = $user->userDevices()
+            ->orderByDesc('last_seen_at')
+            ->orderByDesc('id')
+            ->paginate($perPage);
+
+        return sendResponse($rows, 'User devices fetched');
+    }
+
+    public function favorites(Request $request, int $id)
+    {
+        $user = User::find($id);
+        if (! $user) {
+            return sendError('User not found', [], 404);
+        }
+
+        $perPage = max(1, min((int) $request->input('per_page', 10), 100));
+
+        $rows = $user->favoriteAds()
+            ->select('ads.*')
+            ->with('user:id,name,first_name,last_name,email')
+            ->orderByDesc('ad_favorites.id')
+            ->paginate($perPage);
+
+        $rows->getCollection()->transform(function ($ad) {
+            $userName = trim(
+                implode(' ', array_filter([
+                    $ad->user?->first_name,
+                    $ad->user?->last_name,
+                ]))
+            );
+            if ($userName === '') {
+                $userName = (string) ($ad->user?->name ?? $ad->user?->email ?? '-');
+            }
+
+            return [
+                'id' => $ad->id,
+                'public_id' => $ad->public_id,
+                'title' => $ad->title,
+                'status' => $ad->status,
+                'price' => $ad->price,
+                'currency' => $ad->currency,
+                'cover_image' => $ad->cover_image,
+                'cover_image_url' => $ad->cover_image ? url('/storage/'.ltrim((string) $ad->cover_image, '/')) : null,
+                'owner_name' => $userName,
+                'created_at' => optional($ad->created_at)->toDateTimeString(),
+            ];
+        });
+
+        return sendResponse($rows, 'User favorite ads fetched');
+    }
 }

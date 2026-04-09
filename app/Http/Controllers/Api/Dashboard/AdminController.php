@@ -4,6 +4,11 @@ namespace App\Http\Controllers\Api\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
+use App\Models\Ad;
+use App\Models\ContactUsMessage;
+use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -205,5 +210,54 @@ class AdminController extends Controller
         ]);
 
         return sendResponse([], 'Password updated');
+    }
+
+    public function dashboardStats()
+    {
+        $usersCount = User::query()->count();
+        $activeAdsCount = Ad::query()->where('status', 'published')->count();
+        $inactiveAdsCount = Ad::query()->where('status', '!=', 'published')->count();
+        $contactMessagesCount = ContactUsMessage::query()->count();
+        $revenue = (float) (Ad::query()
+            ->where('status', 'published')
+            ->sum('price') ?? 0);
+
+        $startDate = Carbon::today()->subDays(9);
+        $endDate = Carbon::today();
+
+        $adsByDay = Ad::query()
+            ->selectRaw('DATE(created_at) as day, COUNT(*) as ads_count')
+            ->whereBetween('created_at', [$startDate->copy()->startOfDay(), $endDate->copy()->endOfDay()])
+            ->groupBy(DB::raw('DATE(created_at)'))
+            ->pluck('ads_count', 'day');
+
+        $revenueByDay = Ad::query()
+            ->selectRaw('DATE(created_at) as day, COALESCE(SUM(price), 0) as revenue_sum')
+            ->where('status', 'published')
+            ->whereBetween('created_at', [$startDate->copy()->startOfDay(), $endDate->copy()->endOfDay()])
+            ->groupBy(DB::raw('DATE(created_at)'))
+            ->pluck('revenue_sum', 'day');
+
+        $timeline = [];
+        for ($i = 0; $i < 10; $i++) {
+            $day = $startDate->copy()->addDays($i);
+            $key = $day->toDateString();
+
+            $timeline[] = [
+                'date' => $key,
+                'label' => $day->format('j M'),
+                'ads_count' => (int) ($adsByDay[$key] ?? 0),
+                'revenue' => (float) ($revenueByDay[$key] ?? 0),
+            ];
+        }
+
+        return sendResponse([
+            'users_count' => $usersCount,
+            'active_ads_count' => $activeAdsCount,
+            'inactive_ads_count' => $inactiveAdsCount,
+            'contact_messages_count' => $contactMessagesCount,
+            'revenue' => round($revenue, 2),
+            'last_10_days' => $timeline,
+        ], 'Dashboard stats fetched');
     }
 }

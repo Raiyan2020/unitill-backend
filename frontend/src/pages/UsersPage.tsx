@@ -1,6 +1,6 @@
-import { Edit, Eye, Trash2, X } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { BadgeCheck, Edit, Eye, Heart, Smartphone, Trash2, X } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
@@ -19,6 +19,7 @@ type UserRow = {
   phone: string | null;
   country_code: string | null;
   status: UserStatus;
+  is_trusted_seller?: boolean;
 };
 
 type PaginatedResponse<T> = {
@@ -41,6 +42,7 @@ const statusSelectClass = (status: UserStatus) => {
 };
 
 export function UsersPage() {
+  const navigate = useNavigate();
   const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<UserRow[]>([]);
@@ -53,6 +55,7 @@ export function UsersPage() {
   const [deletingUser, setDeletingUser] = useState<UserRow | null>(null);
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const didInitSearch = useRef(false);
 
   const fetchUsers = async (searchValue = search) => {
     setLoading(true);
@@ -75,6 +78,10 @@ export function UsersPage() {
   }, [page, pageSize]);
 
   useEffect(() => {
+    if (!didInitSearch.current) {
+      didInitSearch.current = true;
+      return;
+    }
     const timer = setTimeout(() => {
       setPage(1);
       fetchUsers(search);
@@ -195,7 +202,21 @@ export function UsersPage() {
                   rows.map((row) => (
                     <tr key={row.id} className="border-t border-[#ececf3] dark:border-[#44485f]">
                       <td className="px-4 py-3">{row.id}</td>
-                      <td className="px-4 py-3">{row.first_name || '-'}</td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex items-center gap-1.5">
+                          {row.first_name || '-'}
+                          {row.is_trusted_seller ? (
+                            <button
+                              type="button"
+                              className="inline-flex items-center"
+                              title="View verification details"
+                              onClick={() => navigate(`/user-verifications/user/${row.id}`)}
+                            >
+                              <BadgeCheck className="h-3.5 w-3.5 text-[#00a3ff]" />
+                            </button>
+                          ) : null}
+                        </span>
+                      </td>
                       <td className="px-4 py-3">{row.last_name || '-'}</td>
                       <td className="px-4 py-3">{row.email || '-'}</td>
                       <td className="px-4 py-3">{`${row.country_code || ''} ${row.phone || ''}`.trim() || '-'}</td>
@@ -220,6 +241,16 @@ export function UsersPage() {
                           <Button size="icon" variant="secondary" title={t.edit} onClick={() => openEdit(row)}>
                             <Edit className="h-4 w-4" />
                           </Button>
+                          <Link to={`/users/${row.id}/devices`}>
+                            <Button size="icon" variant="secondary" title="Device sessions">
+                              <Smartphone className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                          <Link to={`/users/${row.id}/favorites`}>
+                            <Button size="icon" variant="secondary" title="Favorite ads">
+                              <Heart className="h-4 w-4" />
+                            </Button>
+                          </Link>
                           <Button size="icon" variant="destructive" title={t.delete} onClick={() => setDeletingUser(row)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>

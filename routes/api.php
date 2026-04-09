@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\PaymentWebhookController;
 use App\Http\Controllers\Api\BasketController;
 use App\Http\Controllers\Api\Dashboard\AdminAuthController;
 use App\Http\Controllers\Api\Dashboard\AdminController;
+use App\Http\Controllers\Api\Dashboard\AdAdminController;
 use App\Http\Controllers\Api\Dashboard\AdminUserController;
 use App\Http\Controllers\Api\Dashboard\CategoryAdminController;
 use App\Http\Controllers\Api\Dashboard\CityAdminController;
@@ -15,6 +16,8 @@ use App\Http\Controllers\Api\Dashboard\LanguageController;
 use App\Http\Controllers\Api\Dashboard\PermissionController;
 use App\Http\Controllers\Api\Dashboard\PaymentMethodAdminController;
 use App\Http\Controllers\Api\Dashboard\RoleController;
+use App\Http\Controllers\Api\Dashboard\AdminSettingController;
+use App\Http\Controllers\Api\Dashboard\TrustedSellerApplicationAdminController;
 use App\Models\FilterGroup;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -63,11 +66,21 @@ Route::prefix('admin')->controller(AdminAuthController::class)->group(function (
 Route::middleware('auth:sanctum')->prefix('admin')->controller(AdminUserController::class)->group(function () {
     Route::get('users', 'index');
     Route::get('users/{id}', 'show');
+    Route::get('users/{id}/devices', 'devices');
+    Route::get('users/{id}/favorites', 'favorites');
     Route::put('users/{id}', 'update');
     Route::delete('users/{id}', 'destroy');
 });
 
+Route::middleware('auth:sanctum')->prefix('admin')->controller(AdAdminController::class)->group(function () {
+    Route::get('ads', 'index');
+    Route::get('ads/{id}', 'show');
+    Route::put('ads/{id}', 'update');
+    Route::delete('ads/{id}', 'destroy');
+});
+
 Route::middleware('auth:sanctum')->prefix('admin')->controller(AdminController::class)->group(function () {
+    Route::get('dashboard/stats', 'dashboardStats');
     Route::get('admins', 'index');
     Route::post('admins', 'store');
     Route::get('admins/{id}', 'show');
@@ -144,6 +157,18 @@ Route::middleware('auth:sanctum')->prefix('admin')->controller(ContactReasonAdmi
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(ContactUsAdminController::class)->group(function () {
     Route::get('contact-us', 'index');
+});
+
+Route::middleware('auth:sanctum')->prefix('admin')->controller(TrustedSellerApplicationAdminController::class)->group(function () {
+    Route::get('trusted-seller-applications/pending-count', 'pendingCount');
+    Route::get('trusted-seller-applications', 'index');
+    Route::get('trusted-seller-applications/{id}', 'show');
+    Route::put('trusted-seller-applications/{id}', 'update');
+});
+
+Route::middleware('auth:sanctum')->prefix('admin')->controller(AdminSettingController::class)->group(function () {
+    Route::get('settings', 'index');
+    Route::put('settings', 'update');
 });
 
 Route::get('contact-reasons', ContactReasonController::class);

@@ -1,5 +1,5 @@
-import { Building2, FileText, FolderTree, Globe, KeyRound, Languages, LayoutDashboard, LogOut, Mail, Menu, MessageSquare, Moon, ShieldCheck, Sun, User, UserCog, Users, Wallet, X } from 'lucide-react';
-import { useState } from 'react';
+import { BadgeCheck, Building2, FileText, FolderTree, Globe, KeyRound, Languages, LayoutDashboard, LogOut, Mail, Megaphone, Menu, MessageSquare, Moon, Settings, ShieldCheck, Sun, User, UserCog, Users, Wallet, X } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { api } from '../lib/api';
@@ -10,6 +10,8 @@ import { useI18n } from '../providers/i18n-provider';
 const navItems = [
   { to: '/', labelKey: 'dashboard', icon: LayoutDashboard },
   { to: '/users', labelKey: 'users', icon: Users },
+  { to: '/ads', labelKey: 'ads', icon: Megaphone },
+  { to: '/user-verifications', labelKey: 'userVerifications', icon: BadgeCheck },
   { to: '/admins', labelKey: 'admins', icon: UserCog },
   { to: '/roles', labelKey: 'roles', icon: ShieldCheck },
   { to: '/permissions', labelKey: 'permissions', icon: KeyRound },
@@ -20,12 +22,37 @@ const navItems = [
   { to: '/contact-reasons', labelKey: 'contactReasons', icon: MessageSquare },
   { to: '/contact-us', labelKey: 'contactUs', icon: Mail },
   { to: '/payment-methods', labelKey: 'paymentMethods', icon: Wallet },
+  { to: '/settings', labelKey: 'settings', icon: Settings },
 ] as const;
 
 export function AppLayout() {
   const navigate = useNavigate();
   const { t, locale, setLocale, theme, setTheme } = useI18n();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [pendingVerificationCount, setPendingVerificationCount] = useState(0);
+  const [logoError, setLogoError] = useState(false);
+  const projectLogoSrc = '/project-logo.png';
+
+  const loadPendingCount = useCallback(async () => {
+    try {
+      const res = await api.get('/admin/trusted-seller-applications/pending-count');
+      const count = Number(res?.data?.data?.count || 0);
+      setPendingVerificationCount(Number.isNaN(count) ? 0 : count);
+    } catch {
+      setPendingVerificationCount(0);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadPendingCount();
+
+    const onVerificationChanged = () => {
+      loadPendingCount();
+    };
+
+    window.addEventListener('trusted-verifications-changed', onVerificationChanged);
+    return () => window.removeEventListener('trusted-verifications-changed', onVerificationChanged);
+  }, [loadPendingCount]);
 
   return (
     <div className="min-h-screen bg-[#f5f5f9] text-[#2f2b3d] dark:bg-[#25293c] dark:text-[#d7d8ea]">
@@ -40,11 +67,12 @@ export function AppLayout() {
 
       <aside
         className={cn(
-          'fixed z-30 w-[264px] border border-[#e6e6ef] bg-white shadow-[0_10px_24px_rgba(47,43,61,0.12)] transition-transform dark:border-[#44485f] dark:bg-[#2f3349] dark:shadow-[0_12px_28px_rgba(0,0,0,0.35)]',
+          'fixed z-30 w-[264px] overflow-y-auto border border-[#e6e6ef] bg-white shadow-[0_10px_24px_rgba(47,43,61,0.12)] transition-transform dark:border-[#44485f] dark:bg-[#2f3349] dark:shadow-[0_12px_28px_rgba(0,0,0,0.35)] [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden',
           'inset-y-0 start-0 rounded-none',
           sidebarOpen ? 'translate-x-0 rtl:translate-x-0' : '-translate-x-full rtl:translate-x-full',
           'md:inset-y-3 md:start-3 md:rounded-2xl md:translate-x-0 md:rtl:translate-x-0',
         )}
+        style={{ scrollBehavior: 'smooth' }}
       >
         <div className="mx-3 mt-3 flex h-14 items-center rounded-xl bg-[#7367f0] px-4 text-white shadow-[0_10px_20px_rgba(115,103,240,0.35)] transition-all duration-300">
           <h1 className="text-base font-semibold tracking-wide text-white">{t.appName}</h1>
@@ -55,6 +83,28 @@ export function AppLayout() {
         </div>
 
         <div className="px-3 pb-4">
+          <div className="mb-3 mt-3 flex items-center gap-3 rounded-xl border border-[#ececf3] bg-[#fafafe] p-2.5 dark:border-[#44485f] dark:bg-[#383d56]">
+            <div className="relative h-11 w-11 shrink-0">
+              {!logoError ? (
+                <img
+                  src={projectLogoSrc}
+                  alt="Project logo"
+                  className="h-11 w-11 rounded-full object-cover ring-2 ring-[#7367f0]/25"
+                  onError={() => setLogoError(true)}
+                />
+              ) : (
+                <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#7367f0]/15 text-sm font-bold text-[#7367f0] ring-2 ring-[#7367f0]/25">
+                  U
+                </div>
+              )}
+              <div className="absolute -end-0.5 -bottom-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-[#28c76f] dark:border-[#383d56]" />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">{t.appName}</p>
+              <p className="text-xs text-[#8a8da8] dark:text-[#a2a5be]">Connected</p>
+            </div>
+          </div>
+
           <p className="px-2 pb-2 pt-3 text-[11px] font-semibold uppercase tracking-wider text-[#a5a7b8]">Dashboards</p>
           <nav className="space-y-1">
             {navItems.map((item) => {
@@ -86,6 +136,11 @@ export function AppLayout() {
                 >
                   <Icon size={17} className="shrink-0" />
                   {label}
+                  {item.to === '/user-verifications' && pendingVerificationCount > 0 ? (
+                    <span className="ms-auto inline-flex min-w-[20px] items-center justify-center rounded-full bg-[#ea5455] px-1.5 py-0.5 text-[11px] font-semibold text-white">
+                      {pendingVerificationCount > 99 ? '99+' : pendingVerificationCount}
+                    </span>
+                  ) : null}
                 </NavLink>
               );
             })}
