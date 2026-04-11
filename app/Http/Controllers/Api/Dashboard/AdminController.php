@@ -16,6 +16,15 @@ use Illuminate\Validation\Rule;
 
 class AdminController extends Controller
 {
+    private function isPrimaryAdmin(Admin $admin): bool
+    {
+        if ($admin->id === 1) {
+            return true;
+        }
+
+        return strcasecmp((string) $admin->email, 'admin@admin.net') === 0;
+    }
+
     public function index(Request $request)
     {
         $perPage = max(1, min((int) $request->input('per_page', 10), 100));
@@ -98,6 +107,10 @@ class AdminController extends Controller
             return sendError('Admin not found', [], 404);
         }
 
+        if ($this->isPrimaryAdmin($admin)) {
+            return sendError('The primary administrator cannot be modified from this screen.', [], 403);
+        }
+
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|required|string|max:255',
             'email' => ['sometimes', 'required', 'email', 'max:255', Rule::unique('admins', 'email')->ignore($id)],
@@ -133,6 +146,10 @@ class AdminController extends Controller
 
         if (! $admin) {
             return sendError('Admin not found', [], 404);
+        }
+
+        if ($this->isPrimaryAdmin($admin)) {
+            return sendError('The primary administrator cannot be deleted.', [], 403);
         }
 
         $admin->delete();

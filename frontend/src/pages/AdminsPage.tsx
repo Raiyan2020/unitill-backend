@@ -27,6 +27,12 @@ type PaginatedResponse<T> = {
   current_page: number;
 };
 
+const PRIMARY_ADMIN_EMAIL = 'admin@admin.net';
+
+function isPrimaryAdminRow(row: AdminRow): boolean {
+  return row.id === 1 || row.email.trim().toLowerCase() === PRIMARY_ADMIN_EMAIL;
+}
+
 export function AdminsPage() {
   const notify = useNotify();
   const { t } = useI18n();
@@ -97,6 +103,7 @@ export function AdminsPage() {
   };
 
   const openEdit = async (row: AdminRow) => {
+    if (isPrimaryAdminRow(row)) return;
     const res = await api.get(`/admin/admins/${row.id}`);
     const data = ensureApiSuccess<{ name?: string; email?: string; roles?: string[] }>(res, 'Failed to load admin details');
     setFormOpen(true);
@@ -219,10 +226,18 @@ export function AdminsPage() {
                     <td className="px-4 py-3">{row.email}</td>
                     <td className="px-4 py-3">{(row.roles || []).join(', ') || '-'}</td>
                     <td className="px-4 py-3">
-                      <div className="flex gap-2">
-                        <Button size="icon" variant="secondary" onClick={() => openEdit(row)}><Edit className="h-4 w-4" /></Button>
-                        <Button size="icon" variant="destructive" onClick={() => setDeleting(row)}><Trash2 className="h-4 w-4" /></Button>
-                      </div>
+                      {isPrimaryAdminRow(row) ? (
+                        <span className="text-xs text-[#a5a7b8] dark:text-[#8a8da8]">—</span>
+                      ) : (
+                        <div className="flex gap-2">
+                          <Button size="icon" variant="secondary" onClick={() => openEdit(row)} aria-label="Edit">
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button size="icon" variant="destructive" onClick={() => setDeleting(row)} aria-label="Delete">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
