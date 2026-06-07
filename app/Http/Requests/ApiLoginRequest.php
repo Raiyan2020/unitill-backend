@@ -19,6 +19,10 @@ class ApiLoginRequest extends FormRequest
             'password' => 'required|string',
             'device_type' => 'nullable|string|in:ios,android',
             'device_token' => 'nullable|string',
+            'device_name' => 'nullable|string|max:191',
+            'device_identifier' => 'nullable|string|max:191',
+            'city_name' => 'nullable|string|max:191',
+            'country_code' => 'nullable|string|max:2',
         ];
     }
 }

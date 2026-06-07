@@ -39,6 +39,7 @@ class LegalAffairController extends Controller
 
             return [
                 'id' => $row->id,
+                'key' => $row->key,
                 'section' => $row->section,
                 'is_active' => (bool) $row->is_active,
                 'sort_order' => (int) $row->sort_order,
@@ -52,6 +53,7 @@ class LegalAffairController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
+            'key' => 'nullable|string|max:100|unique:legal_affairs,key',
             'translations' => 'required|array|min:1',
             'section' => 'nullable|string|max:100',
             'is_active' => 'boolean',
@@ -65,6 +67,7 @@ class LegalAffairController extends Controller
         $data = $validator->validated();
 
         $row = LegalAffair::create([
+            'key' => $data['key'] ?? null,
             'section' => $data['section'] ?? null,
             'is_active' => (bool) ($data['is_active'] ?? true),
             'sort_order' => (int) ($data['sort_order'] ?? 0),
@@ -83,6 +86,7 @@ class LegalAffairController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
+            'key' => 'sometimes|nullable|string|max:100|unique:legal_affairs,key,'.$id,
             'translations' => 'sometimes|required|array|min:1',
             'section' => 'sometimes|nullable|string|max:100',
             'is_active' => 'sometimes|boolean',

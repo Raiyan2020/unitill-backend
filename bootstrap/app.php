@@ -24,7 +24,13 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->redirectGuestsTo(fn () => route('admin.login'));
+        $middleware->redirectGuestsTo(function (Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return null;
+            }
+
+            return route('admin.login.form');
+        });
 
         $middleware->trustProxies(
             at: '*',
@@ -88,15 +94,27 @@ return Application::configure(basePath: dirname(__DIR__))
                     return sendError('Unauthenticated', [], 401);
                 }
 
-                return redirect('/admin/login');
+                return redirect()->route('admin.login.form');
             }
 
             if ($e instanceof ValidationException) {
+                if ($request->is('api/*') || $request->expectsJson()) {
+                    return sendError(
+                        $e->validator->errors()->first(),
+                        $e->errors(),
+                        422
+                    );
+                }
+
                 return null;
             }
 
-            if ($request->is('api/*')) {
-                return sendError($e->getMessage(), [], 400);
+            if ($request->is('api/*') || $request->expectsJson()) {
+                if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface) {
+                    return sendError($e->getMessage() ?: 'Error', [], $e->getStatusCode());
+                }
+
+                return sendError($e->getMessage() ?: 'Server error', [], 500);
             }
 
             if ($e instanceof MethodNotAllowedHttpException) {

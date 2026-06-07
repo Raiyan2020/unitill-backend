@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -28,13 +29,23 @@ class Ad extends Model
         'slug',
         'status',
         'published_at',
+        'expires_at',
+        'paused_at',
+        'sold_at',
+        'sold_to_user_id',
+        'is_sold_outside',
+        'inactive_reason',
     ];
 
     protected $casts = [
         'price' => 'decimal:2',
         'is_negotiable' => 'boolean',
         'is_verified' => 'boolean',
+        'is_sold_outside' => 'boolean',
         'published_at' => 'datetime',
+        'expires_at' => 'datetime',
+        'paused_at' => 'datetime',
+        'sold_at' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -51,6 +62,11 @@ class Ad extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function soldToUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'sold_to_user_id');
     }
 
     public function country(): BelongsTo
@@ -94,5 +110,48 @@ class Ad extends Model
     public function favoritedByUsers(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'ad_favorites')->withTimestamps();
+    }
+
+    public function reports(): HasMany
+    {
+        return $this->hasMany(AdReport::class);
+    }
+
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query->where('status', 'published');
+    }
+
+    public function coverImageUrl(): ?string
+    {
+        if (! $this->cover_image) {
+            return null;
+        }
+
+        $path = ltrim((string) $this->cover_image, '/');
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        return url('/storage/'.$path);
+    }
+
+    public function formattedPrice(): ?string
+    {
+        if ($this->price === null) {
+            return null;
+        }
+
+        $symbols = [
+            'GBP' => '£',
+            'USD' => '$',
+            'EUR' => '€',
+        ];
+
+        $currency = strtoupper((string) ($this->currency ?? 'GBP'));
+        $symbol = $symbols[$currency] ?? $currency.' ';
+
+        return $symbol.number_format((float) $this->price, 0);
     }
 }

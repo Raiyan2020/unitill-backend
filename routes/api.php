@@ -1,7 +1,5 @@
 <?php
 
-use App\Http\Controllers\Api\PaymentWebhookController;
-use App\Http\Controllers\Api\BasketController;
 use App\Http\Controllers\Api\Dashboard\AdminAuthController;
 use App\Http\Controllers\Api\Dashboard\AdminController;
 use App\Http\Controllers\Api\Dashboard\AdAdminController;
@@ -18,12 +16,21 @@ use App\Http\Controllers\Api\Dashboard\PaymentMethodAdminController;
 use App\Http\Controllers\Api\Dashboard\RoleController;
 use App\Http\Controllers\Api\Dashboard\AdminSettingController;
 use App\Http\Controllers\Api\Dashboard\TrustedSellerApplicationAdminController;
-use App\Models\FilterGroup;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AccountSecurityController;
+use App\Http\Controllers\Api\AdController;
+use App\Http\Controllers\Api\AdReportController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ContactReasonController;
 use App\Http\Controllers\Api\ContactUsController;
+use App\Http\Controllers\Api\HomeController;
+use App\Http\Controllers\Api\LanguageController as AppLanguageController;
+use App\Http\Controllers\Api\FavoritedController;
+use App\Http\Controllers\Api\MyAdController;
+use App\Http\Controllers\Api\SettingController;
+use App\Http\Controllers\Api\TrustedSellerApplicationController;
+use App\Http\Controllers\Api\UserRatingController;
 use App\Http\Controllers\Api\UserController;
 
 
@@ -40,14 +47,13 @@ use App\Http\Controllers\Api\UserController;
 
 
 
-// Route::get('settings', SettingController::class);
-// Route::get('city', CityController::class);
-// Route::get('payment-method', PaymentMethodController::class);
-// Route::post('contact-us' ,ContactUsController::class);
-
-// Route::get('category', CategoryController::class);
-
-
+Route::get('settings', SettingController::class);
+Route::get('languages', AppLanguageController::class);
+Route::get('home', HomeController::class);
+Route::get('categories', CategoryController::class);
+Route::get('ads', [AdController::class, 'index']);
+Route::get('ads/{id}', [AdController::class, 'show']);
+Route::get('ad-report-reasons', [AdReportController::class, 'reasons']);
 
 Route::controller(AuthController::class)->group(function () {
     Route::post('register', 'register');
@@ -176,11 +182,31 @@ Route::get('contact-reasons', ContactReasonController::class);
 
 
 
+
+
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('ads', [AdController::class, 'store']);
+    Route::post('ads/{id}/report', [AdReportController::class, 'store']);
+    Route::get('my-ads', [MyAdController::class, 'index']);
+    Route::get('my-ads/{id}/buyers', [MyAdController::class, 'buyers']);
+    Route::post('my-ads/{id}/mark-sold', [MyAdController::class, 'markAsSold']);
+    Route::post('my-ads/{id}/pause', [MyAdController::class, 'pause']);
+    Route::post('my-ads/{id}/activate', [MyAdController::class, 'activate']);
+    Route::delete('my-ads/{id}', [MyAdController::class, 'destroy']);
+    Route::get('ratings/{user_id?}', [UserRatingController::class, 'index']);
+    Route::post('ratings', [UserRatingController::class, 'store']);
+    Route::get('favorites', [FavoritedController::class, 'index']);
+    Route::post('favorites', [FavoritedController::class, 'store']);
+    Route::delete('favorites/{ad_id}', [FavoritedController::class, 'destroy']);
     Route::post('logout', [AuthController::class, 'logout']);
     //profile
     Route::get('show-profile/{user_id?}', [UserController::class, 'show']);
     Route::post('update-profile', [UserController::class, 'update']);
+    Route::get('account-security', [AccountSecurityController::class, 'index']);
+    Route::post('change-password', [AccountSecurityController::class, 'changePassword']);
+    Route::post('logout-other-devices', [AccountSecurityController::class, 'logoutOtherDevices']);
+    Route::get('trusted-seller-application', [TrustedSellerApplicationController::class, 'show']);
+    Route::post('trusted-seller-application', [TrustedSellerApplicationController::class, 'store']);
     Route::post('contact-us', ContactUsController::class);
 });
 

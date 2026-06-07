@@ -9,6 +9,7 @@ use App\Http\Resources\UserResource;
 use App\Mail\OtpMail;
 use App\Models\User;
 use App\Services\TwilioService;
+use App\Support\MobileTokenIssuer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -71,7 +72,7 @@ class AuthController extends Controller
 
         return sendResponse([
             'user' => new UserResource($user),
-            'token' => $user->createToken('mobile')->plainTextToken,
+            'token' => MobileTokenIssuer::issue($user, $request),
         ], $lang ? 'تم تسجيل الدخول بنجاح' : __('login success'));
     }
 
@@ -85,61 +86,46 @@ class AuthController extends Controller
             'last_name' => $data['last_name'],
             'name' => $data['first_name'].' '.$data['last_name'],
             'email' => $data['email'],
-            'phone' => $data['phone'],
-            'country_code' => $data['country_code'],
+            'phone' => $data['phone'] ?? null,
+            'country_code' => $data['country_code'] ?? null,
             'city_id' => $data['city_id'] ?? null,
             'password' => $data['password'],
             'device_token' => $data['device_token'] ?? null,
             'device_type' => $data['device_type'] ?? null,
         ];
 
-        if (! empty($data['student_email'])) {
-            $otp = random_int(1000, 9999);
-            $user = User::create(array_merge($base, [
-                'student_email' => $data['student_email'],
-                'status' => '2',
-                'activation_code' => (string) $otp,
-                'activation_code_expires_at' => now()->addMinutes(15),
-                'activation_sent_at' => now(),
-                'terms_accepted_at' => now(),
-            ]));
-
-            try {
-                Mail::to($user->student_email)->send(new OtpMail($otp));
-            } catch (\Throwable $e) {
-                Log::error('Registration OTP mail failed', ['error' => $e->getMessage()]);
-
-                return sendError(
-                    $lang
-                        ? 'تعذر إرسال رمز التحقق. حاول لاحقاً.'
-                        : 'Could not send verification email.',
-                    [],
-                    500
-                );
-            }
-
-            return sendResponse([
-                'user_id' => $user->id,
-                'student_email_masked' => $this->maskEmail($user->student_email),
-                'activation_expires_at' => $user->activation_code_expires_at?->toIso8601String(),
-            ], $lang
-                ? 'تم إرسال رمز التحقق إلى بريدك الجامعي'
-                : 'Verification code sent to your student email');
-        }
-
+        $otp = random_int(1000, 9999);
         $user = User::create(array_merge($base, [
-            'student_email' => null,
-            'status' => '1',
-            'activation_code' => null,
-            'activation_code_expires_at' => null,
-            'activation_sent_at' => null,
+            'student_email' => $data['student_email'],
+            'status' => '2',
+            'activation_code' => (string) $otp,
+            'activation_code_expires_at' => now()->addMinutes(15),
+            'activation_sent_at' => now(),
             'terms_accepted_at' => now(),
         ]));
 
+        try {
+            Mail::to($user->student_email)->send(new OtpMail($otp));
+        } catch (\Throwable $e) {
+            Log::error('Registration OTP mail failed', ['error' => $e->getMessage()]);
+
+            return sendError(
+                $lang
+                    ? 'تعذر إرسال رمز التحقق. حاول لاحقاً.'
+                    : 'Could not send verification email.',
+                [],
+                500
+            );
+        }
+
         return sendResponse([
-            'user' => new UserResource($user),
-            'token' => $user->createToken('mobile')->plainTextToken,
-        ], $lang ? 'تم إنشاء الحساب بنجاح' : 'Account created successfully');
+            'needs_verification' => true,
+            'user_id' => $user->id,
+            'student_email_masked' => $this->maskEmail($user->student_email),
+            'activation_expires_at' => $user->activation_code_expires_at?->toIso8601String(),
+        ], $lang
+            ? 'تم إرسال رمز التحقق إلى بريدك الجامعي'
+            : 'Verification code sent to your student email');
     }
 
     /**
@@ -209,7 +195,7 @@ class AuthController extends Controller
 
         return sendResponse([
             'user' => new UserResource($user->fresh()),
-            'token' => $user->createToken('mobile')->plainTextToken,
+            'token' => MobileTokenIssuer::issue($user, $request),
         ], $lang ? 'تم التحقق من البريد بنجاح' : 'Email verified successfully');
     }
 

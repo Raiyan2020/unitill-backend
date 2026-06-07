@@ -41,6 +41,7 @@ class TrustedSellerApplication extends Model
         'user_id',
         'seller_type',
         'is_non_student_confirmed',
+        'identity_confirmed_by_others',
         'operations_city',
         'primary_contact_name',
         'contact_email',
@@ -52,14 +53,17 @@ class TrustedSellerApplication extends Model
         'ack_review_discretion',
         'ack_unitill_manages_directory',
         'ack_no_app_access',
+        'ack_terms_accepted',
         'status',
     ];
 
     protected $casts = [
         'is_non_student_confirmed' => 'boolean',
+        'identity_confirmed_by_others' => 'boolean',
         'ack_review_discretion' => 'boolean',
         'ack_unitill_manages_directory' => 'boolean',
         'ack_no_app_access' => 'boolean',
+        'ack_terms_accepted' => 'boolean',
     ];
 
     public function user(): BelongsTo

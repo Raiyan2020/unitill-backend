@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class LegalAffair extends Model
 {
     protected $fillable = [
+        'key',
         'section',
         'sort_order',
         'is_active',

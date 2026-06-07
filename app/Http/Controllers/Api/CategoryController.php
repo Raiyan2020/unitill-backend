@@ -12,17 +12,21 @@ class CategoryController extends Controller
     //__invoke
     public function __invoke(Request $request)
     {
-        $categories = Category::query()
+        $query = Category::query()
             ->whereNull('parent_id')
             ->where('status', 'active')
-            ->with([
-                'translations',
+            ->with('translations')
+            ->orderBy('sort');
+
+        if (! $request->boolean('parents_only')) {
+            $query->with([
                 'children' => function ($q) {
                     $q->where('status', 'active')->with('translations')->orderBy('id');
                 },
-            ])
-            ->orderBy('sort')
-            ->get();
+            ]);
+        }
+
+        $categories = $query->get();
 
         return sendResponse(CategoryResource::collection($categories));
     }

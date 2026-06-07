@@ -23,6 +23,42 @@ class SettingSeeder extends Seeder
             'set_group' => 'app',
             'is_object' => '1',
         ]);
+
+        Setting::create([
+            'key_id' => 'post_duration',
+            'title_en' => 'Post Duration (days)',
+            'title_ar' => 'مدة الإعلان (أيام)',
+            'value' => '30',
+            'set_group' => 'app',
+            'is_object' => '1',
+        ]);
+
+        Setting::create([
+            'key_id' => 'app_name',
+            'title_en' => 'App Name',
+            'title_ar' => 'اسم التطبيق',
+            'value' => 'UniTill',
+            'set_group' => 'app',
+            'is_object' => '0',
+        ]);
+
+        Setting::create([
+            'key_id' => 'app_slogan',
+            'title_en' => 'App Slogan',
+            'title_ar' => 'شعار التطبيق',
+            'value' => 'BUY, SELL, REPEAT!',
+            'set_group' => 'app',
+            'is_object' => '0',
+        ]);
+
+        Setting::create([
+            'key_id' => 'app_logo',
+            'title_en' => 'App Logo',
+            'title_ar' => 'شعار التطبيق (صورة)',
+            'value' => '',
+            'set_group' => 'app',
+            'is_object' => '0',
+        ]);
  
         Setting::create([
             'key_id'     => 'terms_conditions',
@@ -57,6 +93,24 @@ class SettingSeeder extends Seeder
             'value'      => '00000000',
             'set_group'  => 'app',
             'is_object'  => '0',
+        ]);
+
+        Setting::create([
+            'key_id' => 'login_popup_image',
+            'title_en' => 'Login Popup Image',
+            'title_ar' => 'صورة البوب أب عند تسجيل الدخول',
+            'value' => '',
+            'set_group' => 'app',
+            'is_object' => '0',
+        ]);
+
+        Setting::create([
+            'key_id' => 'enable_login_popup_image',
+            'title_en' => 'Enable Login Popup Image',
+            'title_ar' => 'تفعيل صورة البوب أب',
+            'value' => '0',
+            'set_group' => 'app',
+            'is_object' => '0',
         ]);
 
 

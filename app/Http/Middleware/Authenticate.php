@@ -2,23 +2,30 @@
 
 namespace App\Http\Middleware;
 
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\Middleware\Authenticate as Middleware;
 use Illuminate\Http\Request;
 
 class Authenticate extends Middleware
 {
     /**
-     * Get the path the user should be redirected to when they are not authenticated.
+     * @param  array<int, string|null>  $guards
      */
+    protected function unauthenticated($request, array $guards): void
+    {
+        if ($request->is('api/*') || $request->expectsJson()) {
+            throw new AuthenticationException('Unauthenticated.', $guards);
+        }
+
+        parent::unauthenticated($request, $guards);
+    }
+
     protected function redirectTo(Request $request): ?string
     {
-        if (! $request->expectsJson()) {
-            if ($request->is('admin') || $request->is('admin/*')) {
-                return route('admin.login'); // أو 'admin.login' حسب الراوت الموجود عندك
-            }
-
-            return route('admin.login'); // الافتراضي
+        if ($request->is('api/*') || $request->expectsJson()) {
+            return null;
         }
-        return null; // إذا كان الطلب يتوقع JSON، لا حاجة لإعادة التوجيه
+
+        return route('admin.login.form');
     }
 }
