@@ -44,6 +44,10 @@ class SettingController extends Controller
             'contact_phone' => setting('contact_phone'),
             'popup_image' => $popupImage ? asset($popupImage) : null,
             'enable_popup_image' => setting('enable_login_popup_image') !== '0',
+            'pusher' => [
+                'key' => config('broadcasting.connections.pusher.key'),
+                'cluster' => config('broadcasting.connections.pusher.options.cluster'),
+            ],
         ];
 
         return sendResponse($data);

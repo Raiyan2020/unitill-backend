@@ -13,10 +13,10 @@ class ApiLoginRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
-            'email' => 'required_without:login|nullable|email',
-            'login' => 'required_without:email|string',
-            'password' => 'required|string',
+        $type = $this->input('type', 'data');
+
+        $rules = [
+            'type' => 'required|string|in:data,fingerprint',
             'device_type' => 'nullable|string|in:ios,android',
             'device_token' => 'nullable|string',
             'device_name' => 'nullable|string|max:191',
@@ -24,5 +24,16 @@ class ApiLoginRequest extends FormRequest
             'city_name' => 'nullable|string|max:191',
             'country_code' => 'nullable|string|max:2',
         ];
+
+        if ($type === 'fingerprint') {
+            $rules['user_id'] = 'required|integer|exists:users,id';
+            $rules['device_identifier'] = 'required|string|max:191';
+        } else {
+            $rules['email'] = 'required_without:login|nullable|email';
+            $rules['login'] = 'required_without:email|string';
+            $rules['password'] = 'required|string';
+        }
+
+        return $rules;
     }
 }

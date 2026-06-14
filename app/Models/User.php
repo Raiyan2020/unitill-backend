@@ -128,6 +128,11 @@ class User extends Authenticatable
         return $this->hasMany(UserDevice::class);
     }
 
+    public function loginLogs()
+    {
+        return $this->hasMany(UserLoginLog::class);
+    }
+
     public function contactUsMessages()
     {
         return $this->hasMany(ContactUsMessage::class);
@@ -161,6 +166,16 @@ class User extends Authenticatable
     public function ratingsReceived()
     {
         return $this->hasMany(UserRating::class, 'rated_user_id');
+    }
+
+    public function buyerConversations()
+    {
+        return $this->hasMany(Conversation::class, 'buyer_id');
+    }
+
+    public function sellerConversations()
+    {
+        return $this->hasMany(Conversation::class, 'seller_id');
     }
 
     public function averageRatingReceived(): float

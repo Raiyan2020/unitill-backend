@@ -1,0 +1,191 @@
+<?php
+
+namespace App\Services;
+
+use App\Events\ConversationArchived;
+use App\Events\ConversationUpdated;
+use App\Events\MessageSent;
+use App\Models\Ad;
+use App\Models\Conversation;
+use App\Models\Message;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
+
+class ChatService
+{
+    public function __construct(protected FirebaseService $firebase) {}
+
+    public function findOrCreateConversation(Ad $ad, User $buyer): Conversation
+    {
+        if ($ad->user_id === $buyer->id) {
+            throw new \InvalidArgumentException('cannot_message_own_ad');
+        }
+
+        $conversation = Conversation::query()->firstOrCreate(
+            [
+                'ad_id' => $ad->id,
+                'buyer_id' => $buyer->id,
+            ],
+            [
+                'seller_id' => $ad->user_id,
+                'status' => 'active',
+            ]
+        );
+
+        if ($conversation->buyer_id === $buyer->id) {
+            $conversation->buyer_deleted_at = null;
+        }
+
+        if ($conversation->seller_id === $buyer->id) {
+            $conversation->seller_deleted_at = null;
+        }
+
+        if ($conversation->isDirty()) {
+            $conversation->save();
+        }
+
+        return $conversation->load([
+            'ad:id,public_id,title,cover_image,price,currency,status,user_id',
+            'buyer:id,first_name,last_name,name,image',
+            'seller:id,first_name,last_name,name,image',
+        ]);
+    }
+
+    public function sendMessage(Conversation $conversation, User $sender, string $body): Message
+    {
+        if (! $conversation->isParticipant($sender->id)) {
+            throw new \InvalidArgumentException('not_participant');
+        }
+
+        if (! $conversation->canSendMessages()) {
+            throw new \InvalidArgumentException('messaging_disabled');
+        }
+
+        $body = trim($body);
+
+        if ($body === '') {
+            throw new \InvalidArgumentException('empty_message');
+        }
+
+        return DB::transaction(function () use ($conversation, $sender, $body) {
+            $message = Message::create([
+                'conversation_id' => $conversation->id,
+                'sender_id' => $sender->id,
+                'body' => $body,
+                'type' => 'text',
+            ]);
+
+            $preview = mb_strlen($body) > 120 ? mb_substr($body, 0, 117).'...' : $body;
+
+            $conversation->update([
+                'last_message_preview' => $preview,
+                'last_message_at' => $message->created_at,
+                'buyer_deleted_at' => null,
+                'seller_deleted_at' => null,
+            ]);
+
+            $message->load('sender:id,first_name,last_name,name,image');
+
+            broadcast(new MessageSent($message));
+
+            $recipientId = $conversation->otherParticipantId($sender->id);
+
+            if ($recipientId) {
+                broadcast(new ConversationUpdated($conversation->fresh([
+                    'ad', 'buyer', 'seller',
+                ]), $recipientId));
+
+                $this->notifyRecipient($conversation, $sender, $recipientId, $preview);
+            }
+
+            return $message;
+        });
+    }
+
+    public function sendSystemMessage(Conversation $conversation, string $body): Message
+    {
+        $message = Message::create([
+            'conversation_id' => $conversation->id,
+            'sender_id' => null,
+            'body' => $body,
+            'type' => 'system',
+        ]);
+
+        $conversation->update([
+            'last_message_preview' => $body,
+            'last_message_at' => $message->created_at,
+        ]);
+
+        return $message;
+    }
+
+    public function markAsRead(Conversation $conversation, User $user): int
+    {
+        if (! $conversation->isParticipant($user->id)) {
+            return 0;
+        }
+
+        return Message::query()
+            ->where('conversation_id', $conversation->id)
+            ->where('sender_id', '!=', $user->id)
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
+    }
+
+    public function archiveConversation(Conversation $conversation, string $reason = 'sold'): void
+    {
+        if ($conversation->status === 'archived') {
+            return;
+        }
+
+        $conversation->update([
+            'status' => 'archived',
+            'archived_reason' => $reason,
+            'archived_at' => now(),
+        ]);
+
+        $systemMessage = 'THE DEAL IS CLOSED! This listing has been marked as sold. You can still view your message history.';
+
+        $this->sendSystemMessage($conversation, $systemMessage);
+
+        broadcast(new ConversationArchived($conversation->fresh(), $systemMessage));
+
+        foreach ([$conversation->buyer_id, $conversation->seller_id] as $userId) {
+            broadcast(new ConversationUpdated($conversation->fresh(['ad', 'buyer', 'seller']), $userId));
+        }
+    }
+
+    public function archiveConversationsForAd(Ad $ad, string $reason = 'sold'): void
+    {
+        Conversation::query()
+            ->where('ad_id', $ad->id)
+            ->where('status', 'active')
+            ->each(fn (Conversation $conversation) => $this->archiveConversation($conversation, $reason));
+    }
+
+    protected function notifyRecipient(
+        Conversation $conversation,
+        User $sender,
+        int $recipientId,
+        string $preview,
+    ): void {
+        $recipient = User::query()->find($recipientId);
+
+        if (! $recipient || ! $recipient->notify_chat || ! $recipient->device_token) {
+            return;
+        }
+
+        $senderName = trim($sender->first_name.' '.$sender->last_name) ?: $sender->name;
+
+        $this->firebase->sendNotificationToToken(
+            $recipient->device_token,
+            $senderName,
+            $preview,
+            [
+                'type' => 'chat_message',
+                'conversation_id' => (string) $conversation->id,
+                'ad_id' => (string) $conversation->ad_id,
+            ]
+        );
+    }
+}

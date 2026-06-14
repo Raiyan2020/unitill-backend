@@ -117,6 +117,11 @@ class Ad extends Model
         return $this->hasMany(AdReport::class);
     }
 
+    public function conversations(): HasMany
+    {
+        return $this->hasMany(Conversation::class);
+    }
+
     public function scopePublished(Builder $query): Builder
     {
         return $query->where('status', 'published');

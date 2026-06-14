@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ContactReasonController;
 use App\Http\Controllers\Api\ContactUsController;
+use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\LanguageController as AppLanguageController;
 use App\Http\Controllers\Api\FavoritedController;
@@ -32,6 +33,7 @@ use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\TrustedSellerApplicationController;
 use App\Http\Controllers\Api\UserRatingController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\UserDeviceController;
 
 
 /*
@@ -199,6 +201,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('favorites', [FavoritedController::class, 'store']);
     Route::delete('favorites/{ad_id}', [FavoritedController::class, 'destroy']);
     Route::post('logout', [AuthController::class, 'logout']);
+    Route::post('device-identifier', [UserDeviceController::class, 'storeIdentifier']);
     //profile
     Route::get('show-profile/{user_id?}', [UserController::class, 'show']);
     Route::post('update-profile', [UserController::class, 'update']);
@@ -208,5 +211,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('trusted-seller-application', [TrustedSellerApplicationController::class, 'show']);
     Route::post('trusted-seller-application', [TrustedSellerApplicationController::class, 'store']);
     Route::post('contact-us', ContactUsController::class);
+
+
+    Route::controller(ConversationController::class)->prefix('conversations')->group(function () {
+        Route::get('/', 'index');
+        Route::post('/', 'store');
+        Route::get('{id}', 'show');
+        Route::get('{id}/messages', 'messages');
+        Route::post('{id}/messages', 'sendMessage');
+        Route::post('{id}/read', 'markRead');
+        Route::post('{id}/archive', 'archive');
+        Route::post('{id}/report', 'report');
+        Route::delete('{id}', 'destroy');
+    });
 });
 

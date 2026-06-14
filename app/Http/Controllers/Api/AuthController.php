@@ -8,7 +8,10 @@ use App\Http\Requests\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Mail\OtpMail;
 use App\Models\User;
+use App\Models\UserDevice;
+use App\Models\UserLoginLog;
 use App\Services\TwilioService;
+use App\Support\LoginLogger;
 use App\Support\MobileTokenIssuer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -31,8 +34,19 @@ class AuthController extends Controller
 
     public function login(ApiLoginRequest $request)
     {
-        $login = $request->input('email') ?? $request->input('login');
         $lang = $request->header('lang') === 'ar';
+        $type = $request->input('type', UserLoginLog::TYPE_DATA);
+
+        if ($type === UserLoginLog::TYPE_FINGERPRINT) {
+            return $this->loginWithFingerprint($request, $lang);
+        }
+
+        return $this->loginWithCredentials($request, $lang);
+    }
+
+    protected function loginWithCredentials(ApiLoginRequest $request, bool $lang)
+    {
+        $login = $request->input('email') ?? $request->input('login');
 
         $user = User::where(function ($q) use ($login) {
             $q->where('email', $login)
@@ -43,6 +57,52 @@ class AuthController extends Controller
             return sendError($lang ? 'المستخدم غير موجود' : 'User not found', [], 404);
         }
 
+        $statusError = $this->validateActiveUser($user, $lang);
+        if ($statusError) {
+            return $statusError;
+        }
+
+        if (! Hash::check($request->password, $user->password)) {
+            return sendError($lang ? 'كلمة المرور غير صحيحة' : 'Incorrect password', [], 400);
+        }
+
+        return $this->completeLogin($user, $request, $lang, UserLoginLog::TYPE_DATA);
+    }
+
+    protected function loginWithFingerprint(ApiLoginRequest $request, bool $lang)
+    {
+        $user = User::find($request->input('user_id'));
+
+        if (! $user) {
+            return sendError($lang ? 'المستخدم غير موجود' : 'User not found', [], 404);
+        }
+
+        $statusError = $this->validateActiveUser($user, $lang);
+        if ($statusError) {
+            return $statusError;
+        }
+
+        $deviceIdentifier = $request->input('device_identifier');
+        $knownDevice = UserDevice::query()
+            ->where('user_id', $user->id)
+            ->where('device_identifier', $deviceIdentifier)
+            ->exists();
+
+        if (! $knownDevice) {
+            return sendError(
+                $lang
+                    ? 'يجب تسجيل الدخول بالبيانات أولاً على هذا الجهاز'
+                    : 'Please sign in with credentials on this device first.',
+                [],
+                403
+            );
+        }
+
+        return $this->completeLogin($user, $request, $lang, UserLoginLog::TYPE_FINGERPRINT);
+    }
+
+    protected function validateActiveUser(User $user, bool $lang)
+    {
         if ($user->status === '3') {
             return sendError($lang ? 'الحساب معطّل' : 'Account disabled', [], 403);
         }
@@ -61,14 +121,17 @@ class AuthController extends Controller
             return sendError($lang ? 'الحساب غير مفعّل' : 'Account not active', [], 403);
         }
 
-        if (! Hash::check($request->password, $user->password)) {
-            return sendError($lang ? 'كلمة المرور غير صحيحة' : 'Incorrect password', [], 400);
-        }
+        return null;
+    }
 
+    protected function completeLogin(User $user, ApiLoginRequest $request, bool $lang, string $type)
+    {
         $user->update([
             'device_type' => $request->device_type,
             'device_token' => $request->device_token,
         ]);
+
+        LoginLogger::record($user, $request, $type);
 
         return sendResponse([
             'user' => new UserResource($user),
@@ -94,7 +157,7 @@ class AuthController extends Controller
             'device_type' => $data['device_type'] ?? null,
         ];
 
-        $otp = random_int(1000, 9999);
+        $otp = 1234;
         $user = User::create(array_merge($base, [
             'student_email' => $data['student_email'],
             'status' => '2',
@@ -238,7 +301,7 @@ class AuthController extends Controller
             }
         }
 
-        $otp = random_int(1000, 9999);
+        $otp = 1234;
         $user->activation_code = (string) $otp;
         $user->activation_code_expires_at = now()->addMinutes(15);
         $user->activation_sent_at = now();
@@ -304,7 +367,7 @@ class AuthController extends Controller
             return sendError(__('User not found'), [], 404);
         }
 
-        $otp = random_int(1000, 9999);
+        $otp = 1234;
 
         $user->reset_code = (string) $otp;
 

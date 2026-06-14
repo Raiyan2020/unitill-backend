@@ -1,0 +1,338 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Http\Resources\ConversationResource;
+use App\Http\Resources\MessageResource;
+use App\Models\Ad;
+use App\Models\ChatReport;
+use App\Models\Conversation;
+use App\Services\ChatService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
+
+class ConversationController extends Controller
+{
+    public function __construct(protected ChatService $chatService) {}
+
+    public function index(Request $request)
+    {
+        $validated = $request->validate([
+            'tab' => ['nullable', Rule::in(['active', 'archived'])],
+            'per_page' => 'nullable|integer|min:1|max:50',
+        ]);
+
+        $user = Auth::user();
+        $tab = $validated['tab'] ?? 'active';
+        $perPage = (int) ($validated['per_page'] ?? 20);
+        $lang = $request->header('lang') === 'ar';
+
+        $conversations = Conversation::query()
+            ->visibleToUser($user->id)
+            ->where('status', $tab === 'archived' ? 'archived' : 'active')
+            ->with([
+                'ad:id,public_id,title,cover_image,price,currency,status',
+                'buyer:id,first_name,last_name,name,image',
+                'seller:id,first_name,last_name,name,image',
+            ])
+            ->orderByDesc('last_message_at')
+            ->orderByDesc('updated_at')
+            ->paginate($perPage);
+
+        $response = ConversationResource::collection($conversations)
+            ->additional(['current_tab' => $tab])
+            ->response()
+            ->getData(true);
+
+        return sendResponse($response);
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'ad_id' => 'required',
+        ]);
+
+        $lang = $request->header('lang') === 'ar';
+        $user = Auth::user();
+
+        $ad = Ad::query()
+            ->published()
+            ->where(function ($query) use ($validated) {
+                $query->where('id', $validated['ad_id'])
+                    ->orWhere('public_id', $validated['ad_id']);
+            })
+            ->first();
+
+        if (! $ad) {
+            return sendError($lang ? 'الإعلان غير متاح' : 'Ad is not available', [], 404);
+        }
+
+        if ($ad->user_id === $user->id) {
+            return sendError(
+                $lang ? 'لا يمكنك مراسلة إعلانك' : 'You cannot message your own ad',
+                [],
+                422
+            );
+        }
+
+        try {
+            $conversation = $this->chatService->findOrCreateConversation($ad, $user);
+        } catch (\InvalidArgumentException) {
+            return sendError(
+                $lang ? 'لا يمكن بدء المحادثة' : 'Cannot start conversation',
+                [],
+                422
+            );
+        }
+
+        return sendResponse(
+            new ConversationResource($conversation),
+            $lang ? 'تم بدء المحادثة' : 'Conversation started'
+        );
+    }
+
+    public function show(Request $request, string $id)
+    {
+        $conversation = $this->findParticipantConversation($id);
+
+        if (! $conversation) {
+            return sendError(
+                $request->header('lang') === 'ar' ? 'المحادثة غير موجودة' : 'Conversation not found',
+                [],
+                404
+            );
+        }
+
+        $conversation->load([
+            'ad:id,public_id,title,cover_image,price,currency,status,user_id',
+            'buyer:id,first_name,last_name,name,image',
+            'seller:id,first_name,last_name,name,image',
+        ]);
+
+        return sendResponse(new ConversationResource($conversation));
+    }
+
+    public function messages(Request $request, string $id)
+    {
+        $validated = $request->validate([
+            'per_page' => 'nullable|integer|min:1|max:100',
+            'before_id' => 'nullable|integer|min:1',
+        ]);
+
+        $conversation = $this->findParticipantConversation($id);
+
+        if (! $conversation) {
+            return sendError(
+                $request->header('lang') === 'ar' ? 'المحادثة غير موجودة' : 'Conversation not found',
+                [],
+                404
+            );
+        }
+
+        $perPage = (int) ($validated['per_page'] ?? 30);
+
+        $query = $conversation->messages()
+            ->with('sender:id,first_name,last_name,name,image')
+            ->orderByDesc('id');
+
+        if (! empty($validated['before_id'])) {
+            $query->where('id', '<', $validated['before_id']);
+        }
+
+        $messages = $query->paginate($perPage);
+
+        $this->chatService->markAsRead($conversation, Auth::user());
+
+        $response = MessageResource::collection($messages)->response()->getData(true);
+
+        return sendResponse($response);
+    }
+
+    public function sendMessage(Request $request, string $id)
+    {
+        $validated = $request->validate([
+            'body' => 'required|string|max:5000',
+        ]);
+
+        $lang = $request->header('lang') === 'ar';
+        $conversation = $this->findParticipantConversation($id);
+
+        if (! $conversation) {
+            return sendError($lang ? 'المحادثة غير موجودة' : 'Conversation not found', [], 404);
+        }
+
+        try {
+            $message = $this->chatService->sendMessage(
+                $conversation,
+                Auth::user(),
+                $validated['body']
+            );
+        } catch (\InvalidArgumentException $e) {
+            return match ($e->getMessage()) {
+                'messaging_disabled' => sendError(
+                    $lang ? 'المراسلة معطّلة: الإعلان مباع' : 'Messaging disabled: item sold',
+                    ['can_send_messages' => false],
+                    422
+                ),
+                'empty_message' => sendError(
+                    $lang ? 'الرسالة فارغة' : 'Message is empty',
+                    [],
+                    422
+                ),
+                default => sendError(
+                    $lang ? 'لا يمكن إرسال الرسالة' : 'Cannot send message',
+                    [],
+                    422
+                ),
+            };
+        }
+
+        return sendResponse(
+            new MessageResource($message),
+            $lang ? 'تم إرسال الرسالة' : 'Message sent'
+        );
+    }
+
+    public function markRead(Request $request, string $id)
+    {
+        $conversation = $this->findParticipantConversation($id);
+
+        if (! $conversation) {
+            return sendError(
+                $request->header('lang') === 'ar' ? 'المحادثة غير موجودة' : 'Conversation not found',
+                [],
+                404
+            );
+        }
+
+        $updated = $this->chatService->markAsRead($conversation, Auth::user());
+
+        return sendResponse(['marked_read' => $updated]);
+    }
+
+    public function archive(Request $request, string $id)
+    {
+        $lang = $request->header('lang') === 'ar';
+        $conversation = $this->findParticipantConversation($id);
+
+        if (! $conversation) {
+            return sendError($lang ? 'المحادثة غير موجودة' : 'Conversation not found', [], 404);
+        }
+
+        if ($conversation->status === 'archived') {
+            return sendResponse(
+                new ConversationResource($conversation),
+                $lang ? 'المحادثة مؤرشفة مسبقاً' : 'Conversation already archived'
+            );
+        }
+
+        $this->chatService->archiveConversation($conversation, 'manual');
+
+        return sendResponse(
+            new ConversationResource($conversation->fresh(['ad', 'buyer', 'seller'])),
+            $lang ? 'تم أرشفة المحادثة' : 'Conversation archived'
+        );
+    }
+
+    public function destroy(Request $request, string $id)
+    {
+        $lang = $request->header('lang') === 'ar';
+        $conversation = $this->findParticipantConversation($id, includeDeleted: true);
+
+        if (! $conversation) {
+            return sendError($lang ? 'المحادثة غير موجودة' : 'Conversation not found', [], 404);
+        }
+
+        $userId = Auth::id();
+
+        if ($conversation->buyer_id === $userId) {
+            $conversation->update(['buyer_deleted_at' => now()]);
+        } elseif ($conversation->seller_id === $userId) {
+            $conversation->update(['seller_deleted_at' => now()]);
+        }
+
+        return sendResponse(
+            ['conversation_id' => $conversation->id],
+            $lang ? 'تم حذف المحادثة من قائمتك' : 'Conversation removed from your list'
+        );
+    }
+
+    public function report(Request $request, string $id)
+    {
+        $validated = $request->validate([
+            'type' => ['required', Rule::in(['user', 'chat'])],
+            'reason' => 'nullable|string|max:80',
+            'description' => 'nullable|string|max:2000',
+            'reported_user_id' => 'nullable|integer|exists:users,id',
+        ]);
+
+        $lang = $request->header('lang') === 'ar';
+        $conversation = $this->findParticipantConversation($id);
+
+        if (! $conversation) {
+            return sendError($lang ? 'المحادثة غير موجودة' : 'Conversation not found', [], 404);
+        }
+
+        $reporter = Auth::user();
+        $reportedUserId = $validated['reported_user_id']
+            ?? $conversation->otherParticipantId($reporter->id);
+
+        if (! $reportedUserId || ! $conversation->isParticipant($reportedUserId)) {
+            return sendError(
+                $lang ? 'المستخدم المبلّغ عنه غير صالح' : 'Invalid reported user',
+                [],
+                422
+            );
+        }
+
+        if ($reportedUserId === $reporter->id) {
+            return sendError(
+                $lang ? 'لا يمكنك الإبلاغ عن نفسك' : 'You cannot report yourself',
+                [],
+                422
+            );
+        }
+
+        $report = ChatReport::create([
+            'reporter_id' => $reporter->id,
+            'reported_user_id' => $reportedUserId,
+            'conversation_id' => $conversation->id,
+            'type' => $validated['type'],
+            'reason' => $validated['reason'] ?? null,
+            'description' => $validated['description'] ?? null,
+        ]);
+
+        return sendResponse(
+            [
+                'id' => $report->id,
+                'status' => $report->status,
+            ],
+            $lang ? 'تم إرسال البلاغ' : 'Report submitted'
+        );
+    }
+
+    protected function findParticipantConversation(string $id, bool $includeDeleted = false): ?Conversation
+    {
+        $query = Conversation::query()->where('id', $id);
+
+        if (! $includeDeleted) {
+            $query->visibleToUser(Auth::id());
+        } else {
+            $userId = Auth::id();
+            $query->where(function ($q) use ($userId) {
+                $q->where('buyer_id', $userId)->orWhere('seller_id', $userId);
+            });
+        }
+
+        $conversation = $query->first();
+
+        if (! $conversation || ! $conversation->isParticipant(Auth::id())) {
+            return null;
+        }
+
+        return $conversation;
+    }
+}

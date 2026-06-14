@@ -5,13 +5,17 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\MyAdResource;
 use App\Models\Ad;
+use App\Models\Conversation;
 use App\Models\User;
+use App\Services\ChatService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
 class MyAdController extends Controller
 {
+    public function __construct(protected ChatService $chatService) {}
+
     public function index(Request $request)
     {
         $validated = $request->validate([
@@ -66,7 +70,29 @@ class MyAdController extends Controller
 
         return sendResponse([
             'ad_id' => $ad->id,
-            'buyers' => [],
+            'buyers' => Conversation::query()
+                ->where('ad_id', $ad->id)
+                ->with([
+                    'buyer:id,first_name,last_name,name,image',
+                    'latestMessage',
+                ])
+                ->orderByDesc('last_message_at')
+                ->get()
+                ->map(function (Conversation $conversation) {
+                    $buyer = $conversation->buyer;
+
+                    return [
+                        'user_id' => $buyer?->id,
+                        'name' => $buyer?->name,
+                        'first_name' => $buyer?->first_name,
+                        'last_name' => $buyer?->last_name,
+                        'image' => $buyer?->image ? getimg($buyer->image) : null,
+                        'conversation_id' => $conversation->id,
+                        'last_message_preview' => $conversation->last_message_preview,
+                        'last_message_at' => $conversation->last_message_at?->toIso8601String(),
+                    ];
+                })
+                ->values(),
         ]);
     }
 
@@ -117,6 +143,8 @@ class MyAdController extends Controller
             'sold_to_user_id' => $isSoldOutside ? null : $buyerId,
             'is_sold_outside' => $isSoldOutside,
         ]);
+
+        $this->chatService->archiveConversationsForAd($ad->fresh(), 'sold');
 
         $ad->load('soldToUser:id,first_name,last_name,name');
 
