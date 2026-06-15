@@ -76,7 +76,7 @@ export default function App() {
         <Route path="legal-affairs" element={<PermissionRoute permission="legal_affairs.view"><LegalAffairsPage /></PermissionRoute>} />
         <Route path="contact-reasons" element={<PermissionRoute permission="contact_reasons.view"><ContactReasonsPage /></PermissionRoute>} />
         <Route path="contact-us" element={<PermissionRoute permission="contact_us.view"><ContactUsPage /></PermissionRoute>} />
-        <Route path="push-notifications" element={<PermissionRoute permission="notifications.view"><PushNotificationsPage /></PermissionRoute>} />
+        <Route path="push-notifications" element={<PermissionRoute permission="dashboard.view"><PushNotificationsPage /></PermissionRoute>} />
         <Route path="cities" element={<PermissionRoute permission="cities.view"><CitiesPage /></PermissionRoute>} />
         <Route path="payment-methods" element={<PermissionRoute permission="payment_methods.view"><PaymentMethodsPage /></PermissionRoute>} />
         <Route path="settings" element={<PermissionRoute permission="dashboard.view"><SettingsPage /></PermissionRoute>} />

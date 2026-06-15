@@ -179,9 +179,9 @@ Route::middleware('auth:sanctum')->prefix('admin')->controller(TrustedSellerAppl
 });
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(AdminPushNotificationController::class)->group(function () {
-    Route::get('push-notifications/meta', 'meta')->middleware('permission:notifications.view');
-    Route::get('push-notifications', 'index')->middleware('permission:notifications.view');
-    Route::post('push-notifications', 'store')->middleware('permission:notifications.send');
+    Route::get('push-notifications/meta', 'meta')->middleware('permission:dashboard.view');
+    Route::get('push-notifications', 'index')->middleware('permission:dashboard.view');
+    Route::post('push-notifications', 'store')->middleware('permission:dashboard.view');
 });
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(AdminSettingController::class)->group(function () {

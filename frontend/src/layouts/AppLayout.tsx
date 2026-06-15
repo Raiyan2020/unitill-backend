@@ -1,9 +1,9 @@
 import { BadgeCheck, Bell, Building2, FileText, FolderTree, Globe, KeyRound, Languages, LayoutDashboard, LogOut, Mail, Megaphone, Menu, MessageSquare, Moon, Settings, ShieldCheck, Sun, User, UserCog, Users, Wallet, X } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { api } from '../lib/api';
-import { clearAuthToken, hasPermission } from '../lib/auth';
+import { clearAuthToken, getAdminAuthInfo, setAdminAuthInfo } from '../lib/auth';
 import { cn } from '../lib/cn';
 import { useI18n } from '../providers/i18n-provider';
 
@@ -21,7 +21,7 @@ const navItems = [
   { to: '/legal-affairs', labelKey: 'legalAffairs', icon: FileText, permission: 'legal_affairs.view' },
   { to: '/contact-reasons', labelKey: 'contactReasons', icon: MessageSquare, permission: 'contact_reasons.view' },
   { to: '/contact-us', labelKey: 'contactUs', icon: Mail, permission: 'contact_us.view' },
-  { to: '/push-notifications', labelKey: 'pushNotifications', icon: Bell, permission: 'notifications.view' },
+  { to: '/push-notifications', labelKey: 'pushNotifications', icon: Bell, permission: 'dashboard.view' },
   { to: '/payment-methods', labelKey: 'paymentMethods', icon: Wallet, permission: 'payment_methods.view' },
   { to: '/settings', labelKey: 'settings', icon: Settings, permission: 'dashboard.view' },
 ] as const;
@@ -32,8 +32,14 @@ export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pendingVerificationCount, setPendingVerificationCount] = useState(0);
   const [logoError, setLogoError] = useState(false);
+  const [adminPermissions, setAdminPermissions] = useState<string[]>(
+    () => getAdminAuthInfo()?.permissions ?? [],
+  );
   const projectLogoSrc = '/project-logo.png';
-  const visibleNavItems = navItems.filter((item) => hasPermission(item.permission));
+  const visibleNavItems = useMemo(
+    () => navItems.filter((item) => adminPermissions.includes(item.permission)),
+    [adminPermissions],
+  );
 
   const loadPendingCount = useCallback(async () => {
     try {
@@ -47,6 +53,29 @@ export function AppLayout() {
 
   useEffect(() => {
     loadPendingCount();
+
+    const refreshPermissions = async () => {
+      try {
+        const res = await api.get('/admin/profile');
+        const admin = res.data?.data;
+        const current = getAdminAuthInfo();
+        if (admin && current) {
+          const permissions = Array.isArray(admin.permissions) ? admin.permissions : current.permissions;
+          setAdminAuthInfo({
+            ...current,
+            name: admin.name ?? current.name,
+            email: admin.email ?? current.email,
+            roles: admin.roles ?? current.roles,
+            permissions,
+          });
+          setAdminPermissions(permissions);
+        }
+      } catch {
+        // ignore — sidebar still works with cached permissions
+      }
+    };
+
+    refreshPermissions();
 
     const onVerificationChanged = () => {
       loadPendingCount();
