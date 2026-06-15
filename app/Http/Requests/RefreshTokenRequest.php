@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreDeviceIdentifierRequest extends FormRequest
+class RefreshTokenRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -21,6 +21,7 @@ class StoreDeviceIdentifierRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'refresh_token' => 'required|string|min:20',
             'device_id' => 'required_without:device_identifier|string|max:191',
             'device_identifier' => 'required_without:device_id|string|max:191',
         ];

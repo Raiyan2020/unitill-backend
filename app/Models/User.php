@@ -120,7 +120,7 @@ class User extends Authenticatable
     //notifications
     public function notifications()
     {
-        return $this->hasMany(Notification::class);
+        return $this->hasMany(UserNotification::class);
     }
 
     public function userDevices()
@@ -131,6 +131,16 @@ class User extends Authenticatable
     public function loginLogs()
     {
         return $this->hasMany(UserLoginLog::class);
+    }
+
+    public function refreshTokens()
+    {
+        return $this->hasMany(RefreshToken::class);
+    }
+
+    public function biometricTokens()
+    {
+        return $this->hasMany(BiometricToken::class);
     }
 
     public function contactUsMessages()

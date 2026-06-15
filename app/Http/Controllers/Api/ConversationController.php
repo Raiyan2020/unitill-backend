@@ -237,6 +237,41 @@ class ConversationController extends Controller
         );
     }
 
+    public function unarchive(Request $request, string $id)
+    {
+        $lang = $request->header('lang') === 'ar';
+        $conversation = $this->findParticipantConversation($id);
+
+        if (! $conversation) {
+            return sendError($lang ? 'المحادثة غير موجودة' : 'Conversation not found', [], 404);
+        }
+
+        $result = $this->chatService->unarchiveConversation($conversation);
+
+        if (isset($result['error'])) {
+            $messages = [
+                'not_archived' => $lang ? 'المحادثة ليست مؤرشفة' : 'Conversation is not archived',
+                'sold_listing' => $lang
+                    ? 'لا يمكن إلغاء الأرشفة — الإعلان مُباع'
+                    : 'Cannot unarchive — listing was sold',
+                'ad_not_available' => $lang
+                    ? 'لا يمكن إلغاء الأرشفة — الإعلان غير متاح'
+                    : 'Cannot unarchive — ad is not available',
+            ];
+
+            return sendError(
+                $messages[$result['error']] ?? ($lang ? 'لا يمكن إلغاء الأرشفة' : 'Cannot unarchive'),
+                ['error_code' => $result['error']],
+                422
+            );
+        }
+
+        return sendResponse(
+            new ConversationResource($result['conversation']),
+            $lang ? 'تم إلغاء أرشفة المحادثة' : 'Conversation unarchived'
+        );
+    }
+
     public function destroy(Request $request, string $id)
     {
         $lang = $request->header('lang') === 'ar';

@@ -48,6 +48,9 @@ class SettingController extends Controller
                 'key' => config('broadcasting.connections.pusher.key'),
                 'cluster' => config('broadcasting.connections.pusher.options.cluster'),
             ],
+            'firebase' => [
+                'all_users_topic' => config('fcm.all_users_topic', 'unitill_all'),
+            ],
         ];
 
         return sendResponse($data);

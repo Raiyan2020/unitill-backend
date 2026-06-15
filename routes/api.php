@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\Dashboard\LanguageController;
 use App\Http\Controllers\Api\Dashboard\PermissionController;
 use App\Http\Controllers\Api\Dashboard\PaymentMethodAdminController;
 use App\Http\Controllers\Api\Dashboard\RoleController;
+use App\Http\Controllers\Api\Dashboard\AdminPushNotificationController;
 use App\Http\Controllers\Api\Dashboard\AdminSettingController;
 use App\Http\Controllers\Api\Dashboard\TrustedSellerApplicationAdminController;
 use Illuminate\Support\Facades\Route;
@@ -25,6 +26,7 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ContactReasonController;
 use App\Http\Controllers\Api\ContactUsController;
 use App\Http\Controllers\Api\ConversationController;
+use App\Http\Controllers\Api\FcmController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\LanguageController as AppLanguageController;
 use App\Http\Controllers\Api\FavoritedController;
@@ -34,6 +36,7 @@ use App\Http\Controllers\Api\TrustedSellerApplicationController;
 use App\Http\Controllers\Api\UserRatingController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserDeviceController;
+use App\Http\Controllers\Api\UserNotificationController;
 
 
 /*
@@ -60,6 +63,7 @@ Route::get('ad-report-reasons', [AdReportController::class, 'reasons']);
 Route::controller(AuthController::class)->group(function () {
     Route::post('register', 'register');
     Route::post('login', 'login')->name('login');
+    Route::post('auth/refresh', 'refresh');
     Route::post('verify-student-email', 'verifyStudentEmail');
     Route::post('resend-verification-email', 'resendVerificationEmail');
     Route::post('forgot-password', 'forgotPassword');
@@ -174,6 +178,12 @@ Route::middleware('auth:sanctum')->prefix('admin')->controller(TrustedSellerAppl
     Route::put('trusted-seller-applications/{id}', 'update')->middleware('permission:users.update');
 });
 
+Route::middleware('auth:sanctum')->prefix('admin')->controller(AdminPushNotificationController::class)->group(function () {
+    Route::get('push-notifications/meta', 'meta')->middleware('permission:notifications.view');
+    Route::get('push-notifications', 'index')->middleware('permission:notifications.view');
+    Route::post('push-notifications', 'store')->middleware('permission:notifications.send');
+});
+
 Route::middleware('auth:sanctum')->prefix('admin')->controller(AdminSettingController::class)->group(function () {
     Route::get('settings', 'index')->middleware('permission:dashboard.view');
     Route::put('settings', 'update')->middleware('permission:dashboard.view');
@@ -201,7 +211,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('favorites', [FavoritedController::class, 'store']);
     Route::delete('favorites/{ad_id}', [FavoritedController::class, 'destroy']);
     Route::post('logout', [AuthController::class, 'logout']);
+    Route::post('auth/biometric-token', [AuthController::class, 'issueBiometricToken']);
+    Route::post('auth/revoke-biometric', [AuthController::class, 'revokeBiometric']);
     Route::post('device-identifier', [UserDeviceController::class, 'storeIdentifier']);
+    Route::post('fcm/register', [FcmController::class, 'register']);
+
+    Route::controller(UserNotificationController::class)->prefix('notifications')->group(function () {
+        Route::get('/', 'index');
+        Route::get('unread-count', 'unreadCount');
+        Route::post('read-all', 'markAllRead');
+        Route::post('{id}/read', 'markRead');
+    });
+
     //profile
     Route::get('show-profile/{user_id?}', [UserController::class, 'show']);
     Route::post('update-profile', [UserController::class, 'update']);
@@ -221,6 +242,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('{id}/messages', 'sendMessage');
         Route::post('{id}/read', 'markRead');
         Route::post('{id}/archive', 'archive');
+        Route::post('{id}/unarchive', 'unarchive');
         Route::post('{id}/report', 'report');
         Route::delete('{id}', 'destroy');
     });

@@ -35,6 +35,7 @@ class UserDeviceController extends Controller
 
         return sendResponse([
             'id' => $device->id,
+            'device_id' => $device->device_identifier,
             'device_identifier' => $device->device_identifier,
         ], $lang ? 'تم حفظ معرّف الجهاز' : 'Device identifier saved');
     }

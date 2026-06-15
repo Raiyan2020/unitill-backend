@@ -23,6 +23,13 @@ type Dictionary = {
   legalAffairs: string;
   contactReasons: string;
   contactUs: string;
+  pushNotifications: string;
+  sendNotification: string;
+  sendToAll: string;
+  sendToUser: string;
+  audience: string;
+  notificationTitle: string;
+  notificationBody: string;
   noDataFound: string;
   login: string;
   logout: string;
@@ -74,6 +81,13 @@ const dictionaries: Record<Locale, Dictionary> = {
     legalAffairs: 'Legal Affairs',
     contactReasons: 'Contact Reasons',
     contactUs: 'Contact Us',
+    pushNotifications: 'Push Notifications',
+    sendNotification: 'Send Notification',
+    sendToAll: 'All users (topic)',
+    sendToUser: 'Single user',
+    audience: 'Audience',
+    notificationTitle: 'Title',
+    notificationBody: 'Body',
     noDataFound: 'No data available right now.',
     login: 'Login',
     logout: 'Logout',
@@ -123,6 +137,13 @@ const dictionaries: Record<Locale, Dictionary> = {
     legalAffairs: 'الشؤون القانونية',
     contactReasons: 'أسباب التواصل',
     contactUs: 'اتصل بنا',
+    pushNotifications: 'الإشعارات',
+    sendNotification: 'إرسال إشعار',
+    sendToAll: 'جميع المستخدمين (Topic)',
+    sendToUser: 'مستخدم واحد',
+    audience: 'الفئة المستهدفة',
+    notificationTitle: 'العنوان',
+    notificationBody: 'النص',
     noDataFound: 'لا توجد بيانات متاحة حاليًا.',
     login: 'تسجيل الدخول',
     logout: 'تسجيل الخروج',

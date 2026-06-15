@@ -24,7 +24,7 @@ class LoginLogger
         $log = UserLoginLog::create([
             'user_id' => $user->id,
             'type' => $type,
-            'device_identifier' => $request->input('device_identifier'),
+            'device_identifier' => MobileAuthTokenService::resolveDeviceId($request),
             'device_name' => $deviceName,
             'city_name' => $request->input('city_name'),
             'country_code' => $request->filled('country_code')
@@ -37,7 +37,7 @@ class LoginLogger
         Log::info('User login', [
             'user_id' => $user->id,
             'type' => $type,
-            'device_identifier' => $request->input('device_identifier'),
+            'device_identifier' => MobileAuthTokenService::resolveDeviceId($request),
             'ip' => $request->ip(),
         ]);
 

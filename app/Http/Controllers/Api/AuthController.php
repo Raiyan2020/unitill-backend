@@ -4,15 +4,16 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ApiLoginRequest;
+use App\Http\Requests\RefreshTokenRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Mail\OtpMail;
 use App\Models\User;
-use App\Models\UserDevice;
 use App\Models\UserLoginLog;
 use App\Services\TwilioService;
+use App\Services\PushNotificationService;
 use App\Support\LoginLogger;
-use App\Support\MobileTokenIssuer;
+use App\Support\MobileAuthTokenService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -21,6 +22,8 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
+    public function __construct(protected MobileAuthTokenService $tokens) {}
+
     protected function maskEmail(?string $email): ?string
     {
         if (! $email || ! str_contains($email, '@')) {
@@ -71,34 +74,93 @@ class AuthController extends Controller
 
     protected function loginWithFingerprint(ApiLoginRequest $request, bool $lang)
     {
-        $user = User::find($request->input('user_id'));
+        $deviceId = MobileAuthTokenService::resolveDeviceId($request);
+        $auth = $this->tokens->authenticateBiometric(
+            $request->input('biometric_token'),
+            $deviceId
+        );
 
-        if (! $user) {
-            return sendError($lang ? 'المستخدم غير موجود' : 'User not found', [], 404);
+        if (isset($auth['error'])) {
+            return $this->tokenErrorResponse($auth, $lang);
         }
 
+        $user = $auth['user'];
         $statusError = $this->validateActiveUser($user, $lang);
         if ($statusError) {
             return $statusError;
         }
 
-        $deviceIdentifier = $request->input('device_identifier');
-        $knownDevice = UserDevice::query()
-            ->where('user_id', $user->id)
-            ->where('device_identifier', $deviceIdentifier)
-            ->exists();
+        return $this->completeLogin($user, $request, $lang, UserLoginLog::TYPE_FINGERPRINT);
+    }
 
-        if (! $knownDevice) {
+    public function refresh(RefreshTokenRequest $request)
+    {
+        $lang = $request->header('lang') === 'ar';
+        $deviceId = MobileAuthTokenService::resolveDeviceId($request);
+        $result = $this->tokens->refresh($request->input('refresh_token'), $deviceId);
+
+        if (isset($result['error'])) {
+            return $this->tokenErrorResponse($result, $lang);
+        }
+
+        return sendResponse($result, $lang ? 'تم تجديد رمز الدخول' : 'Access token refreshed');
+    }
+
+    public function issueBiometricToken(Request $request)
+    {
+        $request->validate([
+            'device_id' => 'required_without:device_identifier|string|max:191',
+            'device_identifier' => 'required_without:device_id|string|max:191',
+        ]);
+
+        $lang = $request->header('lang') === 'ar';
+        $user = $request->user();
+        $deviceId = MobileAuthTokenService::resolveDeviceId($request);
+        $result = $this->tokens->issueBiometricToken($user, $deviceId);
+
+        if (isset($result['error'])) {
             return sendError(
-                $lang
-                    ? 'يجب تسجيل الدخول بالبيانات أولاً على هذا الجهاز'
-                    : 'Please sign in with credentials on this device first.',
-                [],
+                $lang ? 'الجهاز غير مسجّل لهذا الحساب' : $result['message'],
+                ['error_code' => $result['error']],
                 403
             );
         }
 
-        return $this->completeLogin($user, $request, $lang, UserLoginLog::TYPE_FINGERPRINT);
+        return sendResponse([
+            'biometric_token' => $result['biometric_token'],
+            'biometric_token_expires_at' => $result['biometric_token_expires_at'],
+        ], $lang ? 'تم إنشاء رمز البصمة' : 'Biometric token issued');
+    }
+
+    public function revokeBiometric(Request $request)
+    {
+        $lang = $request->header('lang') === 'ar';
+        $user = $request->user();
+        $deviceId = MobileAuthTokenService::resolveDeviceId($request);
+
+        $this->tokens->revokeBiometricTokens($user, $deviceId);
+
+        return sendResponse(
+            null,
+            $lang ? 'تم إلغاء رمز البصمة' : 'Biometric token revoked'
+        );
+    }
+
+    protected function tokenErrorResponse(array $result, bool $lang)
+    {
+        $messages = [
+            'biometric_token_invalid' => $lang ? 'رمز البصمة غير صالح' : 'Invalid biometric token',
+            'biometric_token_revoked' => $lang ? 'تم إلغاء رمز البصمة. سجّل الدخول بالبيانات' : 'Biometric token revoked. Please sign in with credentials',
+            'biometric_token_expired' => $lang ? 'انتهت صلاحية رمز البصمة. سجّل الدخول بالبيانات' : 'Biometric token expired. Please sign in with credentials',
+            'refresh_token_invalid' => $lang ? 'رمز التجديد غير صالح' : 'Invalid refresh token',
+            'refresh_token_revoked' => $lang ? 'تم إلغاء رمز التجديد. سجّل الدخول مجدداً' : 'Refresh token revoked. Please sign in again',
+            'refresh_token_expired' => $lang ? 'انتهت صلاحية رمز التجديد. سجّل الدخول مجدداً' : 'Refresh token expired. Please sign in again',
+        ];
+
+        $code = $result['error'];
+        $message = $messages[$code] ?? ($result['message'] ?? 'Unauthorized');
+
+        return sendError($message, ['error_code' => $code], 401);
     }
 
     protected function validateActiveUser(User $user, bool $lang)
@@ -133,10 +195,17 @@ class AuthController extends Controller
 
         LoginLogger::record($user, $request, $type);
 
-        return sendResponse([
+        $issueBiometric = $type === UserLoginLog::TYPE_DATA && $request->boolean('enable_biometric');
+        $tokens = $this->tokens->issue($user, $request, $issueBiometric);
+
+        if ($request->filled('device_token')) {
+            app(PushNotificationService::class)
+                ->syncUserTopicSubscription($user->fresh(), $request->input('device_token'));
+        }
+
+        return sendResponse(array_merge([
             'user' => new UserResource($user),
-            'token' => MobileTokenIssuer::issue($user, $request),
-        ], $lang ? 'تم تسجيل الدخول بنجاح' : __('login success'));
+        ], $tokens), $lang ? 'تم تسجيل الدخول بنجاح' : __('login success'));
     }
 
     public function register(RegisterRequest $request)
@@ -256,10 +325,9 @@ class AuthController extends Controller
             'device_token' => $request->device_token,
         ]);
 
-        return sendResponse([
+        return sendResponse(array_merge([
             'user' => new UserResource($user->fresh()),
-            'token' => MobileTokenIssuer::issue($user, $request),
-        ], $lang ? 'تم التحقق من البريد بنجاح' : 'Email verified successfully');
+        ], $this->tokens->issue($user, $request)), $lang ? 'تم التحقق من البريد بنجاح' : 'Email verified successfully');
     }
 
     /** Alias للتوافق مع المسارات القديمة */
@@ -330,6 +398,13 @@ class AuthController extends Controller
         $user = $request->user();
         if (! $user) {
             return sendError($request->header('lang') === 'ar' ? 'غير مسجّل الدخول' : 'Not authenticated', [], 401);
+        }
+
+        $deviceId = MobileAuthTokenService::resolveDeviceId($request);
+        $this->tokens->revokeRefreshToken($request->input('refresh_token'), $deviceId);
+
+        if ($request->boolean('revoke_biometric')) {
+            $this->tokens->revokeBiometricTokens($user, $deviceId);
         }
 
         $user->currentAccessToken()?->delete();

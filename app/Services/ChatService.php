@@ -163,6 +163,42 @@ class ChatService
             ->each(fn (Conversation $conversation) => $this->archiveConversation($conversation, $reason));
     }
 
+    /**
+     * @return array{conversation?: Conversation, error?: string}
+     */
+    public function unarchiveConversation(Conversation $conversation): array
+    {
+        if ($conversation->status !== 'archived') {
+            return ['error' => 'not_archived'];
+        }
+
+        if ($conversation->archived_reason === 'sold') {
+            return ['error' => 'sold_listing'];
+        }
+
+        $ad = $conversation->relationLoaded('ad')
+            ? $conversation->ad
+            : $conversation->ad()->first(['id', 'status']);
+
+        if (! $ad || $ad->status !== 'published') {
+            return ['error' => 'ad_not_available'];
+        }
+
+        $conversation->update([
+            'status' => 'active',
+            'archived_reason' => null,
+            'archived_at' => null,
+        ]);
+
+        $conversation = $conversation->fresh(['ad', 'buyer', 'seller']);
+
+        foreach ([$conversation->buyer_id, $conversation->seller_id] as $userId) {
+            broadcast(new ConversationUpdated($conversation, $userId));
+        }
+
+        return ['conversation' => $conversation];
+    }
+
     protected function notifyRecipient(
         Conversation $conversation,
         User $sender,

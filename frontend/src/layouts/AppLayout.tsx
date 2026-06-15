@@ -1,4 +1,4 @@
-import { BadgeCheck, Building2, FileText, FolderTree, Globe, KeyRound, Languages, LayoutDashboard, LogOut, Mail, Megaphone, Menu, MessageSquare, Moon, Settings, ShieldCheck, Sun, User, UserCog, Users, Wallet, X } from 'lucide-react';
+import { BadgeCheck, Bell, Building2, FileText, FolderTree, Globe, KeyRound, Languages, LayoutDashboard, LogOut, Mail, Megaphone, Menu, MessageSquare, Moon, Settings, ShieldCheck, Sun, User, UserCog, Users, Wallet, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
@@ -21,6 +21,7 @@ const navItems = [
   { to: '/legal-affairs', labelKey: 'legalAffairs', icon: FileText, permission: 'legal_affairs.view' },
   { to: '/contact-reasons', labelKey: 'contactReasons', icon: MessageSquare, permission: 'contact_reasons.view' },
   { to: '/contact-us', labelKey: 'contactUs', icon: Mail, permission: 'contact_us.view' },
+  { to: '/push-notifications', labelKey: 'pushNotifications', icon: Bell, permission: 'notifications.view' },
   { to: '/payment-methods', labelKey: 'paymentMethods', icon: Wallet, permission: 'payment_methods.view' },
   { to: '/settings', labelKey: 'settings', icon: Settings, permission: 'dashboard.view' },
 ] as const;
