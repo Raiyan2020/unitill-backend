@@ -235,19 +235,10 @@ class AuthController extends Controller
             'activation_sent_at' => now(),
             'terms_accepted_at' => now(),
         ]));
-
         try {
             Mail::to($user->email)->send(new OtpMail($otp));
         } catch (\Throwable $e) {
             Log::error('Registration OTP mail failed', ['error' => $e->getMessage()]);
-
-            return sendError(
-                $lang
-                    ? 'تعذر إرسال رمز التحقق. حاول لاحقاً.'
-                    : 'Could not send verification email.',
-                [],
-                500
-            );
         }
 
         return sendResponse([
@@ -379,12 +370,6 @@ class AuthController extends Controller
             Mail::to($user->email)->send(new OtpMail($otp));
         } catch (\Throwable $e) {
             Log::error('Resend OTP mail failed', ['error' => $e->getMessage()]);
-
-            return sendError(
-                $lang ? 'تعذر إرسال البريد. حاول لاحقاً.' : 'Could not send email. Try again later.',
-                [],
-                500
-            );
         }
 
         return sendResponse([
