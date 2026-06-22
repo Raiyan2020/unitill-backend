@@ -277,4 +277,165 @@ class AdController extends Controller
 
         $request->attributes->set('favorite_ad_ids', $favoriteIds);
     }
+
+    public function storeDraft(Request $request)
+    {
+        $lang = $request->header('lang') === 'ar';
+        $user = Auth::user();
+        
+        $cityId = $request->input('city_id');
+        if ($cityId == 1 && !\App\Models\City::where('id', 1)->exists()) {
+            $userCity = $user->city_id;
+            if ($userCity && \App\Models\City::where('id', $userCity)->exists()) {
+                $cityId = $userCity;
+            } else {
+                $cityId = \App\Models\City::first()?->id ?? 1;
+            }
+        }
+
+        $validated = $request->validate([
+            'main_category_id' => 'required|integer|exists:categories,id',
+            'sub_category_id' => 'nullable|integer|exists:categories,id',
+            'title' => 'required|string|max:255',
+            'subtitle' => 'nullable|string|max:255',
+            'description' => 'nullable|string|max:5000',
+            'price' => 'required|numeric|min:0',
+            'currency' => 'nullable|string|size:3',
+            'is_negotiable' => 'nullable|boolean',
+            'attributes' => 'nullable|array',
+            'attributes.*' => 'nullable|string|max:1000',
+        ]);
+
+        $attributes = (array) ($validated['attributes'] ?? []);
+        $specCategoryId = (int) ($validated['sub_category_id'] ?? $validated['main_category_id']);
+
+        $ad = DB::transaction(function () use ($request, $user, $validated, $attributes, $specCategoryId, $cityId) {
+            $title = $validated['title'];
+            $publicId = strtoupper(Str::random(10));
+
+            $ad = Ad::create([
+                'user_id' => $user->id,
+                'public_id' => $publicId,
+                'title' => $title,
+                'subtitle' => $validated['subtitle'] ?? null,
+                'description' => $validated['description'] ?? null,
+                'country_id' => \App\Models\City::find($cityId)?->country_id ?? 1,
+                'city_id' => $cityId,
+                'main_category_id' => $validated['main_category_id'],
+                'sub_category_id' => $validated['sub_category_id'] ?? null,
+                'price' => $validated['price'],
+                'currency' => strtoupper($validated['currency'] ?? 'GBP'),
+                'is_negotiable' => (bool) ($validated['is_negotiable'] ?? false),
+                'is_verified' => false,
+                'slug' => Str::slug($title.'-'.$publicId),
+                'status' => 'draft',
+            ]);
+
+            $definitions = CategoryAttributeDefinition::query()
+                ->where('category_id', $specCategoryId)
+                ->where('is_active', true)
+                ->get()
+                ->keyBy('slug');
+
+            foreach ($attributes as $slug => $value) {
+                if ($value === null || $value === '' || ! isset($definitions[$slug])) {
+                    continue;
+                }
+
+                AdAttributeValue::create([
+                    'ad_id' => $ad->id,
+                    'category_attribute_definition_id' => $definitions[$slug]->id,
+                    'value' => (string) $value,
+                ]);
+            }
+
+            return $ad;
+        });
+
+        $ad->load([
+            'images',
+            'city.translations',
+            'mainCategory.translations',
+            'subCategory.translations',
+            'attributeValues.definition.translations',
+        ]);
+
+        return sendResponse([
+            'ad' => new AdDetailResource($ad),
+        ], $lang ? 'تم حفظ المسودة بنجاح' : 'Draft saved successfully');
+    }
+
+    public function uploadImage(Request $request, $id)
+    {
+        $lang = $request->header('lang') === 'ar';
+        $user = Auth::user();
+        
+        $ad = Ad::where('id', $id)->orWhere('public_id', $id)->first();
+        if (!$ad || $ad->user_id !== $user->id) {
+            return sendError($lang ? 'الإعلان غير موجود' : 'Ad not found', [], 404);
+        }
+
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
+        ]);
+
+        $path = uploader($request->file('image'), 'ads');
+        $cleanPath = ltrim(str_replace('/storage/', '', $path), '/');
+        
+        $sortOrder = $ad->images()->max('sort_order') + 1;
+
+        AdImage::create([
+            'ad_id' => $ad->id,
+            'path' => $cleanPath,
+            'sort_order' => $sortOrder,
+        ]);
+
+        if (!$ad->cover_image) {
+            $ad->update(['cover_image' => $cleanPath]);
+        }
+
+        return sendResponse(['path' => $path], $lang ? 'تم رفع الصورة' : 'Image uploaded');
+    }
+
+    public function publishDraft(Request $request, $id)
+    {
+        $lang = $request->header('lang') === 'ar';
+        $user = Auth::user();
+        
+        $ad = Ad::where('id', $id)->orWhere('public_id', $id)->first();
+        if (!$ad || $ad->user_id !== $user->id) {
+            return sendError($lang ? 'الإعلان غير موجود' : 'Ad not found', [], 404);
+        }
+
+        if ($ad->images()->count() === 0) {
+            return sendError($lang ? 'يجب رفع صورة واحدة على الأقل' : 'At least one image is required', [], 422);
+        }
+
+        $publishedAt = now();
+        $durationDays = (int) (setting('post_duration') ?? 30);
+
+        $ad->update([
+            'status' => 'pending', // or 'published' based on your workflow
+            'published_at' => $publishedAt,
+            'expires_at' => $publishedAt->copy()->addDays($durationDays),
+        ]);
+
+        $ad->load([
+            'images',
+            'city.translations',
+            'mainCategory.translations',
+            'subCategory.translations',
+            'attributeValues.definition.translations',
+        ]);
+
+        $listingFee = (float) (setting('post_price') ?? 0);
+
+        return sendResponse([
+            'ad' => new AdDetailResource($ad),
+            'listing_fee' => $listingFee,
+            'formatted_listing_fee' => '£'.number_format($listingFee, 2),
+            'total_amount' => $listingFee,
+            'formatted_total_amount' => '£'.number_format($listingFee, 2),
+        ], $lang ? 'تم نشر الإعلان بنجاح' : 'Ad published successfully');
+    }
 }

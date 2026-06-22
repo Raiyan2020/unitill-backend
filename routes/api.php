@@ -56,6 +56,7 @@ Route::get('settings', SettingController::class);
 Route::get('languages', AppLanguageController::class);
 Route::get('home', HomeController::class);
 Route::get('categories', CategoryController::class);
+Route::get('cities', \App\Http\Controllers\Api\CityController::class);
 Route::get('ads', [AdController::class, 'index']);
 Route::get('ads/{id}', [AdController::class, 'show']);
 Route::get('ad-report-reasons', [AdReportController::class, 'reasons']);
@@ -197,6 +198,9 @@ Route::get('contact-reasons', ContactReasonController::class);
 
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::post('ads/draft', [AdController::class, 'storeDraft']);
+    Route::post('ads/{id}/images', [AdController::class, 'uploadImage']);
+    Route::post('ads/{id}/publish', [AdController::class, 'publishDraft']);
     Route::post('ads', [AdController::class, 'store']);
     Route::post('ads/{id}/report', [AdReportController::class, 'store']);
     Route::get('my-ads', [MyAdController::class, 'index']);
