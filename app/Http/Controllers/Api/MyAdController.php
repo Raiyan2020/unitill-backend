@@ -51,6 +51,20 @@ class MyAdController extends Controller
         return sendResponse($response);
     }
 
+    public function purchases(Request $request)
+    {
+        $perPage = (int) ($request->input('per_page', 20));
+
+        $ads = Ad::query()
+            ->where('sold_to_user_id', Auth::id())
+            ->where('status', 'sold')
+            ->with(['user:id,first_name,last_name,name,image'])
+            ->orderByDesc('sold_at')
+            ->paginate($perPage);
+
+        return sendResponse(MyAdResource::collection($ads)->response()->getData(true));
+    }
+
     public function buyers(Request $request, string $id)
     {
         $lang = $request->header('lang') === 'ar';
