@@ -19,7 +19,7 @@ class RegisterRequest extends FormRequest
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|email:rfc|max:255|unique:users,email',
-            'student_email' => 'required|email:rfc|max:255|unique:users,student_email|different:email',
+            'student_email' => 'nullable|email:rfc|max:255|unique:users,student_email|different:email',
             'password' => 'required|string|min:6|confirmed',
             'terms_accepted' => 'required|accepted',
             'phone' => 'nullable|string|max:30|unique:users,phone',
@@ -33,15 +33,18 @@ class RegisterRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
-            $lower = strtolower((string) $this->input('student_email'));
-            if ($lower && ! str_ends_with($lower, '.ac.uk')) {
-                $ar = $this->header('lang') === 'ar';
-                $validator->errors()->add(
-                    'student_email',
-                    $ar
-                        ? 'يجب أن يكون بريد الطالب بنطاق جامعي بريطاني (.ac.uk)'
-                        : 'Student email must be a UK academic address (.ac.uk)'
-                );
+            $studentEmail = $this->input('student_email');
+            if ($studentEmail) {
+                $lower = strtolower((string) $studentEmail);
+                if ($lower && ! str_ends_with($lower, '.ac.uk')) {
+                    $ar = $this->header('lang') === 'ar';
+                    $validator->errors()->add(
+                        'student_email',
+                        $ar
+                            ? 'يجب أن يكون بريد الطالب بنطاق جامعي بريطاني (.ac.uk)'
+                            : 'Student email must be a UK academic address (.ac.uk)'
+                    );
+                }
             }
         });
     }

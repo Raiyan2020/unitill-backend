@@ -226,9 +226,9 @@ class AuthController extends Controller
             'device_type' => $data['device_type'] ?? null,
         ];
 
-        $otp = 1234;
+        $otp = 123456;
         $user = User::create(array_merge($base, [
-            'student_email' => $data['student_email'],
+            'student_email' => $data['student_email'] ?? null,
             'status' => '2',
             'activation_code' => (string) $otp,
             'activation_code_expires_at' => now()->addMinutes(15),
@@ -237,7 +237,7 @@ class AuthController extends Controller
         ]));
 
         try {
-            Mail::to($user->student_email)->send(new OtpMail($otp));
+            Mail::to($user->email)->send(new OtpMail($otp));
         } catch (\Throwable $e) {
             Log::error('Registration OTP mail failed', ['error' => $e->getMessage()]);
 
@@ -253,7 +253,7 @@ class AuthController extends Controller
         return sendResponse([
             'needs_verification' => true,
             'user_id' => $user->id,
-            'student_email_masked' => $this->maskEmail($user->student_email),
+            'student_email_masked' => $this->maskEmail($user->email),
             'activation_expires_at' => $user->activation_code_expires_at?->toIso8601String(),
         ], $lang
             ? 'تم إرسال رمز التحقق إلى بريدك الجامعي'
@@ -268,7 +268,7 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'student_email' => 'nullable|email',
             'email' => 'nullable|email',
-            'activation_code' => 'required|digits:4',
+            'activation_code' => 'required|digits:6',
         ]);
 
         if ($validator->fails()) {
@@ -342,10 +342,10 @@ class AuthController extends Controller
     public function resendVerificationEmail(Request $request)
     {
         $request->validate([
-            'student_email' => 'required|email',
+            'email' => 'required|email',
         ]);
 
-        $user = User::where('student_email', $request->student_email)->first();
+        $user = User::where('email', $request->email)->first();
         $lang = $request->header('lang') === 'ar';
 
         if (! $user) {
@@ -369,14 +369,14 @@ class AuthController extends Controller
             }
         }
 
-        $otp = 1234;
+        $otp = 123456;
         $user->activation_code = (string) $otp;
         $user->activation_code_expires_at = now()->addMinutes(15);
         $user->activation_sent_at = now();
         $user->save();
 
         try {
-            Mail::to($user->student_email)->send(new OtpMail($otp));
+            Mail::to($user->email)->send(new OtpMail($otp));
         } catch (\Throwable $e) {
             Log::error('Resend OTP mail failed', ['error' => $e->getMessage()]);
 
@@ -388,7 +388,7 @@ class AuthController extends Controller
         }
 
         return sendResponse([
-            'student_email_masked' => $this->maskEmail($user->student_email),
+            'student_email_masked' => $this->maskEmail($user->email),
             'activation_expires_at' => $user->activation_code_expires_at?->toIso8601String(),
         ], $lang ? 'تم إعادة إرسال رمز التحقق' : 'Verification code resent');
     }
@@ -442,7 +442,7 @@ class AuthController extends Controller
             return sendError(__('User not found'), [], 404);
         }
 
-        $otp = 1234;
+        $otp = 123456;
 
         $user->reset_code = (string) $otp;
 
@@ -460,7 +460,7 @@ class AuthController extends Controller
     {
         $request->validate([
             'phone' => 'nullable',
-            'reset_code' => 'required|digits:4',
+            'reset_code' => 'required|digits:6',
             'password' => 'required|min:6',
             'country_code' => 'nullable|max:191',
             'email' => 'nullable|email|max:191',
