@@ -171,7 +171,7 @@ class AuthController extends Controller
 
         if ($user->status === '2') {
             return sendError(
-                $lang ? 'يجب التحقق من بريد الطالب الجامعي أولاً' : 'Please verify your student email first.',
+                $lang ? 'يجب التحقق من بريد الطالب الجامعي أولاً' : 'Please verify your email first.',
                 [
                     'needs_verification' => true,
                     'student_email_masked' => $this->maskEmail($user->student_email),
