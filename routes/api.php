@@ -66,6 +66,7 @@ Route::get('cities', \App\Http\Controllers\Api\CityController::class);
 Route::get('ads', [AdController::class, 'index']);
 Route::get('ads/{id}', [AdController::class, 'show']);
 Route::get('ad-report-reasons', [AdReportController::class, 'reasons']);
+Route::get('legal-affairs', [\App\Http\Controllers\Api\LegalAffairController::class, 'index']);
 
 Route::controller(AuthController::class)->group(function () {
     Route::post('register', 'register');

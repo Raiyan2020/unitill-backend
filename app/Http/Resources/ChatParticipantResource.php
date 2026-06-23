@@ -22,11 +22,9 @@ class ChatParticipantResource extends JsonResource
     protected function displayName(): string
     {
         $firstName = trim((string) ($this->first_name ?: explode(' ', (string) $this->name)[0] ?? ''));
-        $lastInitial = $this->last_name
-            ? strtoupper(substr(trim($this->last_name), 0, 1)).'.'
-            : '';
+        $lastName = trim((string) $this->last_name);
 
-        return trim($firstName.' '.$lastInitial) ?: (string) $this->name;
+        return trim($firstName.' '.$lastName) ?: (string) $this->name;
     }
 
     protected function initials(): string

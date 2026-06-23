@@ -231,12 +231,18 @@ class MyAdController extends Controller
             return sendError($lang ? 'الإعلان غير موجود' : 'Ad not found', [], 404);
         }
 
-        if (! in_array($ad->status, ['paused', 'expired', 'draft', 'rejected', 'pending'], true)) {
+        // A sold ad keeps its record (purchase history); everything else the
+        // owner created can be removed. Archive any open conversations first.
+        if ($ad->status === 'sold') {
             return sendError(
-                $lang ? 'لا يمكن حذف هذا الإعلان' : 'This ad cannot be deleted',
+                $lang ? 'لا يمكن حذف إعلان مباع' : 'A sold ad cannot be deleted',
                 [],
                 422
             );
+        }
+
+        if ($ad->status === 'published') {
+            $this->chatService->archiveConversationsForAd($ad, 'listing_removed');
         }
 
         $ad->delete();
