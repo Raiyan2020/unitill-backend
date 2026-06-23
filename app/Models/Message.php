@@ -11,6 +11,8 @@ class Message extends Model
         'conversation_id',
         'sender_id',
         'body',
+        'attachment_path',
+        'attachment_type',
         'type',
         'read_at',
     ];
@@ -18,6 +20,13 @@ class Message extends Model
     protected $casts = [
         'read_at' => 'datetime',
     ];
+
+    protected $appends = ['attachment_url'];
+
+    public function getAttachmentUrlAttribute(): ?string
+    {
+        return $this->attachment_path ? url('storage/' . $this->attachment_path) : null;
+    }
 
     public function conversation(): BelongsTo
     {

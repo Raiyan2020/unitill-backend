@@ -4,12 +4,15 @@ namespace App\Http\Controllers\Api\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Ad;
+use App\Services\PushNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 class AdAdminController extends Controller
 {
+    public function __construct(protected PushNotificationService $pushNotificationService) {}
+
     public function index(Request $request)
     {
         $perPage = max(1, min((int) $request->input('per_page', 10), 100));
@@ -150,7 +153,7 @@ class AdAdminController extends Controller
 
     public function update(Request $request, int $id)
     {
-        $ad = Ad::find($id);
+        $ad = Ad::with('user')->find($id);
 
         if (! $ad) {
             return sendError('Ad not found', [], 404);
@@ -164,8 +167,40 @@ class AdAdminController extends Controller
             return sendError($validator->errors()->first(), $validator->errors()->toArray(), 422);
         }
 
-        $ad->status = $validator->validated()['status'];
+        $oldStatus = $ad->status;
+        $newStatus = $validator->validated()['status'];
+
+        $ad->status = $newStatus;
         $ad->save();
+
+        if ($oldStatus !== $newStatus && $ad->user) {
+            $lang = $request->header('lang') === 'ar';
+            $title = $lang ? 'تحديث حالة الإعلان' : 'Ad Status Update';
+            
+            $statusName = $newStatus;
+            if ($lang) {
+                $statusMap = [
+                    'published' => 'مقبول / منشور',
+                    'rejected' => 'مرفوض',
+                    'pending' => 'قيد المراجعة',
+                    'expired' => 'منتهي',
+                    'draft' => 'مسودة',
+                    'sold' => 'مباع',
+                ];
+                $statusName = $statusMap[$newStatus] ?? $newStatus;
+            }
+
+            $body = $lang 
+                ? "تم تغيير حالة إعلانك '{$ad->title}' إلى {$statusName}"
+                : "Your ad '{$ad->title}' status has been updated to {$statusName}";
+
+            $this->pushNotificationService->sendToUser(
+                $ad->user,
+                $title,
+                $body,
+                ['type' => 'ad_status_update', 'ad_id' => $ad->id]
+            );
+        }
 
         return sendResponse($ad->fresh(), 'Ad status updated');
     }

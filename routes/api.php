@@ -211,7 +211,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('ads', [AdController::class, 'store']);
     Route::post('ads/{id}/report', [AdReportController::class, 'store']);
     Route::get('my-ads', [MyAdController::class, 'index']);
-    Route::get('my-orders', [MyAdController::class, 'purchases']);
+    Route::get('my-orders', [\App\Http\Controllers\Api\OrderController::class, 'index']);
+    Route::post('orders', [\App\Http\Controllers\Api\OrderController::class, 'store']);
     Route::get('my-ads/{id}/buyers', [MyAdController::class, 'buyers']);
     Route::post('my-ads/{id}/mark-sold', [MyAdController::class, 'markAsSold']);
     Route::post('my-ads/{id}/pause', [MyAdController::class, 'pause']);

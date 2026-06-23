@@ -51,7 +51,7 @@ class ChatService
         ]);
     }
 
-    public function sendMessage(Conversation $conversation, User $sender, string $body): Message
+    public function sendMessage(Conversation $conversation, User $sender, ?string $body, ?string $attachmentPath = null, ?string $attachmentType = null): Message
     {
         if (! $conversation->isParticipant($sender->id)) {
             throw new \InvalidArgumentException('not_participant');
@@ -61,21 +61,24 @@ class ChatService
             throw new \InvalidArgumentException('messaging_disabled');
         }
 
-        $body = trim($body);
+        $body = trim($body ?? '');
 
-        if ($body === '') {
+        if ($body === '' && !$attachmentPath) {
             throw new \InvalidArgumentException('empty_message');
         }
 
-        return DB::transaction(function () use ($conversation, $sender, $body) {
+        return DB::transaction(function () use ($conversation, $sender, $body, $attachmentPath, $attachmentType) {
             $message = Message::create([
                 'conversation_id' => $conversation->id,
                 'sender_id' => $sender->id,
                 'body' => $body,
+                'attachment_path' => $attachmentPath,
+                'attachment_type' => $attachmentType,
                 'type' => 'text',
             ]);
 
-            $preview = mb_strlen($body) > 120 ? mb_substr($body, 0, 117).'...' : $body;
+            $previewText = $body !== '' ? $body : ($attachmentType === 'image' ? '📷 Image' : '📎 Attachment');
+            $preview = mb_strlen($previewText) > 120 ? mb_substr($previewText, 0, 117).'...' : $previewText;
 
             $conversation->update([
                 'last_message_preview' => $preview,

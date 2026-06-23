@@ -154,7 +154,8 @@ class ConversationController extends Controller
     public function sendMessage(Request $request, string $id)
     {
         $validated = $request->validate([
-            'body' => 'required|string|max:5000',
+            'body' => 'nullable|string|max:5000',
+            'attachment' => 'nullable|file|max:10240',
         ]);
 
         $lang = $request->header('lang') === 'ar';
@@ -164,11 +165,25 @@ class ConversationController extends Controller
             return sendError($lang ? 'المحادثة غير موجودة' : 'Conversation not found', [], 404);
         }
 
+        if (empty(trim($validated['body'] ?? '')) && !$request->hasFile('attachment')) {
+            return sendError($lang ? 'الرسالة فارغة' : 'Message is empty', [], 422);
+        }
+
+        $attachmentPath = null;
+        $attachmentType = null;
+        if ($request->hasFile('attachment')) {
+            $file = $request->file('attachment');
+            $attachmentPath = $file->store('chat_attachments', 'public');
+            $attachmentType = str_starts_with($file->getMimeType(), 'image/') ? 'image' : 'file';
+        }
+
         try {
             $message = $this->chatService->sendMessage(
                 $conversation,
                 Auth::user(),
-                $validated['body']
+                $validated['body'] ?? '',
+                $attachmentPath,
+                $attachmentType
             );
         } catch (\InvalidArgumentException $e) {
             return match ($e->getMessage()) {

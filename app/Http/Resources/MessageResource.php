@@ -14,6 +14,8 @@ class MessageResource extends JsonResource
             'conversation_id' => $this->conversation_id,
             'body' => $this->body,
             'type' => $this->type,
+            'attachment_url' => $this->attachment_url,
+            'attachment_type' => $this->attachment_type,
             'sender_id' => $this->sender_id,
             'sender' => $this->sender
                 ? new ChatParticipantResource($this->sender)
