@@ -52,6 +52,12 @@ use App\Http\Controllers\Api\UserNotificationController;
 
 
 
+// Pusher private-channel auth for the mobile app (token-based, base url includes /api).
+// Mirrors the default /broadcasting/auth but reachable under the API prefix.
+Route::middleware('auth:sanctum')->post('broadcasting/auth', function (\Illuminate\Http\Request $request) {
+    return \Illuminate\Support\Facades\Broadcast::auth($request);
+});
+
 Route::get('settings', SettingController::class);
 Route::get('languages', AppLanguageController::class);
 Route::get('home', HomeController::class);
