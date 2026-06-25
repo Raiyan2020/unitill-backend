@@ -60,7 +60,13 @@ class Category extends Model
             }
         }
 
-        return '';
+        // Fallback: the requested language has no translation — return any
+        // available translation so the category name is never blank.
+        $fallback = $this->relationLoaded('translations')
+            ? $this->translations->first()
+            : $this->translations()->first();
+
+        return $fallback?->name ?? '';
     }
 
     public function getNameArAttribute(): string

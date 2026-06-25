@@ -68,9 +68,9 @@ class TrustedSellerApplicationController extends Controller
 
         $application = TrustedSellerApplication::create([
             'user_id' => $user->id,
-            'seller_type' => $request->input('seller_type'),
+            'seller_type' => $request->input('entity_type'),
             'identity_confirmed_by_others' => (bool) $request->boolean('identity_confirmed_by_others'),
-            'is_non_student_confirmed' => true,
+            'is_non_student_confirmed' => $request->boolean('is_non_student_confirmed'),
             'operations_city' => $request->input('operations_city'),
             'primary_contact_name' => $request->input('primary_contact_name'),
             'contact_email' => $request->input('contact_email'),
@@ -78,7 +78,9 @@ class TrustedSellerApplicationController extends Controller
             'category_id' => $request->input('category_id'),
             'offers_summary' => $request->input('offers_summary'),
             'estimated_ads_volume' => $request->estimatedAdsVolume(),
-            'preferred_student_contact_method' => $request->input('preferred_student_contact_method'),
+            // Column is NOT NULL with no default; fall back to email when the
+            // simplified mobile form does not provide a preference.
+            'preferred_student_contact_method' => $request->input('preferred_student_contact_method') ?? 'email',
             'ack_review_discretion' => true,
             'ack_unitill_manages_directory' => true,
             'ack_no_app_access' => true,
