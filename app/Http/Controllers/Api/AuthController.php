@@ -188,10 +188,19 @@ class AuthController extends Controller
 
     protected function completeLogin(User $user, ApiLoginRequest $request, bool $lang, string $type)
     {
-        $user->update([
-            'device_type' => $request->device_type,
-            'device_token' => $request->device_token,
-        ]);
+        // Only overwrite the stored device data when the request actually
+        // carries it. A biometric login may arrive before the FCM token is
+        // ready; updating it unconditionally would wipe the real push token.
+        $deviceUpdates = [];
+        if ($request->filled('device_type')) {
+            $deviceUpdates['device_type'] = $request->device_type;
+        }
+        if ($request->filled('device_token')) {
+            $deviceUpdates['device_token'] = $request->device_token;
+        }
+        if ($deviceUpdates) {
+            $user->update($deviceUpdates);
+        }
 
         LoginLogger::record($user, $request, $type);
 
