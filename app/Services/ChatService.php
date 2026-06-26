@@ -221,7 +221,10 @@ class ChatService
             $senderName,
             $preview,
             [
-                'type' => 'chat_message',
+                // `type` + `related_data` drive the mobile tap-navigation, which
+                // opens the conversation by id. Extra keys kept for context.
+                'type' => 'chat',
+                'related_data' => (string) $conversation->id,
                 'conversation_id' => (string) $conversation->id,
                 'ad_id' => (string) $conversation->ad_id,
             ]

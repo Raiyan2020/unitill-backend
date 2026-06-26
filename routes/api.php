@@ -234,6 +234,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('unread-count', 'unreadCount');
         Route::post('read-all', 'markAllRead');
         Route::post('{id}/read', 'markRead');
+        Route::delete('{id}', 'destroy');
     });
 
     //profile

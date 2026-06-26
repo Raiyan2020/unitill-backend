@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Ad;
+use App\Models\UserNotification;
+use App\Services\PushNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -76,6 +78,30 @@ class OrderController extends Controller
             'sold_to_user_id' => Auth::id(),
             'sold_at' => now(),
         ]);
+
+        // Notify the seller that their item was purchased (push + inbox).
+        $seller = $ad->user;
+        if ($seller) {
+            $lang = $request->header('lang') === 'ar';
+            $buyerName = trim((string) (Auth::user()->first_name ?? '').' '.(Auth::user()->last_name ?? ''))
+                ?: (Auth::user()->name ?? '');
+
+            app(PushNotificationService::class)->notifyUser(
+                $seller,
+                $lang ? 'تم بيع إعلانك' : 'Your item was purchased',
+                $lang
+                    ? "قام {$buyerName} بشراء \"{$ad->title}\""
+                    : "{$buyerName} purchased \"{$ad->title}\"",
+                [
+                    'type' => 'order',
+                    'related_data' => (string) $order->id,
+                    'order_id' => (string) $order->id,
+                    'ad_id' => (string) $ad->id,
+                ],
+                UserNotification::TYPE_SYSTEM,
+                'notify_ads',
+            );
+        }
 
         return sendResponse(['order' => $order], 'Order created successfully');
     }

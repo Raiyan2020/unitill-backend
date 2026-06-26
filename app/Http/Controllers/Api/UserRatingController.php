@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreUserRatingRequest;
 use App\Http\Resources\UserRatingResource;
 use App\Models\User;
+use App\Models\UserNotification;
 use App\Models\UserRating;
+use App\Services\PushNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -25,6 +27,29 @@ class UserRatingController extends Controller
         ]);
 
         $rating->load('rater:id,first_name,last_name,name');
+
+        // Notify the rated user that they received a new rating (push + inbox).
+        $ratedUser = User::find($rating->rated_user_id);
+        if ($ratedUser && $ratedUser->id !== Auth::id()) {
+            $raterName = trim((string) ($rating->rater->first_name ?? '').' '.($rating->rater->last_name ?? ''))
+                ?: ($rating->rater->name ?? '');
+            $score = (int) $rating->score;
+
+            app(PushNotificationService::class)->notifyUser(
+                $ratedUser,
+                $lang ? 'تقييم جديد' : 'New rating',
+                $lang
+                    ? "قام {$raterName} بتقييمك بـ {$score} نجوم"
+                    : "{$raterName} rated you {$score} stars",
+                [
+                    'type' => 'rating',
+                    'related_data' => (string) $ratedUser->id,
+                    'rating_id' => (string) $rating->id,
+                ],
+                UserNotification::TYPE_SYSTEM,
+                'notify_system',
+            );
+        }
 
         return sendResponse(
             new UserRatingResource($rating),

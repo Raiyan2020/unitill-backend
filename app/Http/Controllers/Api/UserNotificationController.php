@@ -89,4 +89,23 @@ class UserNotificationController extends Controller
             $lang ? 'تم تعليم جميع الإشعارات كمقروءة' : 'All notifications marked as read'
         );
     }
+
+    public function destroy(Request $request, int $id)
+    {
+        $lang = $request->header('lang') === 'ar';
+
+        $deleted = UserNotification::query()
+            ->where('user_id', Auth::id())
+            ->where('id', $id)
+            ->delete();
+
+        if (! $deleted) {
+            return sendError($lang ? 'الإشعار غير موجود' : 'Notification not found', [], 404);
+        }
+
+        return sendResponse(
+            ['deleted' => true],
+            $lang ? 'تم حذف الإشعار' : 'Notification deleted'
+        );
+    }
 }

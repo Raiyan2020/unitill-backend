@@ -125,6 +125,48 @@ class PushNotificationService
         return $log;
     }
 
+    /**
+     * Send an app-event notification (chat, order, rating, …) to one user.
+     *
+     * Always stores an inbox record so it shows in the in-app bell, and pushes
+     * an FCM message when the user has a device token and the given preference
+     * flag is enabled. Unlike {@see sendToUser} this does not create an admin
+     * PushNotification log row.
+     *
+     * @param  string  $preferenceFlag  User column gating the push (e.g.
+     *                                   notify_ads, notify_system). Pass '' to
+     *                                   always push when a token exists.
+     */
+    public function notifyUser(
+        User $user,
+        string $title,
+        string $body,
+        array $data = [],
+        string $type = UserNotification::TYPE_SYSTEM,
+        string $preferenceFlag = 'notify_system',
+    ): UserNotification {
+        $inbox = UserNotification::query()->create([
+            'user_id' => $user->id,
+            'type' => $type,
+            'title' => $title,
+            'body' => $body,
+            'data' => $data ?: null,
+        ]);
+
+        $allowsPush = $preferenceFlag === '' || (bool) ($user->{$preferenceFlag} ?? true);
+
+        if ($user->device_token && $allowsPush && $this->firebase->isConfigured()) {
+            $this->firebase->sendNotificationToToken(
+                $user->device_token,
+                $title,
+                $body,
+                $data,
+            );
+        }
+
+        return $inbox;
+    }
+
     public function estimatedAllAudienceCount(): int
     {
         return User::query()
