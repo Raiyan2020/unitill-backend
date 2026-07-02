@@ -63,7 +63,7 @@ export function LoginPage() {
 
         <section className="flex items-center justify-center px-5 py-8 sm:px-8 lg:px-12">
           <div className="w-full max-w-[440px]">
-            <h1 className="mb-1 text-3xl font-semibold text-white">Welcome to ashboard! 👋</h1>
+            <h1 className="mb-1 text-3xl font-semibold text-white">Welcome to Dashboard! 👋</h1>
             <p className="mb-7 text-sm text-[#a8add3]">Please sign-in to your account and start the adventure</p>
 
             <form onSubmit={onSubmit} className="space-y-4">
@@ -74,7 +74,7 @@ export function LoginPage() {
                 <Input
                   className="h-11 rounded-lg border-[#444a6c] bg-[#2f3453] text-[#d7d9ee] placeholder:text-[#8f95bc] focus-visible:ring-[#7367f0]"
                   placeholder="Enter your email or username"
-                  // value={email}
+                  value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
@@ -86,7 +86,7 @@ export function LoginPage() {
                     type={showPassword ? 'text' : 'password'}
                     className="h-11 rounded-lg border-[#444a6c] bg-[#2f3453] pe-10 text-[#d7d9ee] placeholder:text-[#8f95bc] focus-visible:ring-[#7367f0]"
                     placeholder=".........."
-                    // value={password}
+                    value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
                   <button
