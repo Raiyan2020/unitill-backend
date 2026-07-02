@@ -18,7 +18,15 @@ class CategoryResource extends JsonResource
         ];
 
         if ($this->parent_id === null) {
-            $data['image'] = $this->image ? asset($this->image) : null;
+            // Images are uploaded to the Laravel `public` disk
+            // (storage/app/public/categories) and served through the
+            // `public/storage` symlink at /storage/... — so the URL must carry
+            // the `storage/` prefix. Absolute URLs are passed through as-is.
+            $data['image'] = $this->image
+                ? (str_starts_with($this->image, 'http')
+                    ? $this->image
+                    : asset('storage/' . ltrim($this->image, '/')))
+                : null;
             $data['children'] = CategoryResource::collection($this->whenLoaded('children'));
         }
 
