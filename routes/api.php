@@ -240,6 +240,8 @@ Route::middleware('auth:sanctum')->group(function () {
     //profile
     Route::get('show-profile/{user_id?}', [UserController::class, 'show']);
     Route::post('update-profile', [UserController::class, 'update']);
+    // Self-service account deletion (App Store guideline 5.1.1(v)).
+    Route::delete('delete-account', [UserController::class, 'destroy']);
     Route::get('account-security', [AccountSecurityController::class, 'index']);
     Route::post('change-password', [AccountSecurityController::class, 'changePassword']);
     Route::post('logout-other-devices', [AccountSecurityController::class, 'logoutOtherDevices']);
