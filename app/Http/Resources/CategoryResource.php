@@ -28,6 +28,22 @@ class CategoryResource extends JsonResource
                     : asset('storage/' . ltrim($this->image, '/')))
                 : null;
             $data['children'] = CategoryResource::collection($this->whenLoaded('children'));
+
+            // Per-category attribute definitions power the post-ad dynamic
+            // fields and the browse filters (same shape as the ads-list
+            // `filter_options`). Only main categories carry them.
+            $data['attributes'] = $this->whenLoaded('attributeDefinitions', function () use ($lang) {
+                return $this->attributeDefinitions
+                    ->map(fn ($definition) => [
+                        'slug' => $definition->slug,
+                        'label' => $definition->labelForLanguageCode($lang),
+                        'input_type' => $definition->input_type,
+                        'options' => $definition->options ?? [],
+                        'is_required' => (bool) $definition->is_required,
+                    ])
+                    ->values()
+                    ->all();
+            });
         }
 
         return $data;

@@ -19,7 +19,7 @@ class RegisterRequest extends FormRequest
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|email:rfc|max:255|unique:users,email',
-            'student_email' => 'nullable|email:rfc|max:255|unique:users,student_email|different:email',
+            'student_email' => 'required|email:rfc|max:255|unique:users,student_email|different:email',
             'password' => 'required|string|min:6|confirmed',
             'terms_accepted' => 'required|accepted',
             'phone' => 'nullable|string|max:30|unique:users,phone',
@@ -41,8 +41,8 @@ class RegisterRequest extends FormRequest
                     $validator->errors()->add(
                         'student_email',
                         $ar
-                            ? 'يجب أن يكون بريد الطالب بنطاق جامعي بريطاني (.ac.uk)'
-                            : 'Student email must be a UK academic address (.ac.uk)'
+                            ? 'من فضلك أدخل بريد جامعة بريطانية صحيح ينتهي بـ .ac.uk'
+                            : 'Please enter a valid UK university email address.'
                     );
                 }
             }

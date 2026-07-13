@@ -61,6 +61,12 @@ class AdDetailResource extends JsonResource
             'city_name' => $this->city
                 ? $this->city->nameForLanguageCode($lang)
                 : null,
+            'location_name' => $this->location_name,
+            'location_label' => $this->location_name
+                ?: ($this->city ? $this->city->nameForLanguageCode($lang) : null),
+            'postcode' => $this->postcode,
+            'latitude' => $this->latitude,
+            'longitude' => $this->longitude,
             'country_id' => $this->country_id,
             'attributes' => $this->whenLoaded('attributeValues', function () use ($lang) {
                 return $this->attributeValues->map(function ($row) use ($lang) {
@@ -72,6 +78,13 @@ class AdDetailResource extends JsonResource
                 })->values();
             }),
             'seller' => $this->whenLoaded('user', function () use ($sellerName) {
+                // Trusted sellers are contacted externally (WhatsApp / phone /
+                // email) rather than through in-app chat, so expose the contact
+                // details from their approved application.
+                $trustedContact = $this->user->is_trusted_seller
+                    ? $this->user->latestApprovedTrustedSellerApplication
+                    : null;
+
                 return [
                     'id' => $this->user->id,
                     'name' => $sellerName,
@@ -79,6 +92,9 @@ class AdDetailResource extends JsonResource
                     'is_trusted_seller' => (bool) $this->user->is_trusted_seller,
                     'average_rating' => round((float) ($this->user->average_rating_received ?? 0), 1),
                     'total_reviews' => (int) ($this->user->total_reviews_count ?? 0),
+                    'contact_phone' => $trustedContact?->contact_phone,
+                    'contact_email' => $trustedContact?->contact_email,
+                    'preferred_contact_method' => $trustedContact?->preferred_student_contact_method,
                 ];
             }),
             'published_at' => $publishedAt?->toIso8601String(),

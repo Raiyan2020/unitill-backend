@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             SettingSeeder::class,
  
             CategorySeeder::class,
+            CategoryAttributeSeeder::class,
             PaymentMethodSeeder::class,
             AdSeeder::class,
             TrustedSellerApplicationSeeder::class,

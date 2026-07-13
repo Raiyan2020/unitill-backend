@@ -29,6 +29,12 @@ class AdResource extends JsonResource
             'city_name' => $this->city
                 ? $this->city->nameForLanguageCode($lang)
                 : null,
+            'location_name' => $this->location_name,
+            'location_label' => $this->location_name
+                ?: ($this->city ? $this->city->nameForLanguageCode($lang) : null),
+            'postcode' => $this->postcode,
+            'latitude' => $this->latitude,
+            'longitude' => $this->longitude,
             'category_id' => $this->main_category_id,
             'category_name' => $this->mainCategory
                 ? $this->mainCategory->nameForLanguageCode($lang)

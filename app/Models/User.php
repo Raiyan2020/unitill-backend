@@ -168,6 +168,17 @@ class User extends Authenticatable
         return $this->hasOne(TrustedSellerApplication::class)->latestOfMany();
     }
 
+    /**
+     * The most recent APPROVED trusted-seller application, used to surface the
+     * seller's external contact details (WhatsApp / phone / email) on listings.
+     */
+    public function latestApprovedTrustedSellerApplication()
+    {
+        return $this->hasOne(TrustedSellerApplication::class)
+            ->where('status', 'approved')
+            ->latestOfMany();
+    }
+
     public function ratingsGiven()
     {
         return $this->hasMany(UserRating::class, 'rater_id');

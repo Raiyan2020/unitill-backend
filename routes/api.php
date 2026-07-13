@@ -241,7 +241,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('show-profile/{user_id?}', [UserController::class, 'show']);
     Route::post('update-profile', [UserController::class, 'update']);
     // Self-service account deletion (App Store guideline 5.1.1(v)).
+    // Requires an OTP sent to the personal email before it can run.
+    Route::post('delete-account/send-otp', [UserController::class, 'sendDeletionOtp']);
     Route::delete('delete-account', [UserController::class, 'destroy']);
+    // GDPR Subject Access Request — emails the user a copy of their data.
+    Route::post('account/data-request', [UserController::class, 'requestDataExport']);
     Route::get('account-security', [AccountSecurityController::class, 'index']);
     Route::post('change-password', [AccountSecurityController::class, 'changePassword']);
     Route::post('logout-other-devices', [AccountSecurityController::class, 'logoutOtherDevices']);

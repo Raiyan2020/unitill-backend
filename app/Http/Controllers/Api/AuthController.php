@@ -245,7 +245,9 @@ class AuthController extends Controller
             'terms_accepted_at' => now(),
         ]));
         try {
-            Mail::to($user->email)->send(new OtpMail($otp));
+            // OTP must be sent to the UNIVERSITY email (.ac.uk) — that is what
+            // proves the user owns a valid student account.
+            Mail::to($user->student_email)->send(new OtpMail($otp));
         } catch (\Throwable $e) {
             Log::error('Registration OTP mail failed', ['error' => $e->getMessage()]);
         }
@@ -253,7 +255,7 @@ class AuthController extends Controller
         return sendResponse([
             'needs_verification' => true,
             'user_id' => $user->id,
-            'student_email_masked' => $this->maskEmail($user->email),
+            'student_email_masked' => $this->maskEmail($user->student_email),
             'activation_expires_at' => $user->activation_code_expires_at?->toIso8601String(),
         ], $lang
             ? 'تم إرسال رمز التحقق إلى بريدك الجامعي'
@@ -345,7 +347,10 @@ class AuthController extends Controller
             'email' => 'required|email',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        // The verification flow identifies the account by its student email,
+        // so accept either identifier here (student email first, then personal).
+        $user = User::where('student_email', $request->email)->first()
+            ?? User::where('email', $request->email)->first();
         $lang = $request->header('lang') === 'ar';
 
         if (! $user) {
@@ -376,13 +381,15 @@ class AuthController extends Controller
         $user->save();
 
         try {
-            Mail::to($user->email)->send(new OtpMail($otp));
+            // Resend to the university email (fall back to personal only for
+            // legacy accounts created before the student email was mandatory).
+            Mail::to($user->student_email ?: $user->email)->send(new OtpMail($otp));
         } catch (\Throwable $e) {
             Log::error('Resend OTP mail failed', ['error' => $e->getMessage()]);
         }
 
         return sendResponse([
-            'student_email_masked' => $this->maskEmail($user->email),
+            'student_email_masked' => $this->maskEmail($user->student_email ?: $user->email),
             'activation_expires_at' => $user->activation_code_expires_at?->toIso8601String(),
         ], $lang ? 'تم إعادة إرسال رمز التحقق' : 'Verification code resent');
     }

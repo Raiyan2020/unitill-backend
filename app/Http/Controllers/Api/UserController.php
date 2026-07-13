@@ -5,11 +5,14 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\UserResource;
+use App\Mail\OtpMail;
 use App\Models\User;
 use App\Traits\ImageTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
@@ -115,10 +118,96 @@ class UserController extends Controller
 
         return sendResponse(new UserResource($user), 'Password changed successfully.');
     }
-    //destroy
-    public function destroy()
+    /**
+     * Sends a confirmation code to the user's PERSONAL email before an account
+     * deletion can be executed (business rule: delete requires OTP + double
+     * confirmation). The code is fixed to 123456 for now (testing).
+     */
+    public function sendDeletionOtp(Request $request)
     {
         $user = Auth::user();
+        $otp = 123456; // fixed for testing
+        try {
+            Mail::to($user->email)->send(new OtpMail($otp));
+        } catch (\Throwable $e) {
+            Log::error('Delete-account OTP mail failed', ['error' => $e->getMessage()]);
+        }
+
+        return sendResponse(
+            ['needs_otp' => true],
+            $request->header('lang') === 'ar'
+                ? 'تم إرسال رمز التأكيد إلى بريدك الشخصي'
+                : 'Confirmation code sent to your personal email'
+        );
+    }
+
+    /**
+     * GDPR Subject Access Request (SAR). Compiles the signed-in user's personal
+     * data, emails a copy to their registered address, and logs the request so
+     * support can action it within the statutory window. No external service is
+     * involved.
+     */
+    public function requestDataExport(Request $request)
+    {
+        $user = Auth::user();
+        $isAr = $request->header('lang') === 'ar';
+
+        $ads = $user->ads()
+            ->latest()
+            ->get(['id', 'title', 'status', 'price', 'created_at'])
+            ->map(fn ($ad) => "- #{$ad->id} {$ad->title} ({$ad->status}) £{$ad->price} — {$ad->created_at}")
+            ->implode("\n");
+
+        $lines = [
+            'UniTill — Personal Data Export',
+            '================================',
+            'Name: '.trim(($user->first_name ?? '').' '.($user->last_name ?? '')),
+            'Personal email: '.($user->email ?? '-'),
+            'University email: '.($user->student_email ?? '-'),
+            'Phone: '.($user->phone ?? '-'),
+            'Trusted seller: '.($user->is_trusted_seller ? 'Yes' : 'No'),
+            'Account created: '.optional($user->created_at)->toDateTimeString(),
+            '',
+            'Your ads:',
+            $ads !== '' ? $ads : '(none)',
+        ];
+        $body = implode("\n", $lines);
+
+        Log::info('SAR data export requested', ['user_id' => $user->id]);
+
+        try {
+            Mail::raw($body, function ($message) use ($user) {
+                $message->to($user->email)->subject('Your UniTill personal data');
+            });
+        } catch (\Throwable $e) {
+            Log::error('SAR data export mail failed', ['error' => $e->getMessage()]);
+        }
+
+        return sendResponse(
+            ['email' => $user->email],
+            $isAr
+                ? 'تم إرسال نسخة من بياناتك إلى بريدك الإلكتروني'
+                : 'A copy of your data has been sent to your email'
+        );
+    }
+
+    //destroy
+    public function destroy(Request $request)
+    {
+        $user = Auth::user();
+
+        // Deletion must be confirmed with the OTP sent to the personal email.
+        $otp = (string) $request->input('otp', '');
+        if ($otp !== '123456') {
+            return sendError(
+                $request->header('lang') === 'ar'
+                    ? 'رمز التأكيد غير صحيح'
+                    : 'Invalid confirmation code',
+                [],
+                422
+            );
+        }
+
         //posts delete
         $user->posts()->delete();
         $user->delete();

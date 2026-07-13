@@ -68,6 +68,11 @@ class StoreAdRequest extends FormRequest
             'price' => 'required|numeric|min:0',
             'currency' => 'nullable|string|size:3',
             'city_id' => 'required|integer|exists:cities,id',
+            // UK postcode based location (resolved via postcodes.io on the client).
+            'postcode' => 'nullable|string|max:12',
+            'location_name' => 'nullable|string|max:191',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'is_negotiable' => 'nullable|boolean',
             'confirm_publish' => 'nullable|boolean',
             'attributes' => 'nullable|array',

@@ -16,6 +16,11 @@ class CategoryController extends Controller
             ->whereNull('parent_id')
             ->where('status', 'active')
             ->with('translations')
+            ->with([
+                'attributeDefinitions' => fn ($q) => $q
+                    ->where('is_active', true)
+                    ->with('translations'),
+            ])
             ->orderBy('sort');
 
         if (! $request->boolean('parents_only')) {

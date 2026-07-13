@@ -9,6 +9,7 @@ use App\Http\Resources\AdResource;
 use App\Models\Ad;
 use App\Models\AdAttributeValue;
 use App\Models\AdImage;
+use App\Models\Category;
 use App\Models\CategoryAttributeDefinition;
 use App\Support\AdFilters;
 use App\Support\AdSort;
@@ -89,7 +90,17 @@ class AdController extends Controller
         }
 
         AdFilters::apply($query, $attributeFilters);
-        AdSort::apply($query, $sort);
+
+        // Viewer coordinates (sent by the location interceptor as headers, or as
+        // query params) power distance sorting.
+        $viewerLat = $request->header('lat') ?? $request->input('lat');
+        $viewerLng = $request->header('lng') ?? $request->input('lng');
+        AdSort::apply(
+            $query,
+            $sort,
+            is_numeric($viewerLat) ? (float) $viewerLat : null,
+            is_numeric($viewerLng) ? (float) $viewerLng : null
+        );
 
         $this->attachFavoriteIds($request);
 
@@ -109,9 +120,14 @@ class AdController extends Controller
             'attributes' => $attributeFilters ?: null,
         ]);
 
-        $filterCategoryId = $subCategoryId ?: ($mainCategoryId ?: null);
-        if ($filterCategoryId) {
-            $response['filter_options'] = $this->filterOptionsForCategory((int) $filterCategoryId, $lang);
+        // Attribute definitions live on the main category, so resolve to it
+        // even when the viewer is browsing a subcategory.
+        $attributeCategoryId = $mainCategoryId;
+        if ($attributeCategoryId === 0 && $subCategoryId > 0) {
+            $attributeCategoryId = (int) (Category::whereKey($subCategoryId)->value('parent_id') ?? $subCategoryId);
+        }
+        if ($attributeCategoryId > 0) {
+            $response['filter_options'] = $this->filterOptionsForCategory($attributeCategoryId, $lang);
         }
 
         return sendResponse($response);
@@ -135,7 +151,8 @@ class AdController extends Controller
                 'attributeValues.definition.translations',
                 'user' => function ($query) {
                     $query->withCount('ratingsReceived as total_reviews_count')
-                        ->withAvg('ratingsReceived as average_rating_received', 'score');
+                        ->withAvg('ratingsReceived as average_rating_received', 'score')
+                        ->with('latestApprovedTrustedSellerApplication');
                 },
             ])
             ->first();
@@ -207,6 +224,10 @@ class AdController extends Controller
                 'description' => $data['description'] ?? null,
                 'country_id' => $request->countryId(),
                 'city_id' => $data['city_id'],
+                'postcode' => $data['postcode'] ?? null,
+                'location_name' => $data['location_name'] ?? null,
+                'latitude' => $data['latitude'] ?? null,
+                'longitude' => $data['longitude'] ?? null,
                 'main_category_id' => $data['main_category_id'],
                 'sub_category_id' => $data['sub_category_id'] ?? null,
                 'cover_image' => $coverPath,

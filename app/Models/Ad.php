@@ -19,6 +19,10 @@ class Ad extends Model
         'description',
         'country_id',
         'city_id',
+        'postcode',
+        'location_name',
+        'latitude',
+        'longitude',
         'main_category_id',
         'sub_category_id',
         'cover_image',
@@ -39,6 +43,8 @@ class Ad extends Model
 
     protected $casts = [
         'price' => 'decimal:2',
+        'latitude' => 'decimal:7',
+        'longitude' => 'decimal:7',
         'is_negotiable' => 'boolean',
         'is_verified' => 'boolean',
         'is_sold_outside' => 'boolean',
