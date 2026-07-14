@@ -21,6 +21,8 @@ class AdDetailResource extends JsonResource
             $sellerName = (string) ($this->user?->name ?? '');
         }
 
+        $viewerId = auth('sanctum')->id();
+
         return [
             'id' => $this->id,
             'public_id' => $this->public_id,
@@ -28,6 +30,9 @@ class AdDetailResource extends JsonResource
             'subtitle' => $this->subtitle,
             'description' => $this->description,
             'status' => $this->status,
+            // Lets the app show owner controls instead of buyer actions
+            // (contact / buy) on the viewer's own ad.
+            'is_owner' => $viewerId && (int) $this->user_id === (int) $viewerId,
             'price' => $this->price !== null ? (float) $this->price : null,
             'currency' => $this->currency,
             'formatted_price' => $this->formattedPrice(),

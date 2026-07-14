@@ -136,9 +136,9 @@ class AdController extends Controller
     public function show(Request $request, string $id)
     {
         $lang = $request->header('lang') === 'ar';
+        $userId = auth('sanctum')->id();
 
         $ad = Ad::query()
-            ->published()
             ->where(function ($query) use ($id) {
                 $query->where('id', $id)
                     ->orWhere('public_id', $id);
@@ -157,7 +157,10 @@ class AdController extends Controller
             ])
             ->first();
 
-        if (! $ad) {
+        // The owner may view their own ad in any status (draft / inactive /
+        // sold); everyone else only sees published ads.
+        $isOwner = $ad && $userId && (int) $ad->user_id === (int) $userId;
+        if (! $ad || ($ad->status !== 'published' && ! $isOwner)) {
             return sendError(
                 $lang ? 'الإعلان غير موجود' : 'Ad not found',
                 [],
