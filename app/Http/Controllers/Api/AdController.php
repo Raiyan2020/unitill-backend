@@ -198,9 +198,13 @@ class AdController extends Controller
         $data = $request->validated();
         $confirmPublish = (bool) ($data['confirm_publish'] ?? false);
         $attributes = (array) ($data['attributes'] ?? []);
-        $specCategoryId = (int) ($data['sub_category_id'] ?? $data['main_category_id']);
+        // Attribute definitions live on the main category; resolve from both.
+        $specCategoryIds = array_values(array_filter([
+            (int) $data['main_category_id'],
+            (int) ($data['sub_category_id'] ?? 0),
+        ]));
 
-        $ad = DB::transaction(function () use ($request, $user, $data, $confirmPublish, $attributes, $specCategoryId) {
+        $ad = DB::transaction(function () use ($request, $user, $data, $confirmPublish, $attributes, $specCategoryIds) {
             $imagePaths = [];
             foreach ($request->file('images', []) as $index => $image) {
                 $imagePaths[] = [
@@ -250,7 +254,7 @@ class AdController extends Controller
             }
 
             $definitions = CategoryAttributeDefinition::query()
-                ->where('category_id', $specCategoryId)
+                ->whereIn('category_id', $specCategoryIds)
                 ->where('is_active', true)
                 ->get()
                 ->keyBy('slug');
@@ -323,14 +327,23 @@ class AdController extends Controller
             'price' => 'required|numeric|min:0',
             'currency' => 'nullable|string|size:3',
             'is_negotiable' => 'nullable|boolean',
+            'postcode' => 'nullable|string|max:20',
+            'location_name' => 'nullable|string|max:255',
+            'latitude' => 'nullable|numeric|between:-90,90',
+            'longitude' => 'nullable|numeric|between:-180,180',
             'attributes' => 'nullable|array',
             'attributes.*' => 'nullable|string|max:1000',
         ]);
 
         $attributes = (array) ($validated['attributes'] ?? []);
-        $specCategoryId = (int) ($validated['sub_category_id'] ?? $validated['main_category_id']);
+        // Attribute definitions live on the main category, so resolve them from
+        // both main and sub category ids (the sub rarely carries its own).
+        $specCategoryIds = array_values(array_filter([
+            (int) $validated['main_category_id'],
+            (int) ($validated['sub_category_id'] ?? 0),
+        ]));
 
-        $ad = DB::transaction(function () use ($request, $user, $validated, $attributes, $specCategoryId, $cityId) {
+        $ad = DB::transaction(function () use ($request, $user, $validated, $attributes, $specCategoryIds, $cityId) {
             $title = $validated['title'];
             $publicId = strtoupper(Str::random(10));
 
@@ -347,13 +360,17 @@ class AdController extends Controller
                 'price' => $validated['price'],
                 'currency' => strtoupper($validated['currency'] ?? 'GBP'),
                 'is_negotiable' => (bool) ($validated['is_negotiable'] ?? false),
+                'postcode' => $validated['postcode'] ?? null,
+                'location_name' => $validated['location_name'] ?? null,
+                'latitude' => $validated['latitude'] ?? null,
+                'longitude' => $validated['longitude'] ?? null,
                 'is_verified' => false,
                 'slug' => Str::slug($title.'-'.$publicId),
                 'status' => 'draft',
             ]);
 
             $definitions = CategoryAttributeDefinition::query()
-                ->where('category_id', $specCategoryId)
+                ->whereIn('category_id', $specCategoryIds)
                 ->where('is_active', true)
                 ->get()
                 ->keyBy('slug');
