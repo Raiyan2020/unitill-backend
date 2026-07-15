@@ -20,3 +20,8 @@ yarn-error.log
 /.vscode
 /storage/app/firebase/firebase_credentials.json
 
+
+# Server runtime and deployment artifacts
+error_log
+frontend/error_log
+*.zip
