@@ -30,11 +30,8 @@ Route::group(
     ['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['localize']], // يمكن أن يكون middleware مختلف حسب إعداداتك
     function () {
         Route::get('/', function () {
-            if (!Auth::guard('admin')->check()) {
-                return redirect()->route('admin.login');
-            }  elseif (Auth::guard('admin')->check()) {
-                return redirect()->route('admin.dashboard');
-            }
+            // Redirect the project root to the React (Vite) dashboard dev server.
+            return redirect()->away(env('FRONTEND_URL', 'http://localhost:5173'));
         });
 
     }

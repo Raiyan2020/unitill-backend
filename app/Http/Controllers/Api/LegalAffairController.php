@@ -14,7 +14,7 @@ class LegalAffairController extends Controller
      */
     public function index(Request $request)
     {
-        $code = $request->header('lang') === 'ar' ? 'ar' : 'en';
+        $code =  $request->header('lang', 'ar');
         $language = Language::where('code', $code)->first();
         $fallback = $code === 'en' ? null : Language::where('code', 'en')->first();
 
@@ -24,9 +24,11 @@ class LegalAffairController extends Controller
             ->orderBy('sort_order')
             ->get()
             ->map(function (LegalAffair $affair) use ($language, $fallback) {
+    
                 $translation = $language
                     ? $affair->translations->firstWhere('language_id', $language->id)
                     : null;
+
                 $translation ??= $fallback
                     ? $affair->translations->firstWhere('language_id', $fallback->id)
                     : null;
