@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Dashboard\CityAdminController;
 use App\Http\Controllers\Api\Dashboard\ContactReasonAdminController;
 use App\Http\Controllers\Api\Dashboard\ContactUsAdminController;
 use App\Http\Controllers\Api\Dashboard\CountryController;
+use App\Http\Controllers\Api\Dashboard\UniversityController;
 use App\Http\Controllers\Api\Dashboard\LegalAffairController;
 use App\Http\Controllers\Api\Dashboard\LanguageController;
 use App\Http\Controllers\Api\Dashboard\PermissionController;
@@ -78,6 +79,14 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('reset-password', 'resetPassword');
 });
 
+// V2 login: two-step OTP flow with a 30-day access token.
+Route::prefix('v2')->controller(\App\Http\Controllers\Api\V2\AuthController::class)->group(function () {
+    Route::post('login', 'login');
+    Route::post('login/verify-otp', 'verifyOtp');
+    Route::post('login/resend-otp', 'resendOtp');
+    Route::post('auth/refresh', 'refresh');
+});
+
 Route::prefix('admin')->controller(AdminAuthController::class)->group(function () {
     Route::post('login', 'login');
     Route::middleware('auth:sanctum')->post('logout', 'logout');
@@ -130,6 +139,13 @@ Route::middleware('auth:sanctum')->prefix('admin')->controller(CountryController
     Route::post('countries', 'store')->middleware('permission:countries.create');
     Route::put('countries/{id}', 'update')->middleware('permission:countries.update');
     Route::delete('countries/{id}', 'destroy')->middleware('permission:countries.delete');
+});
+
+Route::middleware('auth:sanctum')->prefix('admin')->controller(UniversityController::class)->group(function () {
+    Route::get('universities', 'index')->middleware('permission:universities.view');
+    Route::post('universities', 'store')->middleware('permission:universities.create');
+    Route::put('universities/{id}', 'update')->middleware('permission:universities.update');
+    Route::delete('universities/{id}', 'destroy')->middleware('permission:universities.delete');
 });
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(CategoryAdminController::class)->group(function () {

@@ -21,6 +21,7 @@ import { RolesPage } from './pages/RolesPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { SubCategoriesPage } from './pages/SubCategoriesPage';
 import { TrustedSellerApplicationsPage } from './pages/TrustedSellerApplicationsPage';
+import { UniversitiesPage } from './pages/UniversitiesPage';
 import { UserAdsPage } from './pages/UserAdsPage';
 import { UserDevicesPage } from './pages/UserDevicesPage';
 import { UserDetailsPage } from './pages/UserDetailsPage';
@@ -78,6 +79,7 @@ export default function App() {
         <Route path="contact-us" element={<PermissionRoute permission="contact_us.view"><ContactUsPage /></PermissionRoute>} />
         <Route path="push-notifications" element={<PermissionRoute permission="dashboard.view"><PushNotificationsPage /></PermissionRoute>} />
         <Route path="cities" element={<PermissionRoute permission="cities.view"><CitiesPage /></PermissionRoute>} />
+        <Route path="universities" element={<PermissionRoute permission="universities.view"><UniversitiesPage /></PermissionRoute>} />
         <Route path="payment-methods" element={<PermissionRoute permission="payment_methods.view"><PaymentMethodsPage /></PermissionRoute>} />
         <Route path="settings" element={<PermissionRoute permission="dashboard.view"><SettingsPage /></PermissionRoute>} />
         <Route path="profile" element={<ProfilePage />} />

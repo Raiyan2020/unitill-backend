@@ -1,4 +1,4 @@
-import { BadgeCheck, Bell, Building2, FileText, FolderTree, Globe, KeyRound, Languages, LayoutDashboard, LogOut, Mail, Megaphone, Menu, MessageSquare, Moon, Settings, ShieldCheck, Sun, User, UserCog, Users, Wallet, X } from 'lucide-react';
+import { BadgeCheck, Bell, Building2, FileText, FolderTree, GraduationCap, Globe, KeyRound, Languages, LayoutDashboard, LogOut, Mail, Megaphone, Menu, MessageSquare, Moon, Settings, ShieldCheck, Sun, User, UserCog, Users, Wallet, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
@@ -16,6 +16,7 @@ const navItems = [
   { to: '/roles', labelKey: 'roles', icon: ShieldCheck, permission: 'roles.view' },
   { to: '/permissions', labelKey: 'permissions', icon: KeyRound, permission: 'permissions.view' },
   { to: '/countries', labelKey: 'countries', icon: Building2, permission: 'countries.view' },
+  { to: '/universities', labelKey: 'universities', icon: GraduationCap, permission: 'universities.view' },
   { to: '/categories', labelKey: 'categories', icon: FolderTree, permission: 'categories.view' },
   { to: '/languages', labelKey: 'languages', icon: Languages, permission: 'languages.view' },
   { to: '/legal-affairs', labelKey: 'legalAffairs', icon: FileText, permission: 'legal_affairs.view' },

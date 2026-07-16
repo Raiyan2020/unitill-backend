@@ -47,6 +47,9 @@ class User extends Authenticatable
         'activation_code_expires_at',
         'activation_sent_at',
         'terms_accepted_at',
+        'login_otp',
+        'login_otp_expires_at',
+        'login_otp_sent_at',
         ];
 
     /**
@@ -58,6 +61,7 @@ class User extends Authenticatable
         'password',
         'remember_token',
         'activation_code',
+        'login_otp',
     ];
 
     /**
@@ -93,6 +97,8 @@ class User extends Authenticatable
         'activation_sent_at' => 'datetime',
         'terms_accepted_at' => 'datetime',
         'reset_code_expire' => 'datetime',
+        'login_otp_expires_at' => 'datetime',
+        'login_otp_sent_at' => 'datetime',
     ];
 
     protected static function booted(): void

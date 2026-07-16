@@ -16,6 +16,7 @@ type Dictionary = {
   settings: string;
   countries: string;
   cities: string;
+  universities: string;
   paymentMethods: string;
   languages: string;
   categories: string;
@@ -74,6 +75,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     settings: 'Settings',
     countries: 'Countries',
     cities: 'Cities',
+    universities: 'Universities',
     paymentMethods: 'Payment Methods',
     languages: 'Languages',
     categories: 'Categories',
@@ -130,6 +132,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     settings: 'الإعدادات',
     countries: 'الدول',
     cities: 'المدن',
+    universities: 'الجامعات',
     paymentMethods: 'طرق الدفع',
     languages: 'اللغات',
     categories: 'الأقسام',

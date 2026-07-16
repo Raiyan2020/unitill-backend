@@ -18,12 +18,12 @@ class MobileAuthTokenService
         return $deviceId ? trim((string) $deviceId) : null;
     }
 
-    public function issue(User $user, Request $request, bool $issueBiometric = false): array
+    public function issue(User $user, Request $request, bool $issueBiometric = false, ?int $accessTtlMinutes = null): array
     {
         $deviceId = self::resolveDeviceId($request);
         $deviceMeta = $this->deviceMeta($request);
 
-        $accessExpiresAt = now()->addMinutes(config('mobile_auth.access_token_ttl', 60));
+        $accessExpiresAt = now()->addMinutes($accessTtlMinutes ?? config('mobile_auth.access_token_ttl', 60));
         $tokenResult = $user->createToken('mobile-access', ['*'], $accessExpiresAt);
 
         $tokenResult->accessToken->forceFill([
@@ -55,7 +55,7 @@ class MobileAuthTokenService
         return $payload;
     }
 
-    public function refresh(string $plainRefreshToken, string $deviceId): array
+    public function refresh(string $plainRefreshToken, string $deviceId, ?int $accessTtlMinutes = null): array
     {
         $record = $this->findRefreshToken($plainRefreshToken, $deviceId);
 
@@ -77,7 +77,7 @@ class MobileAuthTokenService
             'last_used_at' => now(),
         ])->save();
 
-        $accessExpiresAt = now()->addMinutes(config('mobile_auth.access_token_ttl', 60));
+        $accessExpiresAt = now()->addMinutes($accessTtlMinutes ?? config('mobile_auth.access_token_ttl', 60));
         $tokenResult = $user->createToken('mobile-access', ['*'], $accessExpiresAt);
 
         $tokenResult->accessToken->forceFill([
