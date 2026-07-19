@@ -1,4 +1,4 @@
-import { BadgeCheck, Bell, Building2, FileText, FolderTree, GraduationCap, Globe, KeyRound, Languages, LayoutDashboard, LogOut, Mail, Megaphone, Menu, MessageSquare, Moon, Settings, ShieldCheck, Sun, User, UserCog, Users, Wallet, X } from 'lucide-react';
+import { BadgeCheck, Bell, Building2, FileText, Flag, FolderTree, GraduationCap, Globe, KeyRound, Languages, LayoutDashboard, LogOut, Mail, Megaphone, Menu, MessageSquare, Moon, Settings, ShieldCheck, Sun, User, UserCog, Users, Wallet, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
@@ -11,6 +11,7 @@ const navItems = [
   { to: '/', labelKey: 'dashboard', icon: LayoutDashboard, permission: 'dashboard.view' },
   { to: '/users', labelKey: 'users', icon: Users, permission: 'users.view' },
   { to: '/ads', labelKey: 'ads', icon: Megaphone, permission: 'categories.view' },
+  { to: '/ad-reports', labelKey: 'adReports', icon: Flag, permission: 'ad_reports.view' },
   { to: '/user-verifications', labelKey: 'userVerifications', icon: BadgeCheck, permission: 'users.view' },
   { to: '/admins', labelKey: 'admins', icon: UserCog, permission: 'admins.view' },
   { to: '/roles', labelKey: 'roles', icon: ShieldCheck, permission: 'roles.view' },

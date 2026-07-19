@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppLayout } from './layouts/AppLayout';
 import { AdDetailsPage } from './pages/AdDetailsPage';
+import { AdReportsPage } from './pages/AdReportsPage';
 import { AdsPage } from './pages/AdsPage';
 import { AdminsPage } from './pages/AdminsPage';
 import { CitiesPage } from './pages/CitiesPage';
@@ -62,6 +63,7 @@ export default function App() {
         <Route path="ads" element={<PermissionRoute permission="categories.view"><AdsPage /></PermissionRoute>} />
         <Route path="ads/:id" element={<PermissionRoute permission="categories.view"><AdDetailsPage /></PermissionRoute>} />
         <Route path="ads/user/:userId" element={<PermissionRoute permission="categories.view"><UserAdsPage /></PermissionRoute>} />
+        <Route path="ad-reports" element={<PermissionRoute permission="ad_reports.view"><AdReportsPage /></PermissionRoute>} />
         <Route path="user-verifications" element={<PermissionRoute permission="users.view"><TrustedSellerApplicationsPage /></PermissionRoute>} />
         <Route path="user-verifications/user/:userId" element={<PermissionRoute permission="users.view"><UserVerificationDetailsPage /></PermissionRoute>} />
         <Route path="users/:id" element={<PermissionRoute permission="users.view"><UserDetailsPage /></PermissionRoute>} />

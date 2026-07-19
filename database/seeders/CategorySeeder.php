@@ -7,14 +7,14 @@ use App\Models\CategoryTranslation;
 use App\Models\Language;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class CategorySeeder extends Seeder
 {
     /**
-     * Canonical UniTill category tree (10 top-level categories + subcategories)
-     * as defined by the business notes. Idempotent: categories are matched by
-     * their English translation, so re-running only adds what is missing and
-     * never duplicates.
+     * شجرة أقسام UniTill المعتمدة (10 أقسام رئيسية + الأقسام الفرعية)
+     * حسب ملف المواصفات. تُفرَّغ الجداول أولاً ثم يُعاد البذر، فتكون النتيجة
+     * مطابقة للمواصفات تماماً في كل تشغيل.
      */
     public function run(): void
     {
@@ -22,6 +22,8 @@ class CategorySeeder extends Seeder
         if ($langs->isEmpty()) {
             return;
         }
+
+        $this->truncateCategoryTree();
 
         $tree = [
             [
@@ -38,7 +40,7 @@ class CategorySeeder extends Seeder
             [
                 'en' => 'Cars', 'ar' => 'السيارات',
                 'children' => [
-                    ['en' => 'Cars', 'ar' => 'سيارات'],
+                    ['en' => 'Cars only', 'ar' => 'سيارات فقط'],
                     ['en' => 'Parts', 'ar' => 'قطع غيار'],
                     ['en' => 'Others', 'ar' => 'أخرى'],
                 ],
@@ -107,8 +109,8 @@ class CategorySeeder extends Seeder
                     ['en' => 'Tutoring', 'ar' => 'دروس خصوصية'],
                     ['en' => 'Moving help', 'ar' => 'مساعدة في النقل'],
                     ['en' => 'Cleaning', 'ar' => 'تنظيف'],
-                    ['en' => 'IT / tech help', 'ar' => 'دعم تقني'],
-                    ['en' => 'Freelance / student services', 'ar' => 'خدمات طلابية / حرة'],
+                    ['en' => 'IT/tech help', 'ar' => 'دعم تقني'],
+                    ['en' => 'Freelance/student services', 'ar' => 'خدمات طلابية/حرة'],
                     ['en' => 'Others', 'ar' => 'أخرى'],
                 ],
             ],
@@ -138,8 +140,37 @@ class CategorySeeder extends Seeder
     }
 
     /**
-     * Finds a category by its English translation (scoped to the same parent)
-     * or creates it. Keeps the seeder safe to run repeatedly.
+     * تفريغ شجرة الأقسام قبل إعادة البذر حتى تطابق المواصفات تماماً
+     * دون صفوف قديمة أو مكررة.
+     *
+     * تحذير: الإعلانات مرتبطة بالأقسام، لذلك تُفرَّغ معها.
+     * لا تُشغَّل على بيانات إنتاج فيها إعلانات حقيقية.
+     */
+    private function truncateCategoryTree(): void
+    {
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+
+        foreach ([
+            'ad_attribute_values',
+            'ad_images',
+            'ads',
+            'category_attribute_definition_translations',
+            'category_attribute_definitions',
+            'category_translations',
+            'categories',
+        ] as $table) {
+            DB::table($table)->truncate();
+        }
+
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+    }
+
+    /**
+     * تبحث عن القسم بالاسم الإنجليزي أو العربي (ضمن نفس الأب) وإلا تنشئه.
+     *
+     * المطابقة تشمل اللغتين لأن بيانات قائمة لديها الاسمان متبادلان بين
+     * الخانتين، والبحث بالإنجليزي وحده كان ينشئ نسخة مكررة بدل إيجاد الأصل.
+     * وفي كل الحالات تُعاد كتابة الترجمتين حتى تصحّح البيانات القديمة نفسها.
      */
     private function ensureCategory(
         Collection $langs,
@@ -148,33 +179,32 @@ class CategorySeeder extends Seeder
         ?int $parentId,
         int $sort
     ): Category {
+        $scope = fn ($q) => $parentId === null
+            ? $q->whereNull('parent_id')
+            : $q->where('parent_id', $parentId);
+
         $existingId = CategoryTranslation::query()
-            ->where('name', $en)
-            ->whereHas('category', fn ($q) => $parentId === null
-                ? $q->whereNull('parent_id')
-                : $q->where('parent_id', $parentId))
+            ->whereIn('name', [$en, $ar])
+            ->whereHas('category', $scope)
             ->value('category_id');
 
-        if ($existingId) {
-            return Category::find($existingId);
-        }
-
-        $category = Category::create([
-            'parent_id' => $parentId,
-            'image' => null,
-            'status' => 'active',
-            'filter_group_id' => null,
-            'sort' => $sort,
-        ]);
+        $category = $existingId
+            ? Category::find($existingId)
+            : Category::create([
+                'parent_id' => $parentId,
+                'image' => null,
+                'status' => 'active',
+                'filter_group_id' => null,
+                'sort' => $sort,
+            ]);
 
         foreach (['en' => $en, 'ar' => $ar] as $code => $name) {
             $lang = $langs->get($code);
             if ($lang) {
-                CategoryTranslation::create([
-                    'category_id' => $category->id,
-                    'language_id' => $lang->id,
-                    'name' => $name,
-                ]);
+                CategoryTranslation::updateOrCreate(
+                    ['category_id' => $category->id, 'language_id' => $lang->id],
+                    ['name' => $name]
+                );
             }
         }
 

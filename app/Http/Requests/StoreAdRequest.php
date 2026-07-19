@@ -55,6 +55,26 @@ class StoreAdRequest extends FormRequest
         }
     }
 
+    /**
+     * رقم اللوحة مطلوب لقسم السيارات فقط.
+     *
+     * كان المعرّف مكتوباً بشكل ثابت (2) وهو لا يطابق معرّف قسم السيارات
+     * بعد إعادة بذر الأقسام، لذلك يُحلّ الآن بالاسم.
+     */
+    private function isCarsCategory(): bool
+    {
+        $id = $this->input('main_category_id');
+        if (! $id) {
+            return false;
+        }
+
+        return Category::query()
+            ->whereNull('parent_id')
+            ->where('id', $id)
+            ->whereHas('translations', fn ($q) => $q->where('name', 'Cars'))
+            ->exists();
+    }
+
     public function rules(): array
     {
         return [
@@ -64,12 +84,20 @@ class StoreAdRequest extends FormRequest
             'sub_category_id' => 'nullable|integer|exists:categories,id',
             'title' => 'required|string|max:255',
             'subtitle' => 'nullable|string|max:255',
+            'license_plate' => [
+                Rule::requiredIf(fn() => $this->isCarsCategory()),
+                'nullable',
+                'string',
+                'regex:/^[A-Z]{2}[0-9]{2}[A-Z]{3}$/',
+                'max:7'
+            ],
             'description' => 'nullable|string|max:5000',
             'price' => 'required|numeric|min:0',
             'currency' => 'nullable|string|size:3',
             'city_id' => 'required|integer|exists:cities,id',
             // UK postcode based location (resolved via postcodes.io on the client).
-            'postcode' => 'nullable|string|max:12',
+            'postcode' => ['nullable', 'string', 'regex:/^([A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}|GIR ?0AA)$/i'],
+            'region' => 'nullable|string|max:191',
             'location_name' => 'nullable|string|max:191',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
@@ -77,6 +105,7 @@ class StoreAdRequest extends FormRequest
             'confirm_publish' => 'nullable|boolean',
             'attributes' => 'nullable|array',
             'attributes.*' => 'nullable|string|max:1000',
+            
         ];
     }
 

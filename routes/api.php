@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\Dashboard\AdminAuthController;
 use App\Http\Controllers\Api\Dashboard\AdminController;
 use App\Http\Controllers\Api\Dashboard\AdAdminController;
+use App\Http\Controllers\Api\Dashboard\AdReportAdminController;
 use App\Http\Controllers\Api\Dashboard\AdminUserController;
 use App\Http\Controllers\Api\Dashboard\CategoryAdminController;
 use App\Http\Controllers\Api\Dashboard\CityAdminController;
@@ -38,6 +39,7 @@ use App\Http\Controllers\Api\UserRatingController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserDeviceController;
 use App\Http\Controllers\Api\UserNotificationController;
+use App\Http\Controllers\Api\VehicleLookupController;
 
 
 /*
@@ -106,6 +108,12 @@ Route::middleware('auth:sanctum')->prefix('admin')->controller(AdAdminController
     Route::get('ads/{id}', 'show')->middleware('permission:categories.view');
     Route::put('ads/{id}', 'update')->middleware('permission:categories.update');
     Route::delete('ads/{id}', 'destroy')->middleware('permission:categories.delete');
+});
+
+Route::middleware('auth:sanctum')->prefix('admin')->controller(AdReportAdminController::class)->group(function () {
+    Route::get('ad-reports', 'index')->middleware('permission:ad_reports.view');
+    Route::get('ad-reports/{id}', 'show')->middleware('permission:ad_reports.view');
+    Route::put('ad-reports/{id}', 'update')->middleware('permission:ad_reports.update');
 });
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(AdminController::class)->group(function () {
@@ -282,5 +290,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('{id}/report', 'report');
         Route::delete('{id}', 'destroy');
     });
+
+    Route::get('vehicles/lookup', [VehicleLookupController::class, 'lookup']);
+    Route::get('/postcode/lookup', [App\Http\Controllers\Api\PostcodeController::class, 'lookup']);
 });
 

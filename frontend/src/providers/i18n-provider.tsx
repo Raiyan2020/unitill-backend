@@ -8,6 +8,7 @@ type Dictionary = {
   dashboard: string;
   users: string;
   ads: string;
+  adReports: string;
   userVerifications: string;
   admins: string;
   roles: string;
@@ -67,6 +68,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     dashboard: 'Dashboard',
     users: 'Users',
     ads: 'Ads',
+    adReports: 'Ad Reports',
     userVerifications: 'User Verifications',
     admins: 'Admins',
     roles: 'Roles',
@@ -124,6 +126,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     dashboard: 'لوحة التحكم',
     users: 'المستخدمون',
     ads: 'الإعلانات',
+    adReports: 'بلاغات الإعلانات',
     userVerifications: 'طلبات التوثيق',
     admins: 'المدراء',
     roles: 'الأدوار',

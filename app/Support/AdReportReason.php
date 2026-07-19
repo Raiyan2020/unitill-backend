@@ -59,4 +59,23 @@ class AdReportReason
             ],
         ];
     }
+
+    /**
+     * التسمية المقروءة لسبب مخزّن. تُرجع القيمة الخام إن كان السبب
+     * غير معروف، حتى لا تختفي بلاغات قديمة من لوحة التحكم.
+     */
+    public static function label(?string $value, string $lang = 'en'): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        foreach (self::options($lang) as $option) {
+            if ($option['value'] === $value) {
+                return $option['label'];
+            }
+        }
+
+        return $value;
+    }
 }
