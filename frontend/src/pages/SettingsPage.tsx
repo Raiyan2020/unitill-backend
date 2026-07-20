@@ -52,10 +52,20 @@ export function SettingsPage() {
 
   const fields = useMemo(
     () =>
-      rows.map((row) => ({
+      [...rows]
+        .sort((a, b) => {
+          const order = ['post_price', 'free_ads_per_user'];
+          const aIndex = order.indexOf(a.key_id);
+          const bIndex = order.indexOf(b.key_id);
+          return (aIndex === -1 ? order.length : aIndex) - (bIndex === -1 ? order.length : bIndex);
+        })
+        .map((row) => ({
         key: row.key_id,
         label: locale === 'ar' ? row.title_ar || row.title_en || row.key_id : row.title_en || row.title_ar || row.key_id,
-        isObject: row.is_object,
+        // Price was historically stored as an "object" setting, but both
+        // listing controls must remain compact, editable number inputs.
+        isObject: ['post_price', 'free_ads_per_user'].includes(row.key_id) ? false : row.is_object,
+        isNumber: ['post_price', 'free_ads_per_user'].includes(row.key_id),
       })),
     [rows, locale],
   );
@@ -113,6 +123,9 @@ export function SettingsPage() {
                       />
                     ) : (
                       <Input
+                        type={field.isNumber ? 'number' : 'text'}
+                        min={field.isNumber ? '0' : undefined}
+                        step={field.key === 'post_price' ? '0.01' : field.isNumber ? '1' : undefined}
                         value={values[field.key] ?? ''}
                         disabled={!isEditing}
                         onChange={(e) => setValues((prev) => ({ ...prev, [field.key]: e.target.value }))}
@@ -158,4 +171,3 @@ export function SettingsPage() {
     </div>
   );
 }
-

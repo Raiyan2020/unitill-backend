@@ -7,10 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 class Ad extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'user_id',
         'public_id',
@@ -29,6 +32,10 @@ class Ad extends Model
         'sub_category_id',
         'cover_image',
         'price',
+        'listing_fee',
+        'payment_status',
+        'stripe_payment_intent_id',
+        'is_free_listing',
         'currency',
         'is_negotiable',
         'is_verified',
@@ -45,6 +52,8 @@ class Ad extends Model
 
     protected $casts = [
         'price' => 'decimal:2',
+        'listing_fee' => 'decimal:2',
+        'is_free_listing' => 'boolean',
         'latitude' => 'decimal:7',
         'longitude' => 'decimal:7',
         'is_negotiable' => 'boolean',
@@ -130,9 +139,41 @@ class Ad extends Model
         return $this->hasMany(Conversation::class);
     }
 
+    /**
+     * Ads visible to the public.
+     *
+     * Filtering on expires_at rather than trusting the "expired" status is
+     * deliberate: the scheduled command runs hourly, so relying on status
+     * alone would keep an ad listed until the next run. This drops it the
+     * moment it expires.
+     */
     public function scopePublished(Builder $query): Builder
     {
-        return $query->where('status', 'published');
+        // Ads of a deleted account are excluded by the SoftDeletes global scope,
+        // because closing an account soft-deletes the ads themselves.
+        return $query->where('status', 'published')->notExpired();
+    }
+
+    public function scopeNotExpired(Builder $query): Builder
+    {
+        return $query->where(function (Builder $q) {
+            $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
+        });
+    }
+
+    /**
+     * Ads whose lifetime has passed but whose status has not caught up yet.
+     */
+    public function scopeDueForExpiry(Builder $query): Builder
+    {
+        return $query->where('status', 'published')
+            ->whereNotNull('expires_at')
+            ->where('expires_at', '<=', now());
+    }
+
+    public function isExpired(): bool
+    {
+        return $this->expires_at !== null && $this->expires_at->isPast();
     }
 
     public function coverImageUrl(): ?string

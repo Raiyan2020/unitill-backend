@@ -35,7 +35,7 @@ class CategoryAttributeSeeder extends Seeder
     }
 
     /**
-     * الحالة تختلف من قسم لآخر حسب المواصفات، لذلك لكل قسم قائمته الخاصة.
+     * Condition options differ per category in the spec, so each passes its own list.
      */
     private function condition(array $options): array
     {
@@ -94,8 +94,8 @@ class CategoryAttributeSeeder extends Seeder
                 ['slug' => 'brand', 'label' => ['en' => 'Brand', 'ar' => 'العلامة التجارية'], 'options' => ['Apple', 'Samsung', 'Dell', 'HP', 'Lenovo', 'Huawei', 'Other'], 'type' => 'select'],
                 $this->condition(['New', 'Used', 'Refurbished']),
                 ['slug' => 'warranty', 'label' => ['en' => 'Warranty', 'ar' => 'الضمان'], 'options' => ['Yes', 'No'], 'type' => 'select'],
-                // المواصفات تفصل بين تخزين الهواتف/التابلت واللابتوب، والاتحاد بينهما مستخدم هنا
-                // لأن الحقول مرتبطة بالقسم الرئيسي فقط. الفلترة حسب item_type تتم في الواجهة.
+                // The spec splits phone/tablet storage from laptop storage. The union is used
+                // here because attributes attach to main categories only; the client filters by item_type.
                 ['slug' => 'storage', 'label' => ['en' => 'Storage', 'ar' => 'التخزين'], 'options' => ['64GB', '128GB', '256GB', '512GB', '1TB+'], 'type' => 'select'],
             ],
             'Appliances' => [
@@ -142,8 +142,8 @@ class CategoryAttributeSeeder extends Seeder
     }
 
     /**
-     * تحذف التعريفات التي لم تعد ضمن المواصفات فقط، بدل تفريغ الجدول بالكامل
-     * حتى لا تُفقد قيم الإعلانات القائمة.
+     * Deletes only definitions no longer in the spec, instead of truncating the
+     * whole table, so values on existing ads survive.
      */
     private function pruneRemovedDefinitions(int $categoryId, array $keptSlugs): void
     {

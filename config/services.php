@@ -36,6 +36,11 @@ return [
         'token' => env('MY_FATOORAH_TOKEN','SK_KWT_vVZlnnAqu8jRByOWaRPNId4ShzEDNt256dvnjebuyzo52dXjAfRx2ixW5umjWSUx'),//test
 //        'token' => env('MY_FATOORAH_TOKEN','SK_KWT_O26a1e9k8cXBJfKn1yi78LJxYNVrfCD9E5mX7tXSxDbw1ZKz3izUcIirTW8Ri6tq'),
     ],
+    'stripe' => [
+        'secret' => env('STRIPE_SECRET'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        'currency' => env('STRIPE_CURRENCY', 'gbp'),
+    ],
     'firebase' => [
         'credentials' => storage_path('firebase/firebase_credentials.json'),
     ],
@@ -54,6 +59,9 @@ return [
         'from'  => env('TWILIO_FROM'),
         'verify_sid' => env('TWILIO_VERIFY_SID'),
 
+    ],
+    'vehicle_api' => [
+        'key' => env('VEHICLE_API_KEY'),
     ],
 
 ];

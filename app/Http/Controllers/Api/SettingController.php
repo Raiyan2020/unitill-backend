@@ -35,6 +35,7 @@ class SettingController extends Controller
                 ->where('is_default', true)
                 ->value('code') ?? 'ar',
             'post_price' => setting('post_price'),
+            'free_ads_per_user' => (int) setting('free_ads_per_user', '0'),
             'post_duration' => setting('post_duration', '30'),
             'terms_conditions' => $lang === 'en'
                 ? setting('terms_conditions_en')

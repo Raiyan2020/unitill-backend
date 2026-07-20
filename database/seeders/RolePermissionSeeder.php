@@ -68,6 +68,12 @@ class RolePermissionSeeder extends Seeder
             'notifications.send',
             'ad_reports.view',
             'ad_reports.update',
+            'coupons.view',
+            'coupons.create',
+            'coupons.update',
+            'coupons.delete',
+            'chat_reports.view',
+            'chat_reports.update',
         ];
 
         foreach ($permissions as $permissionName) {

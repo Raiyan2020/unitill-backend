@@ -56,10 +56,10 @@ class StoreAdRequest extends FormRequest
     }
 
     /**
-     * رقم اللوحة مطلوب لقسم السيارات فقط.
+     * The licence plate is required for the Cars category only.
      *
-     * كان المعرّف مكتوباً بشكل ثابت (2) وهو لا يطابق معرّف قسم السيارات
-     * بعد إعادة بذر الأقسام، لذلك يُحلّ الآن بالاسم.
+     * The id used to be hardcoded to 2, which does not match the Cars category
+     * id after reseeding, so it is now resolved by name.
      */
     private function isCarsCategory(): bool
     {
@@ -103,6 +103,7 @@ class StoreAdRequest extends FormRequest
             'longitude' => 'nullable|numeric|between:-180,180',
             'is_negotiable' => 'nullable|boolean',
             'confirm_publish' => 'nullable|boolean',
+            'coupon_code' => 'nullable|string|max:40',
             'attributes' => 'nullable|array',
             'attributes.*' => 'nullable|string|max:1000',
             

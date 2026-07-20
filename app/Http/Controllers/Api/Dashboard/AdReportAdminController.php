@@ -25,7 +25,7 @@ class AdReportAdminController extends Controller
                 'user:id,name,first_name,last_name,email',
                 'ad:id,public_id,title,status,user_id',
             ])
-            // البلاغات المعلّقة أولاً لأنها ما ينتظر إجراءً
+            // Pending first — those are the ones waiting on a decision
             ->orderByRaw("FIELD(status, 'pending', 'reviewed', 'dismissed')")
             ->orderByDesc('id');
 
@@ -88,8 +88,8 @@ class AdReportAdminController extends Controller
     }
 
     /**
-     * تغيير حالة البلاغ فقط. أي إجراء على الإعلان نفسه (إيقاف/حذف)
-     * يبقى في مسار إدارة الإعلانات حتى لا يتكرر منطق الحذف في مكانين.
+     * Changes the report status only. Acting on the ad itself (pause/delete)
+     * stays in the ads admin routes so deletion logic lives in one place.
      */
     public function update(Request $request, int $id)
     {

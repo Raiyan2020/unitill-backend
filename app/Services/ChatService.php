@@ -21,6 +21,12 @@ class ChatService
             throw new \InvalidArgumentException('cannot_message_own_ad');
         }
 
+        // The seller may have closed their account since the ad was cached by
+        // the client, so a new thread must not be opened against them.
+        if (! User::whereKey($ad->user_id)->exists()) {
+            throw new \InvalidArgumentException('seller_unavailable');
+        }
+
         $conversation = Conversation::query()->firstOrCreate(
             [
                 'ad_id' => $ad->id,
@@ -55,6 +61,12 @@ class ChatService
     {
         if (! $conversation->isParticipant($sender->id)) {
             throw new \InvalidArgumentException('not_participant');
+        }
+
+        // Checked before the generic gate so the caller can tell "the other
+        // person left" apart from "the item is sold".
+        if (! $conversation->bothParticipantsExist()) {
+            throw new \InvalidArgumentException('participant_unavailable');
         }
 
         if (! $conversation->canSendMessages()) {

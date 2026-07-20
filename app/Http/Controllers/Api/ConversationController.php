@@ -9,6 +9,7 @@ use App\Models\Ad;
 use App\Models\ChatReport;
 use App\Models\Conversation;
 use App\Services\ChatService;
+use App\Support\ChatReportReason;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -80,7 +81,15 @@ class ConversationController extends Controller
 
         try {
             $conversation = $this->chatService->findOrCreateConversation($ad, $user);
-        } catch (\InvalidArgumentException) {
+        } catch (\InvalidArgumentException $e) {
+            if ($e->getMessage() === 'seller_unavailable') {
+                return sendError(
+                    $lang ? 'لم يعد هذا البائع متاحاً' : 'This seller is no longer available',
+                    [],
+                    422
+                );
+            }
+
             return sendError(
                 $lang ? 'لا يمكن بدء المحادثة' : 'Cannot start conversation',
                 [],
@@ -187,6 +196,13 @@ class ConversationController extends Controller
             );
         } catch (\InvalidArgumentException $e) {
             return match ($e->getMessage()) {
+                'participant_unavailable' => sendError(
+                    $lang
+                        ? 'لم يعد هذا المستخدم متاحاً. يمكنك قراءة المحادثة لكن لا يمكن إرسال رسائل جديدة.'
+                        : 'This user is no longer available. You can still read the conversation, but cannot send new messages.',
+                    ['can_send_messages' => false],
+                    422
+                ),
                 'messaging_disabled' => sendError(
                     $lang ? 'المراسلة معطّلة: الإعلان مباع' : 'Messaging disabled: item sold',
                     ['can_send_messages' => false],
@@ -310,12 +326,28 @@ class ConversationController extends Controller
         );
     }
 
+    /**
+     * Chat report reasons. Public so the app can load them before sign-in.
+     */
+    public function reportReasons(Request $request)
+    {
+        return sendResponse(
+            ChatReportReason::options($request->header('lang', 'en'))
+        );
+    }
+
     public function report(Request $request, string $id)
     {
         $validated = $request->validate([
             'type' => ['required', Rule::in(['user', 'chat'])],
-            'reason' => 'nullable|string|max:80',
-            'description' => 'nullable|string|max:2000',
+            // Reason comes from a fixed list; the explanation is optional except for "other"
+            'reason' => ['required', Rule::in(ChatReportReason::allowed())],
+            'description' => [
+                Rule::requiredIf(fn () => $request->input('reason') === ChatReportReason::OTHER),
+                'nullable',
+                'string',
+                'max:2000',
+            ],
             'reported_user_id' => 'nullable|integer|exists:users,id',
         ]);
 
@@ -341,6 +373,22 @@ class ConversationController extends Controller
         if ($reportedUserId === $reporter->id) {
             return sendError(
                 $lang ? 'لا يمكنك الإبلاغ عن نفسك' : 'You cannot report yourself',
+                [],
+                422
+            );
+        }
+
+        // Stop the same pending report being filed repeatedly, as ad reports already do
+        $duplicate = ChatReport::query()
+            ->where('reporter_id', $reporter->id)
+            ->where('conversation_id', $conversation->id)
+            ->where('type', $validated['type'])
+            ->where('status', 'pending')
+            ->exists();
+
+        if ($duplicate) {
+            return sendError(
+                $lang ? 'لديك بلاغ قيد المراجعة على هذه المحادثة' : 'You already have a pending report on this conversation',
                 [],
                 422
             );

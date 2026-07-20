@@ -11,6 +11,10 @@ use App\Models\AdAttributeValue;
 use App\Models\AdImage;
 use App\Models\Category;
 use App\Models\CategoryAttributeDefinition;
+use App\Services\CouponRedemptionService;
+use App\Services\StripeService;
+use App\Services\ListingPaymentService;
+use App\Traits\HandlesListingPayments;
 use App\Support\AdFilters;
 use App\Support\AdSort;
 use Illuminate\Http\Request;
@@ -21,6 +25,7 @@ use Illuminate\Validation\Rule;
 
 class AdController extends Controller
 {
+    use HandlesListingPayments;
     public function index(Request $request)
     {
         $validated = $request->validate([
@@ -158,9 +163,12 @@ class AdController extends Controller
             ->first();
 
         // The owner may view their own ad in any status (draft / inactive /
-        // sold); everyone else only sees published ads.
+        // sold); everyone else only sees published ads that have not expired.
+        // The expiry check matters because the scheduled command runs hourly,
+        // so an ad can be past expires_at while still flagged "published".
         $isOwner = $ad && $userId && (int) $ad->user_id === (int) $userId;
-        if (! $ad || ($ad->status !== 'published' && ! $isOwner)) {
+        $isVisible = $ad && $ad->status === 'published' && ! $ad->isExpired();
+        if (! $ad || (! $isVisible && ! $isOwner)) {
             return sendError(
                 $lang ? 'الإعلان غير موجود' : 'Ad not found',
                 [],
@@ -220,9 +228,6 @@ class AdController extends Controller
             $title = $data['title'];
             $publicId = strtoupper(Str::random(10));
 
-            $publishedAt = $confirmPublish ? now() : null;
-            $durationDays = (int) (setting('post_duration') ?? 30);
-
             $ad = Ad::create([
                 'user_id' => $user->id,
                 'public_id' => $publicId,
@@ -245,9 +250,7 @@ class AdController extends Controller
                 'is_negotiable' => (bool) ($data['is_negotiable'] ?? false),
                 'is_verified' => false,
                 'slug' => Str::slug($title.'-'.$publicId),
-                'status' => $confirmPublish ? 'published' : 'pending',
-                'published_at' => $publishedAt,
-                'expires_at' => $publishedAt ? $publishedAt->copy()->addDays($durationDays) : null,
+                'status' => 'draft',
             ]);
 
             foreach ($imagePaths as $row) {
@@ -279,7 +282,15 @@ class AdController extends Controller
             return $ad;
         });
 
-        $ad->load([
+        $publication = $confirmPublish ? $this->startPublication($ad, $request->input('coupon_code')) : null;
+        if (isset($publication['coupon_error'])) {
+            return sendError('The coupon code could not be applied.', ['coupon_code' => $publication['coupon_error']], 422);
+        }
+        $appliedCoupon = $publication['coupon'] ?? null;
+        if ($publication !== null) {
+            unset($publication['coupon']);
+        }
+        $ad->refresh()->load([
             'images',
             'city.translations',
             'mainCategory.translations',
@@ -289,13 +300,64 @@ class AdController extends Controller
 
         $listingFee = (float) (setting('post_price') ?? 0);
 
-        return sendResponse([
-            'ad' => new AdDetailResource($ad),
+        return sendResponse(
+            array_replace(
+                $this->listingFeePayload($request, $ad, $listingFee, false),
+                [
+                    'coupon' => $appliedCoupon,
+                    'total_amount' => (float) ($publication['amount'] ?? 0),
+                    'formatted_total_amount' => '£' . number_format((float) ($publication['amount'] ?? 0), 2),
+                ]
+            )
+                + ['publication' => $publication]
+                + ['ad' => new AdDetailResource($ad)],
+            $lang ? 'تم إنشاء الإعلان بنجاح' : 'Ad created successfully'
+        );
+    }
+
+    /**
+     * Builds the step-4 (Pay) payload for a newly created ad.
+     *
+     * The code is only consumed when the ad actually goes live — a draft that
+     * is never published must not burn the user's single use. If redemption
+     * fails the ad still stands; the fee simply comes back undiscounted rather
+     * than the whole request failing after the ad was already created.
+     */
+    protected function listingFeePayload(
+        Request $request,
+        Ad $ad,
+        float $listingFee,
+        bool $charge
+    ): array {
+        $due = $charge ? $listingFee : 0.0;
+        $coupon = null;
+
+        $code = trim((string) $request->input('coupon_code', ''));
+
+        if ($charge && $code !== '' && $listingFee > 0) {
+            $result = app(CouponRedemptionService::class)
+                ->redeem($code, $request->user(), $listingFee, $ad->id);
+
+            if (isset($result['error'])) {
+                $coupon = ['applied' => false, 'code' => $code, 'reason' => $result['error']];
+            } else {
+                $due = $result['final_amount'];
+                $coupon = [
+                    'applied' => true,
+                    'code' => $result['code'],
+                    'discount_amount' => $result['discount_amount'],
+                    'formatted_discount' => '£'.number_format($result['discount_amount'], 2),
+                ];
+            }
+        }
+
+        return [
             'listing_fee' => $listingFee,
             'formatted_listing_fee' => '£'.number_format($listingFee, 2),
-            'total_amount' => $confirmPublish ? $listingFee : 0,
-            'formatted_total_amount' => '£'.number_format($confirmPublish ? $listingFee : 0, 2),
-        ], $lang ? 'تم إنشاء الإعلان بنجاح' : 'Ad created successfully');
+            'coupon' => $coupon,
+            'total_amount' => $due,
+            'formatted_total_amount' => '£'.number_format($due, 2),
+        ];
     }
 
     protected function attachFavoriteIds(Request $request): void
@@ -338,7 +400,7 @@ class AdController extends Controller
             'price' => 'required|numeric|min:0',
             'currency' => 'nullable|string|size:3',
             'is_negotiable' => 'nullable|boolean',
-            'postcode' => "nullable|string|regex:/^([A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}|GIR ?0AA)$/i",
+            'postcode' => ['nullable', 'string', 'regex:/^([A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}|GIR ?0AA)$/i'],
             'region' => 'nullable|string|max:191',
             'location_name' => 'nullable|string|max:255',
             'latitude' => 'nullable|numeric|between:-90,90',
@@ -463,14 +525,10 @@ class AdController extends Controller
             return sendError($lang ? 'يجب رفع صورة واحدة على الأقل' : 'At least one image is required', [], 422);
         }
 
-        $publishedAt = now();
-        $durationDays = (int) (setting('post_duration') ?? 30);
-
-        $ad->update([
-            'status' => 'pending', // or 'published' based on your workflow
-            'published_at' => $publishedAt,
-            'expires_at' => $publishedAt->copy()->addDays($durationDays),
-        ]);
+        $publication = $this->startPublication($ad, $request->input('coupon_code'));
+        if (isset($publication['coupon_error'])) {
+            return sendError('The coupon code could not be applied.', ['coupon_code' => $publication['coupon_error']], 422);
+        }
 
         $ad->load([
             'images',
@@ -480,14 +538,25 @@ class AdController extends Controller
             'attributeValues.definition.translations',
         ]);
 
-        $listingFee = (float) (setting('post_price') ?? 0);
+        return sendResponse(
+            ['publication' => $publication, 'ad' => new AdDetailResource($ad)],
+            $lang ? 'تم نشر الإعلان بنجاح' : 'Ad published successfully'
+        );
+    }
 
-        return sendResponse([
-            'ad' => new AdDetailResource($ad),
-            'listing_fee' => $listingFee,
-            'formatted_listing_fee' => '£'.number_format($listingFee, 2),
-            'total_amount' => $listingFee,
-            'formatted_total_amount' => '£'.number_format($listingFee, 2),
-        ], $lang ? 'تم نشر الإعلان بنجاح' : 'Ad published successfully');
+    public function completeStripePayment(Request $request, string $id, ListingPaymentService $listings)
+    {
+        $ad = Ad::query()->where('user_id', Auth::id())->where(fn ($query) => $query->where('id', $id)->orWhere('public_id', $id))->first();
+        if (! $ad || ! $ad->stripe_payment_intent_id) {
+            return sendError('Payment for this ad was not found.', [], 404);
+        }
+
+        $intent = app(StripeService::class)->paymentIntent($ad->stripe_payment_intent_id);
+        if (($intent['status'] ?? null) !== 'succeeded') {
+            return sendError('The Stripe payment has not succeeded yet.', [], 422);
+        }
+
+        $ad = $listings->publishPaidListing($intent['id'], (int) $intent['amount_received'], (string) $intent['currency']);
+        return sendResponse(['ad' => new AdDetailResource($ad)], 'Payment verified and ad published successfully');
     }
 }

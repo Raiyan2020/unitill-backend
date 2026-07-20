@@ -12,9 +12,9 @@ use Illuminate\Support\Facades\DB;
 class CategorySeeder extends Seeder
 {
     /**
-     * شجرة أقسام UniTill المعتمدة (10 أقسام رئيسية + الأقسام الفرعية)
-     * حسب ملف المواصفات. تُفرَّغ الجداول أولاً ثم يُعاد البذر، فتكون النتيجة
-     * مطابقة للمواصفات تماماً في كل تشغيل.
+     * The approved UniTill category tree (10 main categories + subcategories)
+     * per the spec document. Tables are truncated then reseeded, so the result
+     * matches the spec exactly on every run.
      */
     public function run(): void
     {
@@ -140,11 +140,11 @@ class CategorySeeder extends Seeder
     }
 
     /**
-     * تفريغ شجرة الأقسام قبل إعادة البذر حتى تطابق المواصفات تماماً
-     * دون صفوف قديمة أو مكررة.
+     * Truncates the category tree before reseeding so it matches the spec
+     * exactly, with no stale or duplicated rows.
      *
-     * تحذير: الإعلانات مرتبطة بالأقسام، لذلك تُفرَّغ معها.
-     * لا تُشغَّل على بيانات إنتاج فيها إعلانات حقيقية.
+     * WARNING: ads are foreign-keyed to categories, so they are truncated too.
+     * Never run this against production data holding real ads.
      */
     private function truncateCategoryTree(): void
     {
@@ -166,11 +166,11 @@ class CategorySeeder extends Seeder
     }
 
     /**
-     * تبحث عن القسم بالاسم الإنجليزي أو العربي (ضمن نفس الأب) وإلا تنشئه.
+     * Finds a category by its English or Arabic name (scoped to the same parent),
      *
-     * المطابقة تشمل اللغتين لأن بيانات قائمة لديها الاسمان متبادلان بين
-     * الخانتين، والبحث بالإنجليزي وحده كان ينشئ نسخة مكررة بدل إيجاد الأصل.
-     * وفي كل الحالات تُعاد كتابة الترجمتين حتى تصحّح البيانات القديمة نفسها.
+     * or creates it. Both languages are matched because existing data had the two
+     * names swapped between slots, and matching on English alone created duplicates.
+     * Both translations are always rewritten so old rows self-correct.
      */
     private function ensureCategory(
         Collection $langs,

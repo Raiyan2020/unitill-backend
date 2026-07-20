@@ -14,12 +14,32 @@ class VehicleLookupController extends Controller
             'plate' => 'required|string|regex:/^[A-Z]{2}[0-9]{2}[A-Z]{3}$/|max:7',
         ]);
 
+        $ar = $request->header('lang') === 'ar';
         $data = $service->getMappedVehicleData($request->plate);
 
         if (isset($data['error'])) {
-            return sendError('Couldn’t find this vehicle. Please check the number or enter details manually.', [], 404);
+            // A provider outage is not the user's fault, so it must not be
+            // reported as "vehicle not found" — otherwise they retype a
+            // perfectly valid plate over and over.
+            if ($data['error'] !== 'not_found') {
+                return sendError(
+                    $ar
+                        ? 'خدمة بيانات المركبات غير متاحة حالياً. أدخل التفاصيل يدوياً.'
+                        : 'The vehicle data service is unavailable right now. Please enter the details manually.',
+                    [],
+                    503
+                );
+            }
+
+            return sendError(
+                $ar
+                    ? 'لم نعثر على هذه المركبة. تحقق من الرقم أو أدخل التفاصيل يدوياً.'
+                    : 'Couldn’t find this vehicle. Please check the number or enter details manually.',
+                [],
+                404
+            );
         }
 
-        return sendResponse($data, 'Vehicle details retrieved successfully');
+        return sendResponse($data, $ar ? 'تم جلب بيانات المركبة بنجاح' : 'Vehicle details retrieved successfully');
     }
 }

@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\UserResource;
 use App\Mail\OtpMail;
 use App\Models\User;
+use App\Services\AccountDeletionService;
 use App\Traits\ImageTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -208,10 +209,16 @@ class UserController extends Controller
             );
         }
 
-        //posts delete
-        $user->posts()->delete();
-        $user->delete();
-        return sendResponse(new UserResource($user));
+        // Soft delete, cascaded to the user's ads and chats so they disappear
+        // everywhere at once and come back together on reactivation.
+        $deletedAt = app(AccountDeletionService::class)->delete($user);
+
+        return sendResponse(
+            ['deleted_at' => $deletedAt->toIso8601String()],
+            $request->header('lang') === 'ar'
+                ? 'تم حذف حسابك. يمكنك استعادته بتسجيل الدخول مرة أخرى.'
+                : 'Your account has been deleted. Signing in again will restore it.'
+        );
     }
 
     //notificationSwitch

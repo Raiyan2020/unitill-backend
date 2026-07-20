@@ -143,7 +143,7 @@ class AdAdminController extends Controller
             'sub_category_id' => $ad->sub_category_id,
             'main_category_name' => $this->categoryName($ad->mainCategory),
             'sub_category_name' => $this->categoryName($ad->subCategory),
-            // المواصفات الديناميكية التي أدخلها البائع، حتى يراها المشرف عند المراجعة
+            // Seller-submitted specs, so a moderator can see them while reviewing
             'attributes' => $ad->attributeValues
                 ->filter(fn ($value) => $value->definition !== null)
                 ->sortBy(fn ($value) => $value->definition->sort_order)
@@ -170,7 +170,7 @@ class AdAdminController extends Controller
     }
 
     /**
-     * اسم القسم بالإنجليزية للوحة التحكم، مع الرجوع لأي ترجمة متاحة.
+     * English category name for the dashboard, falling back to any translation.
      */
     private function categoryName(?Category $category): ?string
     {

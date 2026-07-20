@@ -6,9 +6,9 @@ use Illuminate\Support\Facades\DB;
 return new class extends Migration
 {
     /**
-     * الحقول الجديدة تحتاج نوعين إضافيين:
-     * date        => تاريخ الإتاحة في قسم السكن
-     * multiselect => المميزات (موقف سيارات / حديقة / شرفة)
+     * The new attributes need two extra input types:
+     * date        => Accommodation "available from"
+     * multiselect => Features (Parking / Garden / Balcony)
      */
     public function up(): void
     {
@@ -22,7 +22,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        // أي تعريف يستخدم النوعين الجديدين يعود إلى select قبل تقليص الـ enum
+        // Definitions using the new types fall back to select before shrinking the enum
         DB::table('category_attribute_definitions')
             ->whereIn('input_type', ['date', 'multiselect'])
             ->update(['input_type' => 'select']);

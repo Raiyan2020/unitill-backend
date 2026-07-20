@@ -8,6 +8,7 @@ use App\Http\Resources\UserResource;
 use App\Mail\OtpMail;
 use App\Models\User;
 use App\Models\UserLoginLog;
+use App\Services\AccountDeletionService;
 use App\Support\LoginLogger;
 use App\Support\MobileAuthTokenService;
 use Illuminate\Http\Request;
@@ -65,13 +66,25 @@ class AuthController extends Controller
     {
         $login = $request->input('email') ?? $request->input('login');
 
-        $user = User::where(function ($q) use ($login) {
+        // withTrashed so a deleted account can be reactivated by signing in,
+        // rather than looking like it never existed. Mirrors the v1 flow.
+        $user = User::withTrashed()->where(function ($q) use ($login) {
             $q->where('email', $login)
                 ->orWhere('phone', $login);
         })->first();
 
         if (! $user) {
             return sendError($lang ? 'المستخدم غير موجود' : 'User not found', [], 404);
+        }
+
+        if ($user->trashed()) {
+            // The password is verified before restoring so a deleted account
+            // cannot be revived by anyone who merely knows the email.
+            if (! Hash::check($request->password, $user->password)) {
+                return sendError($lang ? 'كلمة المرور غير صحيحة' : 'Incorrect password', [], 400);
+            }
+
+            app(AccountDeletionService::class)->restore($user);
         }
 
         $statusError = $this->validateActiveUser($user, $lang);

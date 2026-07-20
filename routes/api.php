@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\Dashboard\AdminAuthController;
 use App\Http\Controllers\Api\Dashboard\AdminController;
 use App\Http\Controllers\Api\Dashboard\AdAdminController;
 use App\Http\Controllers\Api\Dashboard\AdReportAdminController;
+use App\Http\Controllers\Api\Dashboard\ChatReportAdminController;
 use App\Http\Controllers\Api\Dashboard\AdminUserController;
 use App\Http\Controllers\Api\Dashboard\CategoryAdminController;
 use App\Http\Controllers\Api\Dashboard\CityAdminController;
@@ -28,6 +29,7 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ContactReasonController;
 use App\Http\Controllers\Api\ContactUsController;
 use App\Http\Controllers\Api\ConversationController;
+use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\FcmController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\LanguageController as AppLanguageController;
@@ -38,8 +40,10 @@ use App\Http\Controllers\Api\TrustedSellerApplicationController;
 use App\Http\Controllers\Api\UserRatingController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserDeviceController;
+use App\Http\Controllers\Api\StripeWebhookController;
 use App\Http\Controllers\Api\UserNotificationController;
 use App\Http\Controllers\Api\VehicleLookupController;
+use App\Http\Controllers\Api\Dashboard\CouponAdminController;
 
 
 /*
@@ -62,6 +66,7 @@ Route::middleware('auth:sanctum')->post('broadcasting/auth', function (\Illumina
 });
 
 Route::get('settings', SettingController::class);
+Route::post('stripe/webhook', StripeWebhookController::class);
 Route::get('languages', AppLanguageController::class);
 Route::get('home', HomeController::class);
 Route::get('categories', CategoryController::class);
@@ -69,6 +74,7 @@ Route::get('cities', \App\Http\Controllers\Api\CityController::class);
 Route::get('ads', [AdController::class, 'index']);
 Route::get('ads/{id}', [AdController::class, 'show']);
 Route::get('ad-report-reasons', [AdReportController::class, 'reasons']);
+Route::get('chat-report-reasons', [ConversationController::class, 'reportReasons']);
 Route::get('legal-affairs', [\App\Http\Controllers\Api\LegalAffairController::class, 'index']);
 
 Route::controller(AuthController::class)->group(function () {
@@ -114,6 +120,20 @@ Route::middleware('auth:sanctum')->prefix('admin')->controller(AdReportAdminCont
     Route::get('ad-reports', 'index')->middleware('permission:ad_reports.view');
     Route::get('ad-reports/{id}', 'show')->middleware('permission:ad_reports.view');
     Route::put('ad-reports/{id}', 'update')->middleware('permission:ad_reports.update');
+});
+
+Route::middleware('auth:sanctum')->prefix('admin')->controller(ChatReportAdminController::class)->group(function () {
+    Route::get('chat-reports', 'index')->middleware('permission:chat_reports.view');
+    Route::get('chat-reports/{id}', 'show')->middleware('permission:chat_reports.view');
+    Route::put('chat-reports/{id}', 'update')->middleware('permission:chat_reports.update');
+});
+
+Route::middleware('auth:sanctum')->prefix('admin')->controller(CouponAdminController::class)->group(function () {
+    Route::get('coupons', 'index')->middleware('permission:coupons.view');
+    Route::get('coupons/{id}', 'show')->middleware('permission:coupons.view');
+    Route::post('coupons', 'store')->middleware('permission:coupons.create');
+    Route::put('coupons/{id}', 'update')->middleware('permission:coupons.update');
+    Route::delete('coupons/{id}', 'destroy')->middleware('permission:coupons.delete');
 });
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(AdminController::class)->group(function () {
@@ -232,8 +252,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('ads/draft', [AdController::class, 'storeDraft']);
     Route::post('ads/{id}/images', [AdController::class, 'uploadImage']);
     Route::post('ads/{id}/publish', [AdController::class, 'publishDraft']);
+    Route::post('ads/{id}/payment/complete', [AdController::class, 'completeStripePayment']);
     Route::post('ads', [AdController::class, 'store']);
     Route::post('ads/{id}/report', [AdReportController::class, 'store']);
+    Route::post('coupons/validate', [CouponController::class, 'validateCode']);
     Route::get('my-ads', [MyAdController::class, 'index']);
     Route::get('my-orders', [\App\Http\Controllers\Api\OrderController::class, 'index']);
     Route::post('orders', [\App\Http\Controllers\Api\OrderController::class, 'store']);
@@ -294,4 +316,3 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('vehicles/lookup', [VehicleLookupController::class, 'lookup']);
     Route::get('/postcode/lookup', [App\Http\Controllers\Api\PostcodeController::class, 'lookup']);
 });
-

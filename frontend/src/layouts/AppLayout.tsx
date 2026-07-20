@@ -1,4 +1,4 @@
-import { BadgeCheck, Bell, Building2, FileText, Flag, FolderTree, GraduationCap, Globe, KeyRound, Languages, LayoutDashboard, LogOut, Mail, Megaphone, Menu, MessageSquare, Moon, Settings, ShieldCheck, Sun, User, UserCog, Users, Wallet, X } from 'lucide-react';
+import { BadgeCheck, Bell, Building2, FileText, Flag, MessageSquareWarning, TicketPercent, FolderTree, GraduationCap, Globe, KeyRound, Languages, LayoutDashboard, LogOut, Mail, Megaphone, Menu, MessageSquare, Moon, Settings, ShieldCheck, Sun, User, UserCog, Users, Wallet, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
@@ -12,6 +12,7 @@ const navItems = [
   { to: '/users', labelKey: 'users', icon: Users, permission: 'users.view' },
   { to: '/ads', labelKey: 'ads', icon: Megaphone, permission: 'categories.view' },
   { to: '/ad-reports', labelKey: 'adReports', icon: Flag, permission: 'ad_reports.view' },
+  { to: '/chat-reports', labelKey: 'chatReports', icon: MessageSquareWarning, permission: 'chat_reports.view' },
   { to: '/user-verifications', labelKey: 'userVerifications', icon: BadgeCheck, permission: 'users.view' },
   { to: '/admins', labelKey: 'admins', icon: UserCog, permission: 'admins.view' },
   { to: '/roles', labelKey: 'roles', icon: ShieldCheck, permission: 'roles.view' },
@@ -24,6 +25,7 @@ const navItems = [
   { to: '/contact-reasons', labelKey: 'contactReasons', icon: MessageSquare, permission: 'contact_reasons.view' },
   { to: '/contact-us', labelKey: 'contactUs', icon: Mail, permission: 'contact_us.view' },
   { to: '/push-notifications', labelKey: 'pushNotifications', icon: Bell, permission: 'dashboard.view' },
+  { to: '/coupons', labelKey: 'coupons', icon: TicketPercent, permission: 'coupons.view' },
   { to: '/payment-methods', labelKey: 'paymentMethods', icon: Wallet, permission: 'payment_methods.view' },
   { to: '/settings', labelKey: 'settings', icon: Settings, permission: 'dashboard.view' },
 ] as const;
