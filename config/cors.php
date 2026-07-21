@@ -19,7 +19,16 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'],
+    // Comma-separated list in CORS_ALLOWED_ORIGINS. Defaults cover the SPA
+    // subdomain plus local dev; the SPA is served from a different origin
+    // than the API, so every /api/* call is cross-origin.
+    'allowed_origins' => array_values(array_filter(array_map(
+        'trim',
+        explode(',', (string) env(
+            'CORS_ALLOWED_ORIGINS',
+            'https://dashboard.unitill.uk,http://localhost:5173,http://127.0.0.1:5173'
+        ))
+    ))),
 
     'allowed_origins_patterns' => [],
 
