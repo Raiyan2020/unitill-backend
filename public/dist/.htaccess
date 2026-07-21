@@ -1,0 +1,19 @@
+# React Router (SPA) on Apache / cPanel — avoid 404 on refresh
+<IfModule mod_negotiation.c>
+  Options -MultiViews
+</IfModule>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Serve existing files and directories as-is (assets, favicon, etc.)
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Everything else → index.html (client-side routes: /login, /users, ...)
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+DirectoryIndex index.html

@@ -9,6 +9,7 @@ use Spatie\Sitemap\Sitemap;
 use Spatie\Sitemap\Tags\Url;
 use Laravel\Telescope\Telescope;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,18 +27,32 @@ use Illuminate\Support\Facades\Auth;
 Route::get('/test', function () {
     return view('test');
 });
+// Route::group(
+//     ['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['localize']], // يمكن أن يكون middleware مختلف حسب إعداداتك
+//     function () {
+//         Route::get('/', function () {
+//             // Redirect the project root to the React (Vite) dashboard dev server.
+//             return redirect()->away(env('FRONTEND_URL', 'http://localhost:5173'));
+//         });
+
+//     }
+//     //send email test
+
+
+// );
+
 Route::group(
-    ['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['localize']], // يمكن أن يكون middleware مختلف حسب إعداداتك
+    ['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['localize']],
     function () {
-        Route::get('/', function () {
-            // Redirect the project root to the React (Vite) dashboard dev server.
-            return redirect()->away(env('FRONTEND_URL', 'http://localhost:5173'));
-        });
-
+        Route::get('/{any?}', function () {
+          
+            $path = public_path('dist/index.html');
+            if (File::exists($path)) {
+                return File::get($path);
+            }
+            abort(404, 'Frontend build not found.');
+        })->where('any', '.*');
     }
-    //send email test
-
-
 );
 
 
