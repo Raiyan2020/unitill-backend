@@ -40,19 +40,19 @@ class StoreAdRequest extends FormRequest
         }
 
         // Fallback for hardcoded Flutter city_id=1
-        if ($this->input('city_id') == 1) {
-            if (!City::where('id', 1)->exists()) {
-                $userCity = Auth::user()->city_id;
-                if ($userCity && City::where('id', $userCity)->exists()) {
-                    $this->merge(['city_id' => $userCity]);
-                } else {
-                    $firstCity = City::first();
-                    if ($firstCity) {
-                        $this->merge(['city_id' => $firstCity->id]);
-                    }
-                }
-            }
-        }
+        // if ($this->input('city_id') == 1) {
+        //     if (!City::where('id', 1)->exists()) {
+        //         $userCity = Auth::user()->city_id;
+        //         if ($userCity && City::where('id', $userCity)->exists()) {
+        //             $this->merge(['city_id' => $userCity]);
+        //         } else {
+        //             $firstCity = City::first();
+        //             if ($firstCity) {
+        //                 $this->merge(['city_id' => $firstCity->id]);
+        //             }
+        //         }
+        //     }
+        // }
     }
 
     /**
