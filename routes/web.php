@@ -2,6 +2,7 @@
 
 
 use App\Mail\OtpMail;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 use Mcamara\LaravelLocalization\Facades\LaravelLocalization;
@@ -41,19 +42,21 @@ Route::get('/test', function () {
 
 // );
 
-Route::group(
-    ['prefix' => LaravelLocalization::setLocale(), 'middleware' => ['localize']],
-    function () {
-        Route::get('/{any?}', function () {
-          
-            $path = public_path('dist/index.html');
-            if (File::exists($path)) {
-                return File::get($path);
-            }
-            abort(404, 'Frontend build not found.');
-        })->where('any', '.*');
+// The React SPA owns every path no explicit route claims. Declared as a fallback
+// so it is always matched last — a plain catch-all here would shadow the routes
+// registered after this file, including the whole admin/* dashboard.
+Route::fallback(function (Request $request) {
+    if ($request->is('api/*')) {
+        return response()->json(['message' => 'Not Found.'], 404);
     }
-);
+
+    $path = public_path('dist/index.html');
+    if (! File::exists($path)) {
+        abort(404, 'Frontend build not found.');
+    }
+
+    return response(File::get($path))->header('Content-Type', 'text/html');
+});
 
 
 Route::get('email', function () {
