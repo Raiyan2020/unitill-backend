@@ -29,6 +29,9 @@ class SettingController extends Controller
                 'name' => setting('app_name', 'UniTill'),
                 'slogan' => setting('app_slogan', 'BUY, SELL, REPEAT!'),
                 'logo' => $appLogo ? asset($appLogo) : null,
+                // Falls back to config so the key never returns null if an admin
+                // clears the field in the dashboard.
+                'url' => setting('app_url') ?: config('app.url'),
             ],
             'default_language' => Language::query()
                 ->active()

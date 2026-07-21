@@ -210,10 +210,10 @@ export function CouponsPage() {
             }}
             className="h-9 rounded-lg border border-[#dbdbe8] bg-white px-2 text-sm text-[#2f2b3d] dark:border-[#4a4f68] dark:bg-[#2f3349] dark:text-[#d7d8ea]"
           >
-            <option value="">All statuses</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="expired">Expired</option>
+            <option value="">{t.allStatuses}</option>
+            <option value="active">{t.active}</option>
+            <option value="inactive">{t.inactive}</option>
+            <option value="expired">{t.expired}</option>
           </select>
           <select
             value={pageSize}
@@ -227,7 +227,7 @@ export function CouponsPage() {
               <option key={size} value={size}>{size}</option>
             ))}
           </select>
-          <Input className="h-9 w-[200px]" placeholder="Search code" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Input className="h-9 w-[200px]" placeholder={t.searchCode} value={search} onChange={(e) => setSearch(e.target.value)} />
           <Button className="h-9" onClick={openCreate}>
             <Plus className="me-1 h-4 w-4" /> New coupon
           </Button>
@@ -256,11 +256,11 @@ export function CouponsPage() {
             <table className="w-full text-sm">
               <thead className="bg-[#f8f7fb] text-[#6f6b7d] dark:bg-[#383d56] dark:text-[#b6b8cc]">
                 <tr>
-                  <th className="px-4 py-3 text-start">Code</th>
-                  <th className="px-4 py-3 text-start">Discount</th>
-                  <th className="px-4 py-3 text-start">Min spend</th>
-                  <th className="px-4 py-3 text-start">Used</th>
-                  <th className="px-4 py-3 text-start">Expires</th>
+                  <th className="px-4 py-3 text-start">{t.code}</th>
+                  <th className="px-4 py-3 text-start">{t.discount}</th>
+                  <th className="px-4 py-3 text-start">{t.minSpend}</th>
+                  <th className="px-4 py-3 text-start">{t.used}</th>
+                  <th className="px-4 py-3 text-start">{t.expires}</th>
                   <th className="px-4 py-3 text-start">{t.status}</th>
                   <th className="px-4 py-3 text-start">{t.actions}</th>
                 </tr>
@@ -348,8 +348,8 @@ export function CouponsPage() {
                     onChange={(e) => field('type', e.target.value)}
                     className="mt-1 h-10 w-full rounded-lg border border-[#dbdbe8] bg-white px-2 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349] dark:text-[#d7d8ea]"
                   >
-                    <option value="percentage">Percentage (%)</option>
-                    <option value="fixed">Fixed amount (£)</option>
+                    <option value="percentage">{t.percentage}</option>
+                    <option value="fixed">{t.fixedAmount}</option>
                   </select>
                 </label>
                 <label className="text-sm">
@@ -419,11 +419,11 @@ export function CouponsPage() {
                     <table className="w-full text-sm">
                       <thead className="bg-[#f8f7fb] text-[#6f6b7d] dark:bg-[#383d56] dark:text-[#b6b8cc]">
                         <tr>
-                          <th className="px-3 py-2 text-start">User</th>
-                          <th className="px-3 py-2 text-start">Ad</th>
-                          <th className="px-3 py-2 text-start">Discount</th>
-                          <th className="px-3 py-2 text-start">Paid</th>
-                          <th className="px-3 py-2 text-start">Date</th>
+                          <th className="px-3 py-2 text-start">{t.user}</th>
+                          <th className="px-3 py-2 text-start">{t.ad}</th>
+                          <th className="px-3 py-2 text-start">{t.discount}</th>
+                          <th className="px-3 py-2 text-start">{t.paid}</th>
+                          <th className="px-3 py-2 text-start">{t.date}</th>
                         </tr>
                       </thead>
                       <tbody>

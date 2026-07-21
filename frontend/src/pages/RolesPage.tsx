@@ -118,7 +118,7 @@ export function RolesPage() {
           </select>
           <Input
             className="h-9 w-[220px]"
-            placeholder="Search"
+            placeholder={t.search}
             value={search}
             onChange={(e) => {
               setPage(1);
@@ -135,8 +135,8 @@ export function RolesPage() {
             <table className="w-full text-sm">
               <thead className="bg-[#f8f7fb] text-[#6f6b7d] dark:bg-[#383d56] dark:text-[#b6b8cc]">
                 <tr>
-                  <th className="px-4 py-3 text-start">ID</th>
-                  <th className="px-4 py-3 text-start">Name</th>
+                  <th className="px-4 py-3 text-start">{t.id}</th>
+                  <th className="px-4 py-3 text-start">{t.name}</th>
                   <th className="px-4 py-3 text-start">{t.permissions}</th>
                   <th className="px-4 py-3 text-start">{t.actions}</th>
                 </tr>
@@ -199,7 +199,7 @@ export function RolesPage() {
               </Button>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Input placeholder="Role name" value={form.name} onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))} />
+              <Input placeholder={t.roleName} value={form.name} onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))} />
               <div className="flex max-h-[300px] flex-wrap gap-2 overflow-auto rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
                 {permissions.map((perm) => (
                   <label

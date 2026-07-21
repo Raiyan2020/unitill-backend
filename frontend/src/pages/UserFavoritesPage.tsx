@@ -7,6 +7,7 @@ import { TableFooter, TableLoadingRow } from '../components/table/TableHelpers';
 import { api } from '../lib/api';
 import { ensureApiSuccess } from '../lib/api-response';
 import { useNotify } from '../lib/notify';
+import { useI18n } from '../providers/i18n-provider';
 
 type FavoriteAdRow = {
   id: number;
@@ -24,6 +25,7 @@ type FavoriteAdRow = {
 type PaginatedResponse<T> = { data: T[]; total: number };
 
 export function UserFavoritesPage() {
+  const { t } = useI18n();
   const notify = useNotify();
   const navigate = useNavigate();
   const { userId } = useParams();
@@ -93,13 +95,13 @@ export function UserFavoritesPage() {
             <table className="w-full text-sm">
               <thead className="bg-[#f8f7fb] text-[#6f6b7d] dark:bg-[#383d56] dark:text-[#b6b8cc]">
                 <tr>
-                  <th className="px-4 py-3 text-start">Image</th>
-                  <th className="px-4 py-3 text-start">ID</th>
-                  <th className="px-4 py-3 text-start">Title</th>
-                  <th className="px-4 py-3 text-start">Owner</th>
-                  <th className="px-4 py-3 text-start">Status</th>
-                  <th className="px-4 py-3 text-start">Price</th>
-                  <th className="px-4 py-3 text-start">Actions</th>
+                  <th className="px-4 py-3 text-start">{t.image}</th>
+                  <th className="px-4 py-3 text-start">{t.id}</th>
+                  <th className="px-4 py-3 text-start">{t.title}</th>
+                  <th className="px-4 py-3 text-start">{t.owner}</th>
+                  <th className="px-4 py-3 text-start">{t.status}</th>
+                  <th className="px-4 py-3 text-start">{t.price}</th>
+                  <th className="px-4 py-3 text-start">{t.actions}</th>
                 </tr>
               </thead>
               <tbody>

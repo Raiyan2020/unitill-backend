@@ -38,20 +38,20 @@ class CouponController extends Controller
         $result['formatted_discount'] = '£'.number_format($result['discount_amount'], 2);
         $result['formatted_final'] = '£'.number_format($result['final_amount'], 2);
 
-        return sendResponse($result, $ar ? 'تم تطبيق كود الخصم' : 'Discount code applied');
+        return sendResponse($result, __('api.coupon.applied'));
     }
 
     private function errorMessage(array $result, bool $ar): string
     {
         return match ($result['error']) {
-            'not_started' => $ar ? 'هذا الكود لم يبدأ العمل به بعد' : 'This code is not active yet',
-            'expired' => $ar ? 'انتهت صلاحية هذا الكود' : 'This code has expired',
-            'exhausted' => $ar ? 'تم استهلاك جميع استخدامات هذا الكود' : 'This code has reached its usage limit',
-            'already_used' => $ar ? 'لقد استخدمت هذا الكود من قبل' : 'You have already used this code',
-            'min_amount' => $ar
-                ? 'هذا الكود يتطلب مبلغاً أدنى قدره £'.number_format($result['min_amount'] ?? 0, 2)
-                : 'This code requires a minimum of £'.number_format($result['min_amount'] ?? 0, 2),
-            default => $ar ? 'كود الخصم غير صالح' : 'Invalid discount code',
+            'not_started' => __('api.coupon.not_active_yet'),
+            'expired' => __('api.coupon.expired'),
+            'exhausted' => __('api.coupon.limit_reached'),
+            'already_used' => __('api.coupon.already_used'),
+            'min_amount' => __('api.coupon.min_amount', [
+                'amount' => number_format($result['min_amount'] ?? 0, 2),
+            ]),
+            default => __('api.coupon.invalid'),
         };
     }
 }

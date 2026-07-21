@@ -63,13 +63,13 @@ export function UserDetailsPage() {
             <p className="text-sm text-slate-500">User not found.</p>
           ) : (
             <div className="grid gap-3 md:grid-cols-2">
-              <Item label="ID" value={String(user.id)} />
-              <Item label="Name" value={user.name || '-'} />
+              <Item label={t.id} value={String(user.id)} />
+              <Item label={t.name} value={user.name || '-'} />
               <Item label={t.firstName} value={user.first_name || '-'} />
               <Item label={t.lastName} value={user.last_name || '-'} />
               <Item label={t.email} value={user.email || '-'} />
               <Item label={t.phone} value={`${user.country_code || ''} ${user.phone || ''}`.trim() || '-'} />
-              <Item label="City ID" value={user.city_id?.toString() || '-'} />
+              <Item label={t.cityId} value={user.city_id?.toString() || '-'} />
               <div>
                 <p className="mb-1 text-xs text-slate-500">{t.status}</p>
                 <Badge variant={statusVariant}>{statusText}</Badge>

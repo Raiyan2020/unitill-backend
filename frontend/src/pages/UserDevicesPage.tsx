@@ -6,6 +6,7 @@ import { TableFooter, TableLoadingRow } from '../components/table/TableHelpers';
 import { api } from '../lib/api';
 import { ensureApiSuccess } from '../lib/api-response';
 import { useNotify } from '../lib/notify';
+import { useI18n } from '../providers/i18n-provider';
 
 type DeviceRow = {
   id: number;
@@ -20,6 +21,7 @@ type DeviceRow = {
 type PaginatedResponse<T> = { data: T[]; total: number };
 
 export function UserDevicesPage() {
+  const { t } = useI18n();
   const notify = useNotify();
   const { userId } = useParams();
   const [rows, setRows] = useState<DeviceRow[]>([]);
@@ -81,12 +83,12 @@ export function UserDevicesPage() {
             <table className="w-full text-sm">
               <thead className="bg-[#f8f7fb] text-[#6f6b7d] dark:bg-[#383d56] dark:text-[#b6b8cc]">
                 <tr>
-                  <th className="px-4 py-3 text-start">ID</th>
-                  <th className="px-4 py-3 text-start">Device Name</th>
-                  <th className="px-4 py-3 text-start">Identifier</th>
-                  <th className="px-4 py-3 text-start">Country</th>
-                  <th className="px-4 py-3 text-start">Last Seen</th>
-                  <th className="px-4 py-3 text-start">Active</th>
+                  <th className="px-4 py-3 text-start">{t.id}</th>
+                  <th className="px-4 py-3 text-start">{t.deviceName}</th>
+                  <th className="px-4 py-3 text-start">{t.identifier}</th>
+                  <th className="px-4 py-3 text-start">{t.country}</th>
+                  <th className="px-4 py-3 text-start">{t.lastSeen}</th>
+                  <th className="px-4 py-3 text-start">{t.active}</th>
                 </tr>
               </thead>
               <tbody>

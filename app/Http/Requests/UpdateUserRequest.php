@@ -38,7 +38,7 @@ class UpdateUserRequest extends FormRequest
                 $ar = $this->header('lang') === 'ar';
                 $validator->errors()->add(
                     'profile',
-                    $ar ? 'يجب إرسال حقل واحد على الأقل للتحديث' : 'At least one field is required to update'
+                    __('api.profile.at_least_one_field')
                 );
             }
         });
@@ -60,14 +60,14 @@ class UpdateUserRequest extends FormRequest
         $ar = $this->header('lang') === 'ar';
 
         return [
-            'first_name.required' => $ar ? 'الاسم الأول مطلوب' : 'First name is required',
-            'last_name.required' => $ar ? 'اسم العائلة مطلوب' : 'Last name is required',
-            'image.image' => $ar ? 'يجب أن تكون الصورة بصيغة صالحة' : 'Image must be a valid file',
-            'image.mimes' => $ar ? 'صيغ الصورة المسموحة: jpeg, png, jpg, webp' : 'Allowed image types: jpeg, png, jpg, webp',
-            'image.max' => $ar ? 'حجم الصورة يجب ألا يتجاوز 5MB' : 'Image size must not exceed 5MB',
-            'email.unique' => $ar ? 'البريد الشخصي مستخدم بالفعل' : 'Email is already in use',
-            'phone.unique' => $ar ? 'رقم الهاتف مسجّل مسبقاً' : 'Phone number is already in use',
-            'city_id.exists' => $ar ? 'المدينة غير صالحة' : 'Invalid city',
+            'first_name.required' => __('api.profile.first_name_required'),
+            'last_name.required' => __('api.profile.last_name_required'),
+            'image.image' => __('api.profile.image_invalid'),
+            'image.mimes' => __('api.profile.image_types'),
+            'image.max' => __('api.profile.image_max_size'),
+            'email.unique' => __('api.profile.email_taken'),
+            'phone.unique' => __('api.profile.phone_taken'),
+            'city_id.exists' => __('api.profile.invalid_city'),
         ];
     }
 }

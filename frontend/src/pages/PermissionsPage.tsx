@@ -122,7 +122,7 @@ export function PermissionsPage() {
           </select>
           <Input
             className="h-9 w-[220px]"
-            placeholder="Search"
+            placeholder={t.search}
             value={search}
             onChange={(e) => {
               setPage(1);
@@ -138,8 +138,8 @@ export function PermissionsPage() {
           <table className="w-full text-sm">
             <thead className="bg-[#f8f7fb] text-[#6f6b7d] dark:bg-[#383d56] dark:text-[#b6b8cc]">
               <tr>
-                <th className="px-4 py-3 text-start">ID</th>
-                <th className="px-4 py-3 text-start">Name</th>
+                <th className="px-4 py-3 text-start">{t.id}</th>
+                <th className="px-4 py-3 text-start">{t.name}</th>
                 <th className="px-4 py-3 text-start">{t.actions}</th>
               </tr>
             </thead>
@@ -184,7 +184,7 @@ export function PermissionsPage() {
               </Button>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Input placeholder="Permission name" value={name} onChange={(e) => setName(e.target.value)} />
+              <Input placeholder={t.permissionName} value={name} onChange={(e) => setName(e.target.value)} />
               <div className="flex justify-end gap-2">
                 <Button variant="secondary" onClick={() => { setEditing(null); setFormOpen(false); setName(''); }}>{t.cancel}</Button>
                 <Button onClick={save} disabled={saving}>{t.save}</Button>

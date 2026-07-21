@@ -229,7 +229,7 @@ class AdController extends Controller
         $isVisible = $ad && $ad->status === 'published' && ! $ad->isExpired();
         if (! $ad || (! $isVisible && ! $isOwner)) {
             return sendError(
-                $lang ? 'الإعلان غير موجود' : 'Ad not found',
+                __('api.ad.not_found'),
                 [],
                 404
             );
@@ -365,7 +365,7 @@ class AdController extends Controller
         // free quota, zeroed by a coupon, or paid via Stripe.
         $publication = $this->startPublication($ad, $request->input('coupon_code'));
         if (isset($publication['coupon_error'])) {
-            return sendError('The coupon code could not be applied.', ['coupon_code' => $publication['coupon_error']], 422);
+            return sendError(__('api.ad.coupon_failed'), ['coupon_code' => $publication['coupon_error']], 422);
         }
         $appliedCoupon = $publication['coupon'] ?? null;
         if ($publication !== null) {
@@ -392,7 +392,7 @@ class AdController extends Controller
             )
                 + ['publication' => $publication]
                 + ['ad' => new AdDetailResource($ad)],
-            $lang ? 'تم إنشاء الإعلان بنجاح' : 'Ad created successfully'
+            __('api.ad.created')
         );
     }
 
@@ -477,7 +477,7 @@ class AdController extends Controller
                 'regex:/^[A-Z]{2}[0-9]{2}[A-Z]{3}$/', 
                 'max:7'
             ],
-            'description' => 'nullable|string|max:5000',
+            'description' => 'required|string|max:5000',
             'price' => 'required|numeric|min:0',
             'currency' => 'nullable|string|size:3',
             'is_negotiable' => 'nullable|boolean',
@@ -582,7 +582,7 @@ class AdController extends Controller
 
         return sendResponse([
             'ad' => new AdDetailResource($ad),
-        ], $lang ? 'تم حفظ المسودة بنجاح' : 'Draft saved successfully');
+        ], __('api.ad.draft_saved'));
     }
 
     public function uploadImage(Request $request, $id)
@@ -592,7 +592,7 @@ class AdController extends Controller
         
         $ad = Ad::where('id', $id)->orWhere('public_id', $id)->first();
         if (!$ad || $ad->user_id !== $user->id) {
-            return sendError($lang ? 'الإعلان غير موجود' : 'Ad not found', [], 404);
+            return sendError(__('api.ad.not_found'), [], 404);
         }
 
         $request->validate([
@@ -614,7 +614,7 @@ class AdController extends Controller
             $ad->update(['cover_image' => $cleanPath]);
         }
 
-        return sendResponse(['path' => $path], $lang ? 'تم رفع الصورة' : 'Image uploaded');
+        return sendResponse(['path' => $path], __('api.ad.image_uploaded'));
     }
 
     public function publishDraft(Request $request, $id)
@@ -624,16 +624,16 @@ class AdController extends Controller
         
         $ad = Ad::where('id', $id)->orWhere('public_id', $id)->first();
         if (!$ad || $ad->user_id !== $user->id) {
-            return sendError($lang ? 'الإعلان غير موجود' : 'Ad not found', [], 404);
+            return sendError(__('api.ad.not_found'), [], 404);
         }
 
         if ($ad->images()->count() === 0) {
-            return sendError($lang ? 'يجب رفع صورة واحدة على الأقل' : 'At least one image is required', [], 422);
+            return sendError(__('api.ad.image_required'), [], 422);
         }
 
         $publication = $this->startPublication($ad, $request->input('coupon_code'));
         if (isset($publication['coupon_error'])) {
-            return sendError('The coupon code could not be applied.', ['coupon_code' => $publication['coupon_error']], 422);
+            return sendError(__('api.ad.coupon_failed'), ['coupon_code' => $publication['coupon_error']], 422);
         }
 
         $ad->load([
@@ -646,7 +646,7 @@ class AdController extends Controller
 
         return sendResponse(
             ['publication' => $publication, 'ad' => new AdDetailResource($ad)],
-            $lang ? 'تم نشر الإعلان بنجاح' : 'Ad published successfully'
+            __('api.ad.published')
         );
     }
 

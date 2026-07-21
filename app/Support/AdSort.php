@@ -142,35 +142,37 @@ class AdSort
     /**
      * The global sort list, plus the Cars-only mileage/year add-ons when
      * $includeVehicleSorts is set.
+     *
+     * $lang is kept for backwards compatibility with existing callers but is no
+     * longer read: labels come from __(), which resolves against the locale that
+     * SetApiLocale has already set from the request header.
      */
     public static function options(string $lang = 'en', bool $includeVehicleSorts = false): array
     {
-        $ar = $lang === 'ar';
-
         $options = [
             [
                 'value' => self::NEWEST,
-                'label' => $ar ? 'الأحدث أولاً' : 'Newest First',
+                'label' => __('api.sort.newest_first'),
             ],
             [
                 'value' => self::OLDEST,
-                'label' => $ar ? 'الأقدم أولاً' : 'Oldest First',
+                'label' => __('api.sort.oldest_first'),
             ],
             [
                 'value' => self::PRICE_LOW_TO_HIGH,
-                'label' => $ar ? 'السعر: من الأقل للأعلى' : 'Price: Low to High',
+                'label' => __('api.sort.price_low_high'),
             ],
             [
                 'value' => self::PRICE_HIGH_TO_LOW,
-                'label' => $ar ? 'السعر: من الأعلى للأقل' : 'Price: High to Low',
+                'label' => __('api.sort.price_high_low'),
             ],
             [
                 'value' => self::DISTANCE_NEAREST,
-                'label' => $ar ? 'الأقرب أولاً' : 'Distance: Nearest',
+                'label' => __('api.sort.distance_nearest'),
             ],
             [
                 'value' => self::DISTANCE_FARTHEST,
-                'label' => $ar ? 'الأبعد أولاً' : 'Distance: Farthest',
+                'label' => __('api.sort.distance_farthest'),
             ],
         ];
 
@@ -178,19 +180,19 @@ class AdSort
             $options = array_merge($options, [
                 [
                     'value' => self::MILEAGE_LOW_TO_HIGH,
-                    'label' => $ar ? 'المسافة المقطوعة: من الأقل للأعلى' : 'Mileage: Low to High',
+                    'label' => __('api.sort.mileage_low_high'),
                 ],
                 [
                     'value' => self::MILEAGE_HIGH_TO_LOW,
-                    'label' => $ar ? 'المسافة المقطوعة: من الأعلى للأقل' : 'Mileage: High to Low',
+                    'label' => __('api.sort.mileage_high_low'),
                 ],
                 [
                     'value' => self::YEAR_NEW_TO_OLD,
-                    'label' => $ar ? 'سنة الصنع: من الأحدث للأقدم' : 'Year: New to Old',
+                    'label' => __('api.sort.year_new_old'),
                 ],
                 [
                     'value' => self::YEAR_OLD_TO_NEW,
-                    'label' => $ar ? 'سنة الصنع: من الأقدم للأحدث' : 'Year: Old to New',
+                    'label' => __('api.sort.year_old_new'),
                 ],
             ]);
         }

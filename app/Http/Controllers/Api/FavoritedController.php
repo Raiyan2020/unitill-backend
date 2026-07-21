@@ -61,7 +61,7 @@ class FavoritedController extends Controller
 
         if ($user->favoriteAds()->where('ads.id', $adId)->exists()) {
             return sendError(
-                $lang ? 'الإعلان مضاف للمفضلة مسبقاً' : 'Ad is already favorited',
+                __('api.favorite.already_favorited'),
                 [],
                 422
             );
@@ -74,7 +74,7 @@ class FavoritedController extends Controller
 
         if (! $ad) {
             return sendError(
-                $lang ? 'الإعلان غير متاح' : 'Ad is not available',
+                __('api.favorite.ad_not_available'),
                 [],
                 404
             );
@@ -86,7 +86,7 @@ class FavoritedController extends Controller
 
         return sendResponse(
             new AdResource($ad),
-            $lang ? 'تمت الإضافة للمفضلة' : 'Added to favorited'
+            __('api.favorite.added')
         );
     }
 
@@ -97,7 +97,7 @@ class FavoritedController extends Controller
 
         if (! $user->favoriteAds()->where('ads.id', $ad_id)->exists()) {
             return sendError(
-                $lang ? 'الإعلان غير موجود في المفضلة' : 'Ad is not favorited',
+                __('api.favorite.not_favorited'),
                 [],
                 404
             );
@@ -107,7 +107,7 @@ class FavoritedController extends Controller
 
         return sendResponse(
             ['ad_id' => $ad_id],
-            $lang ? 'تمت الإزالة من المفضلة' : 'Removed from favorited'
+            __('api.favorite.removed')
         );
     }
 }

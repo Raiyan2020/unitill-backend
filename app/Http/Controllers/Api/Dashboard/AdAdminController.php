@@ -207,30 +207,19 @@ class AdAdminController extends Controller
         $ad->save();
 
         if ($oldStatus !== $newStatus && $ad->user) {
-            $lang = $request->header('lang') === 'ar';
-            $title = $lang ? 'تحديث حالة الإعلان' : 'Ad Status Update';
-            
-            $statusName = $newStatus;
-            if ($lang) {
-                $statusMap = [
-                    'published' => 'مقبول / منشور',
-                    'rejected' => 'مرفوض',
-                    'pending' => 'قيد المراجعة',
-                    'expired' => 'منتهي',
-                    'draft' => 'مسودة',
-                    'sold' => 'مباع',
-                ];
-                $statusName = $statusMap[$newStatus] ?? $newStatus;
+            // NOTE: resolves in the acting admin's language, not the ad owner's.
+            // Users have no stored locale, so a student can be notified in
+            // whatever language the dashboard operator happens to be using.
+            $statusKey = "api.ad_status.{$newStatus}";
+            $statusName = __($statusKey);
+            if ($statusName === $statusKey) {
+                $statusName = $newStatus;
             }
-
-            $body = $lang 
-                ? "تم تغيير حالة إعلانك '{$ad->title}' إلى {$statusName}"
-                : "Your ad '{$ad->title}' status has been updated to {$statusName}";
 
             $this->pushNotificationService->sendToUser(
                 $ad->user,
-                $title,
-                $body,
+                __('api.ad_status.title'),
+                __('api.ad_status.body', ['title' => $ad->title, 'status' => $statusName]),
                 ['type' => 'ad_status_update', 'ad_id' => $ad->id]
             );
         }

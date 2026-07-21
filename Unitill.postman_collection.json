@@ -10603,7 +10603,7 @@
 							{
 								"key": "lang",
 								"value": "en",
-								"description": "Set to \"ar\" for Arabic messages"
+								"description": "Set to \"ar\", \"fr\", \"es\" or \"zh\" for a translated message"
 							}
 						],
 						"url": {
@@ -10625,7 +10625,8 @@
 									"type": "string"
 								}
 							]
-						}
+						},
+						"description": "GDPR Subject Access Request. Emails the full export to the account email as a JSON attachment (unitill-personal-data.json).\n\nThe payload covers all six items the spec requires: the copy of the data itself plus purposes_of_processing, categories_of_data, recipients, retention_periods and your_rights.\n\nResponses:\n- 200 confirmation that the email was sent\n- 500 if delivery failed (no longer reported as success — a SAR has a statutory deadline)\n- 429 when the export limit is exceeded (5 per hour per user; Retry-After and X-RateLimit-* headers included)"
 					},
 					"response": [
 						{
@@ -10677,6 +10678,41 @@
 							"body": "{\n    \"status\": true,\n    \"message\": \"A copy of your data has been emailed to you\"\n}"
 						}
 					]
+				},
+				{
+					"name": "Download My Data (GDPR)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "lang",
+								"value": "en",
+								"description": "Affects error messages only; the export itself is English"
+							}
+						],
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/account/data-download",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"account",
+								"data-download"
+							]
+						},
+						"description": "\"Download my data\" — the same payload as the SAR email, streamed inline as a JSON file so the app does not have to wait on mail delivery.\n\nContent-Disposition: attachment; filename=unitill-personal-data-YYYY-MM-DD.json\n\nIncludes 15 data sections: ads, favourites, conversations, messages sent, ad reports, chat reports, ratings given/received, orders as buyer/seller, coupon redemptions, devices, login history, notifications, contact-us messages.\n\nThrottled to 5 requests per hour per user (shared with the SAR endpoint) because each call reads 15 tables. Exceeding it returns 429 with Retry-After."
+					},
+					"response": []
 				},
 				{
 					"name": "Store Device Identifier",

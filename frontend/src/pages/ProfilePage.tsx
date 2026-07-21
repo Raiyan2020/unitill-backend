@@ -142,12 +142,12 @@ export function ProfilePage() {
               <>
                 <div className="grid gap-4 md:grid-cols-2">
                   <Input
-                    placeholder="First Name"
+                    placeholder={t.firstName}
                     value={profileForm.firstName}
                     onChange={(e) => setProfileForm((s) => ({ ...s, firstName: e.target.value }))}
                   />
                   <Input
-                    placeholder="Last Name"
+                    placeholder={t.lastName}
                     value={profileForm.lastName}
                     onChange={(e) => setProfileForm((s) => ({ ...s, lastName: e.target.value }))}
                   />
@@ -157,17 +157,17 @@ export function ProfilePage() {
                     onChange={(e) => setProfileForm((s) => ({ ...s, email: e.target.value }))}
                   />
                   <Input
-                    placeholder="Organization"
+                    placeholder={t.organization}
                     value={profileForm.organization}
                     onChange={(e) => setProfileForm((s) => ({ ...s, organization: e.target.value }))}
                   />
-                  <Input placeholder="Phone Number" value={profileForm.phone} onChange={(e) => setProfileForm((s) => ({ ...s, phone: e.target.value }))} />
-                  <Input placeholder="Address" value={profileForm.address} onChange={(e) => setProfileForm((s) => ({ ...s, address: e.target.value }))} />
-                  <Input placeholder="State" value={profileForm.state} onChange={(e) => setProfileForm((s) => ({ ...s, state: e.target.value }))} />
-                  <Input placeholder="Zip Code" value={profileForm.zip} onChange={(e) => setProfileForm((s) => ({ ...s, zip: e.target.value }))} />
-                  <Input placeholder="Country" value={profileForm.country} onChange={(e) => setProfileForm((s) => ({ ...s, country: e.target.value }))} />
+                  <Input placeholder={t.phoneNumber} value={profileForm.phone} onChange={(e) => setProfileForm((s) => ({ ...s, phone: e.target.value }))} />
+                  <Input placeholder={t.address} value={profileForm.address} onChange={(e) => setProfileForm((s) => ({ ...s, address: e.target.value }))} />
+                  <Input placeholder={t.state} value={profileForm.state} onChange={(e) => setProfileForm((s) => ({ ...s, state: e.target.value }))} />
+                  <Input placeholder={t.zipCode} value={profileForm.zip} onChange={(e) => setProfileForm((s) => ({ ...s, zip: e.target.value }))} />
+                  <Input placeholder={t.country} value={profileForm.country} onChange={(e) => setProfileForm((s) => ({ ...s, country: e.target.value }))} />
                   <Input
-                    placeholder="Language"
+                    placeholder={t.language}
                     value={profileForm.language}
                     onChange={(e) => setProfileForm((s) => ({ ...s, language: e.target.value }))}
                   />
@@ -193,20 +193,20 @@ export function ProfilePage() {
             <div className="grid gap-4 md:grid-cols-2">
               <Input
                 type="password"
-                placeholder="Current password"
+                placeholder={t.currentPassword}
                 value={passwordForm.current_password}
                 onChange={(e) => setPasswordForm((s) => ({ ...s, current_password: e.target.value }))}
               />
               <div />
               <Input
                 type="password"
-                placeholder="New password"
+                placeholder={t.newPassword}
                 value={passwordForm.new_password}
                 onChange={(e) => setPasswordForm((s) => ({ ...s, new_password: e.target.value }))}
               />
               <Input
                 type="password"
-                placeholder="Confirm new password"
+                placeholder={t.confirmNewPassword}
                 value={passwordForm.new_password_confirmation}
                 onChange={(e) => setPasswordForm((s) => ({ ...s, new_password_confirmation: e.target.value }))}
               />

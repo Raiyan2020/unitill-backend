@@ -153,7 +153,7 @@ export function CategoriesPage() {
           <select value={pageSize} onChange={(e) => { setPage(1); setPageSize(Number(e.target.value)); }} className="h-9 rounded-lg border border-[#dbdbe8] bg-white px-2 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]">
             {[10, 25, 50, 100].map((size) => <option key={size} value={size}>{size}</option>)}
           </select>
-          <Input className="h-9 w-[220px]" placeholder="Search" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Input className="h-9 w-[220px]" placeholder={t.search} value={search} onChange={(e) => setSearch(e.target.value)} />
           <Button size="sm" onClick={openCreate}>+ Add Category</Button>
         </div>
       </div>
@@ -164,11 +164,11 @@ export function CategoriesPage() {
             <table className="w-full text-sm">
               <thead className="bg-[#f8f7fb] text-[#6f6b7d] dark:bg-[#383d56] dark:text-[#b6b8cc]">
                 <tr>
-                  <th className="px-4 py-3 text-start">Image</th>
-                  <th className="px-4 py-3 text-start">ID</th>
-                  <th className="px-4 py-3 text-start">Name</th>
-                  <th className="px-4 py-3 text-start">Status</th>
-                  <th className="px-4 py-3 text-start">Sort</th>
+                  <th className="px-4 py-3 text-start">{t.image}</th>
+                  <th className="px-4 py-3 text-start">{t.id}</th>
+                  <th className="px-4 py-3 text-start">{t.name}</th>
+                  <th className="px-4 py-3 text-start">{t.status}</th>
+                  <th className="px-4 py-3 text-start">{t.sort}</th>
                   <th className="px-4 py-3 text-start">{t.actions}</th>
                 </tr>
               </thead>
@@ -223,10 +223,10 @@ export function CategoriesPage() {
               <CardContent className="max-h-[78vh] space-y-4 overflow-y-auto p-4 md:max-h-[84vh] md:p-6">
                 <div className="grid gap-3 md:grid-cols-3">
                   <Input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] ?? null)} />
-                  <Input placeholder="Sort" value={form.sort} onChange={(e) => setForm((s) => ({ ...s, sort: e.target.value }))} />
+                  <Input placeholder={t.sort} value={form.sort} onChange={(e) => setForm((s) => ({ ...s, sort: e.target.value }))} />
                   <select value={form.status} onChange={(e) => setForm((s) => ({ ...s, status: e.target.value as 'active' | 'inactive' }))} className="h-10 rounded-xl border border-[#dbdbe8] bg-white px-3 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]">
-                    <option value="active">active</option>
-                    <option value="inactive">inactive</option>
+                    <option value="active">{t.active}</option>
+                    <option value="inactive">{t.inactive}</option>
                   </select>
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">

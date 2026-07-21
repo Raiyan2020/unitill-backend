@@ -46,7 +46,7 @@ class StoreUserRatingRequest extends FormRequest
                 $ar = $this->header('lang') === 'ar';
                 $validator->errors()->add(
                     'rated_user_id',
-                    $ar ? 'لقد قيّمت هذا المستخدم مسبقاً' : 'You have already rated this user'
+                    __('api.rating.already_rated')
                 );
             }
         });
@@ -68,14 +68,14 @@ class StoreUserRatingRequest extends FormRequest
         $ar = $this->header('lang') === 'ar';
 
         return [
-            'rated_user_id.required' => $ar ? 'المستخدم المراد تقييمه مطلوب' : 'Rated user is required',
-            'rated_user_id.exists' => $ar ? 'المستخدم غير موجود' : 'User not found',
-            'rated_user_id.not_in' => $ar ? 'لا يمكنك تقييم نفسك' : 'You cannot rate yourself',
-            'score.required' => $ar ? 'التقييم مطلوب' : 'Rating score is required',
-            'score.min' => $ar ? 'التقييم يجب أن يكون بين 1 و 5' : 'Rating must be between 1 and 5',
-            'score.max' => $ar ? 'التقييم يجب أن يكون بين 1 و 5' : 'Rating must be between 1 and 5',
-            'comment.max' => $ar ? 'التعليق طويل جداً' : 'Comment is too long',
-            'ad_id.exists' => $ar ? 'الإعلان غير موجود' : 'Ad not found',
+            'rated_user_id.required' => __('api.rating.rated_user_required'),
+            'rated_user_id.exists' => __('api.rating.user_not_found'),
+            'rated_user_id.not_in' => __('api.rating.cannot_rate_self'),
+            'score.required' => __('api.rating.score_required'),
+            'score.min' => __('api.rating.score_range'),
+            'score.max' => __('api.rating.score_range'),
+            'comment.max' => __('api.rating.comment_too_long'),
+            'ad_id.exists' => __('api.rating.ad_not_found'),
         ];
     }
 }

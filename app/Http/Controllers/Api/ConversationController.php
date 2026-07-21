@@ -96,12 +96,12 @@ class ConversationController extends Controller
             ->first();
 
         if (! $ad) {
-            return sendError($lang ? 'الإعلان غير متاح' : 'Ad is not available', [], 404);
+            return sendError(__('api.chat.ad_not_available'), [], 404);
         }
 
         if ($ad->user_id === $user->id) {
             return sendError(
-                $lang ? 'لا يمكنك مراسلة إعلانك' : 'You cannot message your own ad',
+                __('api.chat.cannot_message_own_ad'),
                 [],
                 422
             );
@@ -112,7 +112,7 @@ class ConversationController extends Controller
         } catch (\InvalidArgumentException $e) {
             if ($e->getMessage() === 'seller_unavailable') {
                 return sendError(
-                    $lang ? 'لم يعد هذا البائع متاحاً' : 'This seller is no longer available',
+                    __('api.chat.seller_unavailable'),
                     [],
                     422
                 );
@@ -120,16 +120,14 @@ class ConversationController extends Controller
 
             if ($e->getMessage() === 'buyer_not_verified') {
                 return sendError(
-                    $lang
-                        ? 'هذا البائع يستقبل الرسائل من الحسابات المُوثّقة فقط. يرجى إكمال توثيق بريدك الجامعي.'
-                        : 'This seller only accepts messages from verified accounts. Please verify your student email first.',
+                    __('api.chat.buyer_not_verified'),
                     ['needs_verification' => true],
                     403
                 );
             }
 
             return sendError(
-                $lang ? 'لا يمكن بدء المحادثة' : 'Cannot start conversation',
+                __('api.chat.cannot_start'),
                 [],
                 422
             );
@@ -137,7 +135,7 @@ class ConversationController extends Controller
 
         return sendResponse(
             new ConversationResource($conversation),
-            $lang ? 'تم بدء المحادثة' : 'Conversation started'
+            __('api.chat.started')
         );
     }
 
@@ -147,7 +145,7 @@ class ConversationController extends Controller
 
         if (! $conversation) {
             return sendError(
-                $request->header('lang') === 'ar' ? 'المحادثة غير موجودة' : 'Conversation not found',
+                __('api.chat.not_found'),
                 [],
                 404
             );
@@ -173,7 +171,7 @@ class ConversationController extends Controller
 
         if (! $conversation) {
             return sendError(
-                $request->header('lang') === 'ar' ? 'المحادثة غير موجودة' : 'Conversation not found',
+                __('api.chat.not_found'),
                 [],
                 404
             );
@@ -209,11 +207,11 @@ class ConversationController extends Controller
         $conversation = $this->findParticipantConversation($id);
 
         if (! $conversation) {
-            return sendError($lang ? 'المحادثة غير موجودة' : 'Conversation not found', [], 404);
+            return sendError(__('api.chat.not_found'), [], 404);
         }
 
         if (empty(trim($validated['body'] ?? '')) && !$request->hasFile('attachment')) {
-            return sendError($lang ? 'الرسالة فارغة' : 'Message is empty', [], 422);
+            return sendError(__('api.chat.message_empty'), [], 422);
         }
 
         $attachmentPath = null;
@@ -235,24 +233,22 @@ class ConversationController extends Controller
         } catch (\InvalidArgumentException $e) {
             return match ($e->getMessage()) {
                 'participant_unavailable' => sendError(
-                    $lang
-                        ? 'لم يعد هذا المستخدم متاحاً. يمكنك قراءة المحادثة لكن لا يمكن إرسال رسائل جديدة.'
-                        : 'This user is no longer available. You can still read the conversation, but cannot send new messages.',
+                    __('api.chat.user_unavailable'),
                     ['can_send_messages' => false],
                     422
                 ),
                 'messaging_disabled' => sendError(
-                    $lang ? 'المراسلة معطّلة: الإعلان مباع' : 'Messaging disabled: item sold',
+                    __('api.chat.messaging_disabled_sold'),
                     ['can_send_messages' => false],
                     422
                 ),
                 'empty_message' => sendError(
-                    $lang ? 'الرسالة فارغة' : 'Message is empty',
+                    __('api.chat.message_empty'),
                     [],
                     422
                 ),
                 default => sendError(
-                    $lang ? 'لا يمكن إرسال الرسالة' : 'Cannot send message',
+                    __('api.chat.cannot_send'),
                     [],
                     422
                 ),
@@ -261,7 +257,7 @@ class ConversationController extends Controller
 
         return sendResponse(
             new MessageResource($message),
-            $lang ? 'تم إرسال الرسالة' : 'Message sent'
+            __('api.chat.message_sent')
         );
     }
 
@@ -271,7 +267,7 @@ class ConversationController extends Controller
 
         if (! $conversation) {
             return sendError(
-                $request->header('lang') === 'ar' ? 'المحادثة غير موجودة' : 'Conversation not found',
+                __('api.chat.not_found'),
                 [],
                 404
             );
@@ -288,13 +284,13 @@ class ConversationController extends Controller
         $conversation = $this->findParticipantConversation($id);
 
         if (! $conversation) {
-            return sendError($lang ? 'المحادثة غير موجودة' : 'Conversation not found', [], 404);
+            return sendError(__('api.chat.not_found'), [], 404);
         }
 
         if ($conversation->status === 'archived') {
             return sendResponse(
                 new ConversationResource($conversation),
-                $lang ? 'المحادثة مؤرشفة مسبقاً' : 'Conversation already archived'
+                __('api.chat.already_archived')
             );
         }
 
@@ -302,7 +298,7 @@ class ConversationController extends Controller
 
         return sendResponse(
             new ConversationResource($conversation->fresh(['ad', 'buyer', 'seller'])),
-            $lang ? 'تم أرشفة المحادثة' : 'Conversation archived'
+            __('api.chat.archived')
         );
     }
 
@@ -312,24 +308,20 @@ class ConversationController extends Controller
         $conversation = $this->findParticipantConversation($id);
 
         if (! $conversation) {
-            return sendError($lang ? 'المحادثة غير موجودة' : 'Conversation not found', [], 404);
+            return sendError(__('api.chat.not_found'), [], 404);
         }
 
         $result = $this->chatService->unarchiveConversation($conversation);
 
         if (isset($result['error'])) {
             $messages = [
-                'not_archived' => $lang ? 'المحادثة ليست مؤرشفة' : 'Conversation is not archived',
-                'sold_listing' => $lang
-                    ? 'لا يمكن إلغاء الأرشفة — الإعلان مُباع'
-                    : 'Cannot unarchive — listing was sold',
-                'ad_not_available' => $lang
-                    ? 'لا يمكن إلغاء الأرشفة — الإعلان غير متاح'
-                    : 'Cannot unarchive — ad is not available',
+                'not_archived' => __('api.chat.not_archived'),
+                'sold_listing' => __('api.chat.cannot_unarchive_sold'),
+                'ad_not_available' => __('api.chat.cannot_unarchive_ad_unavailable'),
             ];
 
             return sendError(
-                $messages[$result['error']] ?? ($lang ? 'لا يمكن إلغاء الأرشفة' : 'Cannot unarchive'),
+                $messages[$result['error']] ?? (__('api.chat.cannot_unarchive')),
                 ['error_code' => $result['error']],
                 422
             );
@@ -337,7 +329,7 @@ class ConversationController extends Controller
 
         return sendResponse(
             new ConversationResource($result['conversation']),
-            $lang ? 'تم إلغاء أرشفة المحادثة' : 'Conversation unarchived'
+            __('api.chat.unarchived')
         );
     }
 
@@ -347,7 +339,7 @@ class ConversationController extends Controller
         $conversation = $this->findParticipantConversation($id, includeDeleted: true);
 
         if (! $conversation) {
-            return sendError($lang ? 'المحادثة غير موجودة' : 'Conversation not found', [], 404);
+            return sendError(__('api.chat.not_found'), [], 404);
         }
 
         $userId = Auth::id();
@@ -360,7 +352,7 @@ class ConversationController extends Controller
 
         return sendResponse(
             ['conversation_id' => $conversation->id],
-            $lang ? 'تم حذف المحادثة من قائمتك' : 'Conversation removed from your list'
+            __('api.chat.removed')
         );
     }
 
@@ -393,7 +385,7 @@ class ConversationController extends Controller
         $conversation = $this->findParticipantConversation($id);
 
         if (! $conversation) {
-            return sendError($lang ? 'المحادثة غير موجودة' : 'Conversation not found', [], 404);
+            return sendError(__('api.chat.not_found'), [], 404);
         }
 
         $reporter = Auth::user();
@@ -402,7 +394,7 @@ class ConversationController extends Controller
 
         if (! $reportedUserId || ! $conversation->isParticipant($reportedUserId)) {
             return sendError(
-                $lang ? 'المستخدم المبلّغ عنه غير صالح' : 'Invalid reported user',
+                __('api.chat.invalid_reported_user'),
                 [],
                 422
             );
@@ -410,7 +402,7 @@ class ConversationController extends Controller
 
         if ($reportedUserId === $reporter->id) {
             return sendError(
-                $lang ? 'لا يمكنك الإبلاغ عن نفسك' : 'You cannot report yourself',
+                __('api.chat.cannot_report_self'),
                 [],
                 422
             );
@@ -426,7 +418,7 @@ class ConversationController extends Controller
 
         if ($duplicate) {
             return sendError(
-                $lang ? 'لديك بلاغ قيد المراجعة على هذه المحادثة' : 'You already have a pending report on this conversation',
+                __('api.chat.report_pending_exists'),
                 [],
                 422
             );
@@ -446,7 +438,7 @@ class ConversationController extends Controller
                 'id' => $report->id,
                 'status' => $report->status,
             ],
-            $lang ? 'تم إرسال البلاغ' : 'Report submitted'
+            __('api.chat.report_submitted')
         );
     }
 

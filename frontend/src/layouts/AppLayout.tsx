@@ -97,7 +97,7 @@ export function AppLayout() {
       {sidebarOpen ? (
         <button
           type="button"
-          aria-label="Close sidebar"
+          aria-label={t.closeSidebar}
           onClick={() => setSidebarOpen(false)}
           className="fixed inset-0 z-20 bg-black/35 md:hidden"
         />
@@ -189,7 +189,7 @@ export function AppLayout() {
       <div className="ms-0 flex min-h-screen flex-col md:ms-[288px]">
         <header className="sticky top-0 z-10 m-2 flex h-auto min-h-16 items-center justify-between rounded-2xl border border-[#e6e6ef] bg-white px-3 py-2 shadow-[0_8px_22px_rgba(47,43,61,0.08)] backdrop-blur dark:border-[#44485f] dark:bg-[#2f3349]/95 dark:shadow-[0_10px_24px_rgba(0,0,0,0.28)] md:m-3 md:h-16 md:px-6 md:py-0">
           <input
-            placeholder="Search (CTRL + K)"
+            placeholder={t.searchShortcut}
             className="h-10 w-full max-w-[220px] rounded-lg border border-[#e0e1ec] bg-[#f8f8fc] px-3 text-sm outline-none focus:ring-2 focus:ring-[#7367f0] dark:border-[#484d66] dark:bg-[#383d56] md:max-w-[320px]"
           />
 

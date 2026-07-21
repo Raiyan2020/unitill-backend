@@ -23,23 +23,19 @@ class VehicleLookupController extends Controller
             // perfectly valid plate over and over.
             if ($data['error'] !== 'not_found') {
                 return sendError(
-                    $ar
-                        ? 'خدمة بيانات المركبات غير متاحة حالياً. أدخل التفاصيل يدوياً.'
-                        : 'The vehicle data service is unavailable right now. Please enter the details manually.',
+                    __('api.vehicle.service_unavailable'),
                     [],
                     503
                 );
             }
 
             return sendError(
-                $ar
-                    ? 'لم نعثر على هذه المركبة. تحقق من الرقم أو أدخل التفاصيل يدوياً.'
-                    : 'Couldn’t find this vehicle. Please check the number or enter details manually.',
+                __('api.vehicle.not_found'),
                 [],
                 404
             );
         }
 
-        return sendResponse($data, $ar ? 'تم جلب بيانات المركبة بنجاح' : 'Vehicle details retrieved successfully');
+        return sendResponse($data, __('api.vehicle.details_retrieved'));
     }
 }

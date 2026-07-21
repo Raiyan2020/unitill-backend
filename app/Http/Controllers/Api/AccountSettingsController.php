@@ -39,9 +39,7 @@ class AccountSettingsController extends Controller
 
         if ($validated === []) {
             return sendError(
-                $request->header('lang') === 'ar'
-                    ? 'لم يتم إرسال أي إعداد للتحديث'
-                    : 'No setting was supplied to update.',
+                __('api.settings.none_supplied'),
                 [],
                 422
             );
@@ -55,9 +53,7 @@ class AccountSettingsController extends Controller
 
         return sendResponse(
             $this->payload($user->fresh()),
-            $request->header('lang') === 'ar'
-                ? 'تم تحديث الإعدادات بنجاح'
-                : 'Settings updated successfully'
+            __('api.settings.updated')
         );
     }
 

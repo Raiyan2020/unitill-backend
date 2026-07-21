@@ -155,7 +155,7 @@ export function TrustedSellerApplicationsPage() {
               <option key={size} value={size}>{size}</option>
             ))}
           </select>
-          <Input className="h-9 w-[240px]" placeholder="Search" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Input className="h-9 w-[240px]" placeholder={t.search} value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
       </div>
 
@@ -165,10 +165,10 @@ export function TrustedSellerApplicationsPage() {
             <table className="w-full text-sm">
               <thead className="bg-[#f8f7fb] text-[#6f6b7d] dark:bg-[#383d56] dark:text-[#b6b8cc]">
                 <tr>
-                  <th className="px-4 py-3 text-start">ID</th>
-                  <th className="px-4 py-3 text-start">User</th>
-                  <th className="px-4 py-3 text-start">Seller Type</th>
-                  <th className="px-4 py-3 text-start">City</th>
+                  <th className="px-4 py-3 text-start">{t.id}</th>
+                  <th className="px-4 py-3 text-start">{t.user}</th>
+                  <th className="px-4 py-3 text-start">{t.sellerType}</th>
+                  <th className="px-4 py-3 text-start">{t.city}</th>
                   <th className="px-4 py-3 text-start">{t.status}</th>
                   <th className="px-4 py-3 text-start">{t.actions}</th>
                 </tr>

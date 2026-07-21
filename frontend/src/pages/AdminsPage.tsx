@@ -196,7 +196,7 @@ export function AdminsPage() {
               </option>
             ))}
           </select>
-          <Input className="h-9 w-[220px]" placeholder="Search" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Input className="h-9 w-[220px]" placeholder={t.search} value={search} onChange={(e) => setSearch(e.target.value)} />
           <Button size="sm" onClick={openCreate}>
             + Add Admin
           </Button>
@@ -209,8 +209,8 @@ export function AdminsPage() {
             <table className="w-full text-sm">
               <thead className="bg-[#f8f7fb] text-[#6f6b7d] dark:bg-[#383d56] dark:text-[#b6b8cc]">
                 <tr>
-                  <th className="px-4 py-3 text-start">ID</th>
-                  <th className="px-4 py-3 text-start">Name</th>
+                  <th className="px-4 py-3 text-start">{t.id}</th>
+                  <th className="px-4 py-3 text-start">{t.name}</th>
                   <th className="px-4 py-3 text-start">{t.email}</th>
                   <th className="px-4 py-3 text-start">{t.roles}</th>
                   <th className="px-4 py-3 text-start">{t.actions}</th>
@@ -230,10 +230,10 @@ export function AdminsPage() {
                         <span className="text-xs text-[#a5a7b8] dark:text-[#8a8da8]">—</span>
                       ) : (
                         <div className="flex gap-2">
-                          <Button size="icon" variant="secondary" onClick={() => openEdit(row)} aria-label="Edit">
+                          <Button size="icon" variant="secondary" onClick={() => openEdit(row)} aria-label={t.edit}>
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button size="icon" variant="destructive" onClick={() => setDeleting(row)} aria-label="Delete">
+                          <Button size="icon" variant="destructive" onClick={() => setDeleting(row)} aria-label={t.delete}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -275,7 +275,7 @@ export function AdminsPage() {
             </CardHeader>
             <CardContent className="space-y-5">
               <div className="grid gap-3.5 md:grid-cols-2">
-                <Input placeholder="Name" value={form.name} onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))} />
+                <Input placeholder={t.name} value={form.name} onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))} />
                 <Input placeholder={t.email} value={form.email} onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))} />
                 <Input
                   type="password"
@@ -298,7 +298,7 @@ export function AdminsPage() {
                   onChange={(e) => setForm((s) => ({ ...s, role: e.target.value }))}
                   className="h-10 w-full rounded-xl border border-[#dbdbe8] bg-white px-3 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]"
                 >
-                  <option value="">Select role</option>
+                  <option value="">{t.selectRole}</option>
                   {roles.map((role) => (
                     <option key={role.id} value={role.name}>
                       {role.name}

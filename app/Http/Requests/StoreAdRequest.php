@@ -91,7 +91,7 @@ class StoreAdRequest extends FormRequest
                 'regex:/^[A-Z]{2}[0-9]{2}[A-Z]{3}$/',
                 'max:7'
             ],
-            'description' => 'nullable|string|max:5000',
+            'description' => 'required|string|max:5000',
             'price' => 'required|numeric|min:0',
             'currency' => 'nullable|string|size:3',
             'city_id' => 'required|integer|exists:cities,id',
@@ -128,7 +128,7 @@ class StoreAdRequest extends FormRequest
             if (! $mainCategory) {
                 $validator->errors()->add(
                     'main_category_id',
-                    $ar ? 'القسم الرئيسي غير صالح' : 'Invalid main category'
+                    __('api.ad_form.invalid_main_category')
                 );
 
                 return;
@@ -143,7 +143,7 @@ class StoreAdRequest extends FormRequest
                 if (! $subCategory) {
                     $validator->errors()->add(
                         'sub_category_id',
-                        $ar ? 'القسم الفرعي لا ينتمي للقسم الرئيسي' : 'Sub category does not belong to the main category'
+                        __('api.ad_form.sub_not_in_main')
                     );
 
                     return;
@@ -167,14 +167,31 @@ class StoreAdRequest extends FormRequest
                     if ($definition->is_required && ($value === null || $value === '')) {
                         $validator->errors()->add(
                             "attributes.{$definition->slug}",
-                            $ar
-                                ? "حقل {$definition->labelForLanguageCode('ar')} مطلوب"
-                                : "The {$definition->labelForLanguageCode('en')} field is required"
+                            __('api.ad_form.attribute_required', ['field' => $this->attributeLabel($definition)])
                         );
                     }
                 }
             }
         });
+    }
+
+    /**
+     * Attribute label in the caller's language.
+     *
+     * labelForLanguageCode() returns the raw slug when a locale has no
+     * translation, and only en/ar are seeded — so a French user would otherwise
+     * be told "fuel_type is required". English is tried before giving up.
+     */
+    protected function attributeLabel(CategoryAttributeDefinition $definition): string
+    {
+        $locale = app()->getLocale();
+        $label = $definition->labelForLanguageCode($locale);
+
+        if ($label === $definition->slug && $locale !== 'en') {
+            $label = $definition->labelForLanguageCode('en');
+        }
+
+        return $label;
     }
 
     public function countryId(): ?int
@@ -200,15 +217,15 @@ class StoreAdRequest extends FormRequest
         $ar = $this->header('lang') === 'ar';
 
         return [
-            'images.required' => $ar ? 'يجب رفع صورة واحدة على الأقل' : 'At least one image is required',
-            'images.min' => $ar ? 'يجب رفع صورة واحدة على الأقل' : 'At least one image is required',
-            'images.max' => $ar ? 'الحد الأقصى 10 صور' : 'Maximum 10 images allowed',
-            'images.*.image' => $ar ? 'يجب أن تكون الملفات صوراً' : 'Files must be images',
-            'images.*.max' => $ar ? 'حجم الصورة يجب ألا يتجاوز 5MB' : 'Image size must not exceed 5MB',
-            'main_category_id.required' => $ar ? 'القسم الرئيسي مطلوب' : 'Main category is required',
-            'title.required' => $ar ? 'عنوان الإعلان مطلوب' : 'Ad title is required',
-            'price.required' => $ar ? 'السعر مطلوب' : 'Price is required',
-            'city_id.required' => $ar ? 'المدينة مطلوبة' : 'City is required',
+            'images.required' => __('api.ad.image_required'),
+            'images.min' => __('api.ad.image_required'),
+            'images.max' => __('api.ad_form.images_max'),
+            'images.*.image' => __('api.ad_form.images_must_be_images'),
+            'images.*.max' => __('api.ad_form.image_max_size'),
+            'main_category_id.required' => __('api.ad_form.main_category_required'),
+            'title.required' => __('api.ad_form.title_required'),
+            'price.required' => __('api.ad_form.price_required'),
+            'city_id.required' => __('api.ad_form.city_required'),
         ];
     }
 }

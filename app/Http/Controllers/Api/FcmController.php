@@ -30,6 +30,6 @@ class FcmController extends Controller
             'device_token' => $deviceToken,
             'all_users_topic' => $this->pushNotifications->allUsersTopic(),
             'subscribed_to_all_topic' => (bool) $user->notify_system,
-        ], $lang ? 'تم تسجيل جهاز الإشعارات' : 'FCM device registered');
+        ], __('api.session.fcm_registered'));
     }
 }

@@ -46,12 +46,9 @@ class RegisterRequest extends FormRequest
 
             $host = strtolower(trim(substr(strrchr((string) $studentEmail, '@') ?: '', 1)));
             if ($host === '' || ! $this->isRegisteredUniversityDomain($host)) {
-                $ar = $this->header('lang') === 'ar';
                 $validator->errors()->add(
                     'student_email',
-                    $ar
-                        ? 'يرجى إدخال بريد إلكتروني جامعي بريطاني صالح.'
-                        : 'Please enter a valid UK university email address.'
+                    __('api.auth.invalid_university_email')
                 );
             }
         });
@@ -102,16 +99,16 @@ class RegisterRequest extends FormRequest
         $ar = $this->header('lang') === 'ar';
 
         return [
-            'email.required' => $ar ? 'البريد الشخصي مطلوب' : 'Personal email is required',
-            'email.unique' => $ar ? 'البريد الشخصي مستخدم بالفعل' : 'Personal email is already registered',
-            'student_email.required' => $ar ? 'بريد الطالب الجامعي مطلوب' : 'Student email is required',
-            'student_email.unique' => $ar ? 'بريد الطالب مسجّل مسبقاً' : 'Student email is already registered',
-            'student_email.different' => $ar ? 'بريد الطالب يجب أن يختلف عن البريد الشخصي' : 'Student email must differ from personal email',
-            'phone.unique' => $ar ? 'رقم الهاتف مسجّل مسبقاً' : 'Phone number is already registered',
-            'terms_accepted.accepted' => $ar ? 'يجب الموافقة على الشروط والأحكام' : 'You must accept the terms and conditions',
-            'terms_accepted.required' => $ar ? 'يجب الموافقة على الشروط والأحكام' : 'You must accept the terms and conditions',
-            'password.confirmed' => $ar ? 'تأكيد كلمة المرور غير متطابق' : 'Password confirmation does not match',
-            'city_id.exists' => $ar ? 'المدينة غير صالحة' : 'Invalid city',
+            'email.required' => __('api.register.personal_email_required'),
+            'email.unique' => __('api.register.personal_email_taken'),
+            'student_email.required' => __('api.register.student_email_required'),
+            'student_email.unique' => __('api.register.student_email_taken'),
+            'student_email.different' => __('api.register.student_email_must_differ'),
+            'phone.unique' => __('api.register.phone_taken'),
+            'terms_accepted.accepted' => __('api.register.terms_required'),
+            'terms_accepted.required' => __('api.register.terms_required'),
+            'password.confirmed' => __('api.register.password_confirmed'),
+            'city_id.exists' => __('api.register.invalid_city'),
         ];
     }
 }

@@ -61,6 +61,15 @@ class SettingSeeder extends Seeder
         ]);
 
         Setting::create([
+            'key_id' => 'app_url',
+            'title_en' => 'App URL',
+            'title_ar' => 'رابط التطبيق',
+            'value' => config('app.url'),
+            'set_group' => 'app',
+            'is_object' => '0',
+        ]);
+
+        Setting::create([
             'key_id' => 'app_logo',
             'title_en' => 'App Logo',
             'title_ar' => 'شعار التطبيق (صورة)',

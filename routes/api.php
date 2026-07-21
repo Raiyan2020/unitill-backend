@@ -294,7 +294,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('delete-account/send-otp', [UserController::class, 'sendDeletionOtp']);
     Route::delete('delete-account', [UserController::class, 'destroy']);
     // GDPR Subject Access Request — emails the user a copy of their data.
-    Route::post('account/data-request', [UserController::class, 'requestDataExport']);
+    // Both export routes are throttled separately from the global API limit:
+    // each one reads 15 tables, so repeated taps would hammer the database.
+    Route::post('account/data-request', [UserController::class, 'requestDataExport'])
+        ->middleware('throttle:data-export');
+    // "Download my data" — same payload, returned inline as a JSON file.
+    Route::get('account/data-download', [UserController::class, 'downloadData'])
+        ->middleware('throttle:data-export');
     // Privacy & notification toggles for the Settings screen.
     Route::get('account/settings', [AccountSettingsController::class, 'show']);
     Route::put('account/settings', [AccountSettingsController::class, 'update']);

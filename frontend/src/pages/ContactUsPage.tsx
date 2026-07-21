@@ -69,7 +69,7 @@ export function ContactUsPage() {
           <select value={pageSize} onChange={(e) => { setPage(1); setPageSize(Number(e.target.value)); }} className="h-9 rounded-lg border border-[#dbdbe8] bg-white px-2 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]">
             {[10, 25, 50, 100].map((size) => <option key={size} value={size}>{size}</option>)}
           </select>
-          <Input className="h-9 w-[260px]" placeholder="Search" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Input className="h-9 w-[260px]" placeholder={t.search} value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
       </div>
 
@@ -79,12 +79,12 @@ export function ContactUsPage() {
             <table className="w-full text-sm">
               <thead className="bg-[#f8f7fb] text-[#6f6b7d] dark:bg-[#383d56] dark:text-[#b6b8cc]">
                 <tr>
-                  <th className="px-4 py-3 text-start">ID</th>
-                  <th className="px-4 py-3 text-start">User</th>
-                  <th className="px-4 py-3 text-start">Email</th>
-                  <th className="px-4 py-3 text-start">Reason</th>
-                  <th className="px-4 py-3 text-start">Message</th>
-                  <th className="px-4 py-3 text-start">Created at</th>
+                  <th className="px-4 py-3 text-start">{t.id}</th>
+                  <th className="px-4 py-3 text-start">{t.user}</th>
+                  <th className="px-4 py-3 text-start">{t.email}</th>
+                  <th className="px-4 py-3 text-start">{t.reason}</th>
+                  <th className="px-4 py-3 text-start">{t.message}</th>
+                  <th className="px-4 py-3 text-start">{t.createdAt}</th>
                 </tr>
               </thead>
               <tbody>

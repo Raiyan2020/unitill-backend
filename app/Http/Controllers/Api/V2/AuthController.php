@@ -74,14 +74,14 @@ class AuthController extends Controller
         })->first();
 
         if (! $user) {
-            return sendError($lang ? 'المستخدم غير موجود' : 'User not found', [], 404);
+            return sendError(__('api.auth.user_not_found'), [], 404);
         }
 
         if ($user->trashed()) {
             // The password is verified before restoring so a deleted account
             // cannot be revived by anyone who merely knows the email.
             if (! Hash::check($request->password, $user->password)) {
-                return sendError($lang ? 'كلمة المرور غير صحيحة' : 'Wrong password', [], 400);
+                return sendError(__('api.auth.wrong_password'), [], 400);
             }
 
             app(AccountDeletionService::class)->restore($user);
@@ -93,7 +93,7 @@ class AuthController extends Controller
         }
 
         if (! Hash::check($request->password, $user->password)) {
-            return sendError($lang ? 'كلمة المرور غير صحيحة' : 'Wrong password', [], 400);
+            return sendError(__('api.auth.wrong_password'), [], 400);
         }
 
         return $user;
@@ -129,7 +129,7 @@ class AuthController extends Controller
 
         if (! $target) {
             return sendError(
-                $lang ? 'لا يوجد بريد لإرسال رمز التحقق' : 'No email on file to send the code to',
+                __('api.auth.no_email_on_file'),
                 [],
                 422
             );
@@ -142,9 +142,7 @@ class AuthController extends Controller
             'user_id' => $user->id,
             'student_email_masked' => $this->maskEmail($target),
             'otp_expires_at' => $user->login_otp_expires_at?->toIso8601String(),
-        ], $lang
-            ? 'تم إرسال رمز التحقق إلى بريدك الجامعي'
-            : 'Verification code sent to your student email');
+        ], __('api.auth.code_sent_student_email'));
     }
 
     protected function sendLoginOtp(User $user, string $target): void
@@ -199,7 +197,7 @@ class AuthController extends Controller
         $user = $this->resolveOtpUser($request);
 
         if (! $user) {
-            return sendError($lang ? 'المستخدم غير موجود' : 'User not found', [], 404);
+            return sendError(__('api.auth.user_not_found'), [], 404);
         }
 
         $statusError = $this->validateActiveUser($user, $lang);
@@ -209,7 +207,7 @@ class AuthController extends Controller
 
         if (! $user->login_otp) {
             return sendError(
-                $lang ? 'لم يتم طلب رمز تحقق. سجّل الدخول مجدداً' : 'No verification code requested. Please sign in again.',
+                __('api.auth.no_code_requested'),
                 [],
                 400
             );
@@ -217,14 +215,14 @@ class AuthController extends Controller
 
         if ($user->login_otp_expires_at && now()->greaterThan($user->login_otp_expires_at)) {
             return sendError(
-                $lang ? 'انتهت صلاحية رمز التحقق. اطلب رمزاً جديداً' : 'Verification code expired. Request a new one.',
+                __('api.auth.code_expired'),
                 ['expired' => true],
                 400
             );
         }
 
         if ((string) $user->login_otp !== (string) $request->input('otp')) {
-            return sendError($lang ? 'رمز التحقق غير صحيح' : 'Invalid verification code', [], 400);
+            return sendError(__('api.auth.code_invalid'), [], 400);
         }
 
         // Consume the OTP so it cannot be replayed.
@@ -252,16 +250,16 @@ class AuthController extends Controller
 
         if (isset($result['error'])) {
             $messages = [
-                'refresh_token_invalid' => $lang ? 'رمز التجديد غير صالح' : 'Invalid refresh token',
-                'refresh_token_revoked' => $lang ? 'تم إلغاء رمز التجديد. سجّل الدخول مجدداً' : 'Refresh token revoked. Please sign in again',
-                'refresh_token_expired' => $lang ? 'انتهت صلاحية رمز التجديد. سجّل الدخول مجدداً' : 'Refresh token expired. Please sign in again',
+                'refresh_token_invalid' => __('api.auth.refresh_token_invalid'),
+                'refresh_token_revoked' => __('api.auth.refresh_token_revoked'),
+                'refresh_token_expired' => __('api.auth.refresh_token_expired'),
             ];
             $message = $messages[$result['error']] ?? ($result['message'] ?? 'Unauthorized');
 
             return sendError($message, ['error_code' => $result['error']], 401);
         }
 
-        return sendResponse($result, $lang ? 'تم تجديد رمز الدخول' : 'Access token refreshed');
+        return sendResponse($result, __('api.auth.access_token_refreshed'));
     }
 
     /**
@@ -284,7 +282,7 @@ class AuthController extends Controller
         $user = $this->resolveOtpUser($request);
 
         if (! $user) {
-            return sendError($lang ? 'المستخدم غير موجود' : 'User not found', [], 404);
+            return sendError(__('api.auth.user_not_found'), [], 404);
         }
 
         $statusError = $this->validateActiveUser($user, $lang);
@@ -297,7 +295,7 @@ class AuthController extends Controller
         // then verify it — a full authentication bypass.
         if (! $user->login_otp) {
             return sendError(
-                $lang ? 'لم يتم طلب رمز تحقق. سجّل الدخول مجدداً' : 'No verification code requested. Please sign in again.',
+                __('api.auth.no_code_requested'),
                 [],
                 400
             );
@@ -310,7 +308,7 @@ class AuthController extends Controller
                 $seconds = max(0, $nextAllowed->getTimestamp() - now()->getTimestamp());
 
                 return sendError(
-                    $lang ? "يمكنك إعادة الإرسال بعد {$seconds} ثانية" : "You can resend in {$seconds} seconds",
+                    __('api.auth.resend_cooldown', ['seconds' => $seconds]),
                     ['retry_after_seconds' => $seconds],
                     429
                 );
@@ -320,7 +318,7 @@ class AuthController extends Controller
         $target = $user->student_email ?: $user->email;
         if (! $target) {
             return sendError(
-                $lang ? 'لا يوجد بريد لإرسال رمز التحقق' : 'No email on file to send the code to',
+                __('api.auth.no_email_on_file'),
                 [],
                 422
             );
@@ -331,7 +329,7 @@ class AuthController extends Controller
         return sendResponse([
             'student_email_masked' => $this->maskEmail($target),
             'otp_expires_at' => $user->login_otp_expires_at?->toIso8601String(),
-        ], $lang ? 'تم إعادة إرسال رمز التحقق' : 'Verification code resent');
+        ], __('api.auth.code_resent'));
     }
 
     /**
@@ -382,18 +380,18 @@ class AuthController extends Controller
 
         return sendResponse(array_merge([
             'user' => new UserResource($user),
-        ], $tokens), $lang ? 'تم تسجيل الدخول بنجاح' : __('login success'));
+        ], $tokens), __('api.session.login_success'));
     }
 
     protected function validateActiveUser(User $user, bool $lang)
     {
         if ($user->status === '3') {
-            return sendError($lang ? 'الحساب معطّل' : 'Account disabled', [], 403);
+            return sendError(__('api.auth.account_disabled'), [], 403);
         }
 
         if ($user->status === '2') {
             return sendError(
-                $lang ? 'يجب التحقق من بريد الطالب الجامعي أولاً' : 'Please verify your email first.',
+                __('api.auth.verify_email_first'),
                 [
                     'needs_verification' => true,
                     'student_email_masked' => $this->maskEmail($user->student_email),
@@ -402,7 +400,7 @@ class AuthController extends Controller
         }
 
         if ($user->status !== '1') {
-            return sendError($lang ? 'الحساب غير مفعّل' : 'Account not active', [], 403);
+            return sendError(__('api.auth.account_not_active'), [], 403);
         }
 
         return null;
@@ -411,9 +409,9 @@ class AuthController extends Controller
     protected function tokenErrorResponse(array $result, bool $lang)
     {
         $messages = [
-            'biometric_token_invalid' => $lang ? 'رمز البصمة غير صالح' : 'Invalid biometric token',
-            'biometric_token_revoked' => $lang ? 'تم إلغاء رمز البصمة. سجّل الدخول بالبيانات' : 'Biometric token revoked. Please sign in with credentials',
-            'biometric_token_expired' => $lang ? 'انتهت صلاحية رمز البصمة. سجّل الدخول بالبيانات' : 'Biometric token expired. Please sign in with credentials',
+            'biometric_token_invalid' => __('api.auth.biometric_token_invalid'),
+            'biometric_token_revoked' => __('api.auth.biometric_token_revoked_signin'),
+            'biometric_token_expired' => __('api.auth.biometric_token_expired'),
         ];
 
         $code = $result['error'];

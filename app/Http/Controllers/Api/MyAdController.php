@@ -78,12 +78,12 @@ class MyAdController extends Controller
         $ad = $this->findOwnedAd($id);
 
         if (! $ad) {
-            return sendError($lang ? 'الإعلان غير موجود' : 'Ad not found', [], 404);
+            return sendError(__('api.ad.not_found'), [], 404);
         }
 
         if ($ad->status !== 'published') {
             return sendError(
-                $lang ? 'يمكن عرض المشترين للإعلانات النشطة فقط' : 'Buyers are available for active ads only',
+                __('api.ad.buyers_active_only'),
                 [],
                 422
             );
@@ -123,12 +123,12 @@ class MyAdController extends Controller
         $ad = $this->findOwnedAd($id);
 
         if (! $ad) {
-            return sendError($lang ? 'الإعلان غير موجود' : 'Ad not found', [], 404);
+            return sendError(__('api.ad.not_found'), [], 404);
         }
 
         if ($ad->status !== 'published') {
             return sendError(
-                $lang ? 'يمكن تعليم الإعلانات النشطة فقط كمباعة' : 'Only active ads can be marked as sold',
+                __('api.ad.only_active_can_be_sold'),
                 [],
                 422
             );
@@ -144,7 +144,7 @@ class MyAdController extends Controller
 
         if (! $isSoldOutside && ! $buyerId) {
             return sendError(
-                $lang ? 'اختر مشترياً أو حدد البيع خارج التطبيق' : 'Select a buyer or mark as sold outside UniTill',
+                __('api.ad.select_buyer_or_outside'),
                 [],
                 422
             );
@@ -152,7 +152,7 @@ class MyAdController extends Controller
 
         if ($buyerId && (int) $buyerId === (int) Auth::id()) {
             return sendError(
-                $lang ? 'لا يمكنك اختيار نفسك كمشتري' : 'You cannot select yourself as buyer',
+                __('api.ad.cannot_select_self'),
                 [],
                 422
             );
@@ -171,7 +171,7 @@ class MyAdController extends Controller
 
         return sendResponse(
             new MyAdResource($ad),
-            $lang ? 'تم تعليم الإعلان كمباع' : 'Ad marked as sold'
+            __('api.ad.marked_sold')
         );
     }
 
@@ -182,7 +182,7 @@ class MyAdController extends Controller
 
         if (! $ad || $ad->status !== 'published') {
             return sendError(
-                $lang ? 'يمكن إيقاف الإعلانات النشطة فقط' : 'Only active ads can be paused',
+                __('api.ad.only_active_can_pause'),
                 [],
                 422
             );
@@ -196,7 +196,7 @@ class MyAdController extends Controller
 
         return sendResponse(
             new MyAdResource($ad->fresh()),
-            $lang ? 'تم إيقاف الإعلان' : 'Ad paused successfully'
+            __('api.ad.paused')
         );
     }
 
@@ -207,7 +207,7 @@ class MyAdController extends Controller
 
         if (! $ad || ! in_array($ad->status, ['paused', 'expired'], true)) {
             return sendError(
-                $lang ? 'يمكن تفعيل الإعلانات الموقوفة أو المنتهية فقط' : 'Only paused or expired ads can be activated',
+                __('api.ad.only_paused_expired_activate'),
                 [],
                 422
             );
@@ -229,7 +229,7 @@ class MyAdController extends Controller
 
         if (isset($publication['coupon_error'])) {
             return sendError(
-                $lang ? 'تعذّر تطبيق كود الخصم' : 'The coupon code could not be applied.',
+                __('api.ad.coupon_failed'),
                 ['coupon_code' => $publication['coupon_error']],
                 422
             );
@@ -240,7 +240,7 @@ class MyAdController extends Controller
                 'ad' => new MyAdResource($ad->fresh()),
                 'publication' => $publication,
             ],
-            $lang ? 'تم تفعيل الإعلان' : 'Ad activated successfully'
+            __('api.ad.activated')
         );
     }
 
@@ -258,14 +258,12 @@ class MyAdController extends Controller
         $ad = $this->findOwnedAd($id);
 
         if (! $ad) {
-            return sendError($lang ? 'الإعلان غير موجود' : 'Ad not found', [], 404);
+            return sendError(__('api.ad.not_found'), [], 404);
         }
 
         if ($ad->status !== 'sold') {
             return sendError(
-                $lang
-                    ? 'يمكن إعادة بيع الإعلانات المباعة فقط. استخدم إعادة التفعيل للإعلانات الموقوفة أو المنتهية.'
-                    : 'Only sold ads can be relisted this way. Use activate for paused or expired ads.',
+                __('api.ad.only_sold_relist'),
                 [],
                 422
             );
@@ -318,7 +316,7 @@ class MyAdController extends Controller
 
         if (isset($publication['coupon_error'])) {
             return sendError(
-                $lang ? 'تعذّر تطبيق كود الخصم' : 'The coupon code could not be applied.',
+                __('api.ad.coupon_failed'),
                 ['coupon_code' => $publication['coupon_error']],
                 422
             );
@@ -330,7 +328,7 @@ class MyAdController extends Controller
                 'relisted_from_ad_id' => (int) $ad->id,
                 'publication' => $publication,
             ],
-            $lang ? 'تم إنشاء إعلان جديد من الإعلان المباع' : 'A new listing was created from the sold ad'
+            __('api.ad.relisted')
         );
     }
 
@@ -340,14 +338,14 @@ class MyAdController extends Controller
         $ad = $this->findOwnedAd($id);
 
         if (! $ad) {
-            return sendError($lang ? 'الإعلان غير موجود' : 'Ad not found', [], 404);
+            return sendError(__('api.ad.not_found'), [], 404);
         }
 
         // A sold ad keeps its record (purchase history); everything else the
         // owner created can be removed. Archive any open conversations first.
         if ($ad->status === 'sold') {
             return sendError(
-                $lang ? 'لا يمكن حذف إعلان مباع' : 'A sold ad cannot be deleted',
+                __('api.ad.sold_cannot_delete'),
                 [],
                 422
             );
@@ -361,7 +359,7 @@ class MyAdController extends Controller
 
         return sendResponse(
             ['ad_id' => (int) $id],
-            $lang ? 'تم حذف الإعلان' : 'Ad deleted successfully'
+            __('api.ad.deleted')
         );
     }
 

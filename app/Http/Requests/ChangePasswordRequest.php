@@ -24,10 +24,10 @@ class ChangePasswordRequest extends FormRequest
         $ar = $this->header('lang') === 'ar';
 
         return [
-            'current_password.required' => $ar ? 'كلمة المرور الحالية مطلوبة' : 'Current password is required',
-            'new_password.required' => $ar ? 'كلمة المرور الجديدة مطلوبة' : 'New password is required',
-            'new_password.min' => $ar ? 'كلمة المرور الجديدة 6 أحرف على الأقل' : 'New password must be at least 6 characters',
-            'new_password.confirmed' => $ar ? 'تأكيد كلمة المرور غير متطابق' : 'Password confirmation does not match',
+            'current_password.required' => __('api.password.current_required'),
+            'new_password.required' => __('api.password.new_required'),
+            'new_password.min' => __('api.password.new_min'),
+            'new_password.confirmed' => __('api.password.confirmation_mismatch'),
         ];
     }
 }

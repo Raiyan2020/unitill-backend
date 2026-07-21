@@ -8,6 +8,7 @@ use App\Http\Resources\UserResource;
 use App\Mail\OtpMail;
 use App\Models\User;
 use App\Services\AccountDeletionService;
+use App\Services\PersonalDataExportService;
 use App\Traits\ImageTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -80,7 +81,7 @@ class UserController extends Controller
             new UserResource(
                 $this->profileQuery()->findOrFail($user->id)
             ),
-            $lang ? 'تم تحديث الملف الشخصي بنجاح' : 'Profile updated successfully.'
+            __('api.profile.updated')
         );
     }
 
@@ -136,9 +137,7 @@ class UserController extends Controller
 
         return sendResponse(
             ['needs_otp' => true],
-            $request->header('lang') === 'ar'
-                ? 'تم إرسال رمز التأكيد إلى بريدك الشخصي'
-                : 'Confirmation code sent to your personal email'
+            __('api.account.deletion_code_sent')
         );
     }
 
@@ -148,47 +147,65 @@ class UserController extends Controller
      * support can action it within the statutory window. No external service is
      * involved.
      */
-    public function requestDataExport(Request $request)
+    /**
+     * SAR: emails the full export as a JSON attachment.
+     *
+     * A delivery failure is reported to the caller rather than swallowed — a
+     * subject access request has a statutory deadline, so a silent failure means
+     * an unanswered legal obligation nobody knows about.
+     */
+    public function requestDataExport(Request $request, PersonalDataExportService $exporter)
     {
         $user = Auth::user();
-        $isAr = $request->header('lang') === 'ar';
+        $payload = $exporter->build($user);
+        $json = json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
-        $ads = $user->ads()
-            ->latest()
-            ->get(['id', 'title', 'status', 'price', 'created_at'])
-            ->map(fn ($ad) => "- #{$ad->id} {$ad->title} ({$ad->status}) £{$ad->price} — {$ad->created_at}")
-            ->implode("\n");
-
-        $lines = [
-            'UniTill — Personal Data Export',
-            '================================',
-            'Name: '.trim(($user->first_name ?? '').' '.($user->last_name ?? '')),
-            'Personal email: '.($user->email ?? '-'),
-            'University email: '.($user->student_email ?? '-'),
-            'Phone: '.($user->phone ?? '-'),
-            'Trusted seller: '.($user->is_trusted_seller ? 'Yes' : 'No'),
-            'Account created: '.optional($user->created_at)->toDateTimeString(),
-            '',
-            'Your ads:',
-            $ads !== '' ? $ads : '(none)',
-        ];
-        $body = implode("\n", $lines);
-
-        Log::info('SAR data export requested', ['user_id' => $user->id]);
+        Log::info('SAR data export requested', [
+            'user_id' => $user->id,
+            'pending_disclosures' => $exporter->pendingReview(),
+        ]);
 
         try {
-            Mail::raw($body, function ($message) use ($user) {
-                $message->to($user->email)->subject('Your UniTill personal data');
-            });
+            Mail::raw(
+                "Your UniTill personal data export is attached as JSON.\n\nRequested: ".now()->toDateTimeString(),
+                function ($message) use ($user, $json) {
+                    $message->to($user->email)
+                        ->subject('Your UniTill personal data')
+                        ->attachData($json, 'unitill-personal-data.json', ['mime' => 'application/json']);
+                }
+            );
         } catch (\Throwable $e) {
-            Log::error('SAR data export mail failed', ['error' => $e->getMessage()]);
+            Log::error('SAR data export mail failed', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return sendError(__('api.account.export_failed'), [], 500);
         }
 
         return sendResponse(
             ['email' => $user->email],
-            $isAr
-                ? 'تم إرسال نسخة من بياناتك إلى بريدك الإلكتروني'
-                : 'A copy of your data has been sent to your email'
+            __('api.account.export_sent')
+        );
+    }
+
+    /**
+     * Same payload as the SAR email, returned inline so the app can offer
+     * "Download my data" without waiting on mail delivery.
+     */
+    public function downloadData(Request $request, PersonalDataExportService $exporter)
+    {
+        $user = Auth::user();
+        $payload = $exporter->build($user);
+
+        Log::info('Personal data downloaded', ['user_id' => $user->id]);
+
+        return response()->streamDownload(
+            function () use ($payload) {
+                echo json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            },
+            'unitill-personal-data-'.now()->format('Y-m-d').'.json',
+            ['Content-Type' => 'application/json']
         );
     }
 
@@ -201,9 +218,7 @@ class UserController extends Controller
         $otp = (string) $request->input('otp', '');
         if ($otp !== '123456') {
             return sendError(
-                $request->header('lang') === 'ar'
-                    ? 'رمز التأكيد غير صحيح'
-                    : 'Invalid confirmation code',
+                __('api.account.invalid_confirmation_code'),
                 [],
                 422
             );
@@ -215,9 +230,7 @@ class UserController extends Controller
 
         return sendResponse(
             ['deleted_at' => $deletedAt->toIso8601String()],
-            $request->header('lang') === 'ar'
-                ? 'تم حذف حسابك. يمكنك استعادته بتسجيل الدخول مرة أخرى.'
-                : 'Your account has been deleted. Signing in again will restore it.'
+            __('api.account.deleted_restorable')
         );
     }
 

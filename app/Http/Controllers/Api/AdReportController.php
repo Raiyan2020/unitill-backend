@@ -34,7 +34,7 @@ class AdReportController extends Controller
 
         if (! $ad) {
             return sendError(
-                $lang ? 'الإعلان غير موجود' : 'Ad not found',
+                __('api.report.ad_not_found'),
                 [],
                 404
             );
@@ -42,7 +42,7 @@ class AdReportController extends Controller
 
         if ($ad->user_id === $user->id) {
             return sendError(
-                $lang ? 'لا يمكنك الإبلاغ عن إعلانك' : 'You cannot report your own ad',
+                __('api.report.cannot_report_own_ad'),
                 [],
                 422
             );
@@ -50,7 +50,7 @@ class AdReportController extends Controller
 
         if (AdReport::query()->where('user_id', $user->id)->where('ad_id', $ad->id)->exists()) {
             return sendError(
-                $lang ? 'لقد أبلغت عن هذا الإعلان مسبقاً' : 'You have already reported this ad',
+                __('api.report.already_reported'),
                 [],
                 422
             );
@@ -69,6 +69,6 @@ class AdReportController extends Controller
             'ad_id' => $ad->id,
             'reason' => $report->reason,
             'status' => $report->status,
-        ], $lang ? 'تم إرسال البلاغ بنجاح' : 'Report submitted successfully');
+        ], __('api.report.submitted'));
     }
 }
