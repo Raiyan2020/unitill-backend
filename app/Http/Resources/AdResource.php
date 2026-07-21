@@ -14,7 +14,10 @@ class AdResource extends JsonResource
     {
         $lang = $request->header('lang', 'en');
         $favoriteIds = $request->attributes->get('favorite_ad_ids', []);
-        $publishedAt = $this->published_at ?? $this->created_at;
+        // No created_at fallback: an ad that has not been paid for has never been
+        // published, and reporting its creation time as "published 1 second ago"
+        // tells the buyer something untrue.
+        $publishedAt = $this->published_at;
 
         return [
             'id' => $this->id,

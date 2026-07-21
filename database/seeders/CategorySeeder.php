@@ -61,6 +61,8 @@ class CategorySeeder extends Seeder
                     ['en' => 'Laptops', 'ar' => 'لابتوبات'],
                     ['en' => 'Mobile phones', 'ar' => 'هواتف محمولة'],
                     ['en' => 'Tablets', 'ar' => 'تابلت'],
+                    ['en' => 'Computers', 'ar' => 'كمبيوترات'],
+                    ['en' => 'Home Electronics', 'ar' => 'إلكترونيات منزلية'],
                     ['en' => 'Accessories', 'ar' => 'إكسسوارات'],
                     ['en' => 'Others', 'ar' => 'أخرى'],
                 ],

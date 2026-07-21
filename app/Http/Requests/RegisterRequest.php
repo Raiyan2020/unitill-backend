@@ -50,8 +50,8 @@ class RegisterRequest extends FormRequest
                 $validator->errors()->add(
                     'student_email',
                     $ar
-                        ? 'بريد الطالب يجب أن يكون تابعاً لإحدى الجامعات المعتمدة لدينا'
-                        : 'Student email must belong to one of our registered universities.'
+                        ? 'يرجى إدخال بريد إلكتروني جامعي بريطاني صالح.'
+                        : 'Please enter a valid UK university email address.'
                 );
             }
         });

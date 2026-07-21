@@ -12,6 +12,11 @@ trait HandlesListingPayments
 {
     protected function startPublication(Ad $ad, ?string $couponCode = null): array
     {
+        // Where to return the ad if Stripe setup fails: a posted ad goes back to
+        // "pending", a draft being published goes back to "draft". Hardcoding one
+        // of them would turn the other into something it never was.
+        $originalStatus = $ad->status;
+
         $result = DB::transaction(function () use ($ad, $couponCode) {
             $lockedAd = Ad::query()->lockForUpdate()->findOrFail($ad->id);
             // Serialize a user's quota checks so two concurrent publish calls
@@ -91,7 +96,7 @@ trait HandlesListingPayments
                 $paymentAd->update(['stripe_payment_intent_id' => $intent['id']]);
             }
         } catch (\Throwable $exception) {
-            $paymentAd->update(['status' => 'draft', 'payment_status' => 'payment_setup_failed']);
+            $paymentAd->update(['status' => $originalStatus, 'payment_status' => 'payment_setup_failed']);
             throw $exception;
         }
 

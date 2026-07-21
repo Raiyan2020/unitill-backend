@@ -1,4 +1,4 @@
-import { BadgeCheck, Bell, Building2, FileText, Flag, MessageSquareWarning, TicketPercent, FolderTree, GraduationCap, Globe, KeyRound, Languages, LayoutDashboard, LogOut, Mail, Megaphone, Menu, MessageSquare, Moon, Settings, ShieldCheck, Sun, User, UserCog, Users, Wallet, X } from 'lucide-react';
+import { BadgeCheck, Bell, Building2, FileText, Flag, MessageSquareWarning, TicketPercent, FolderTree, GraduationCap, Globe, KeyRound, Languages, LayoutDashboard, LogOut, Mail, Megaphone, Menu, MessageSquare, Moon, Settings, ShieldCheck, Sun, User, UserCog, Users, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
@@ -26,7 +26,10 @@ const navItems = [
   { to: '/contact-us', labelKey: 'contactUs', icon: Mail, permission: 'contact_us.view' },
   { to: '/push-notifications', labelKey: 'pushNotifications', icon: Bell, permission: 'dashboard.view' },
   { to: '/coupons', labelKey: 'coupons', icon: TicketPercent, permission: 'coupons.view' },
-  { to: '/payment-methods', labelKey: 'paymentMethods', icon: Wallet, permission: 'payment_methods.view' },
+  // Payment methods is hidden from the sidebar: the listing fee goes through
+  // Stripe, which never consults this table. The route and page remain reachable
+  // by URL so nothing is lost if it is needed again.
+  // { to: '/payment-methods', labelKey: 'paymentMethods', icon: Wallet, permission: 'payment_methods.view' },
   { to: '/settings', labelKey: 'settings', icon: Settings, permission: 'dashboard.view' },
 ] as const;
 

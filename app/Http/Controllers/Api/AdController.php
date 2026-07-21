@@ -14,6 +14,7 @@ use App\Models\CategoryAttributeDefinition;
 use App\Services\CouponRedemptionService;
 use App\Services\StripeService;
 use App\Services\ListingPaymentService;
+use App\Services\PostcodeService;
 use App\Traits\HandlesListingPayments;
 use App\Support\AdFilters;
 use App\Support\AdSort;
@@ -41,6 +42,8 @@ class AdController extends Controller
             'is_negotiable' => 'nullable|boolean',
             'per_page' => 'nullable|integer|min:1|max:50',
             'filters' => 'nullable',
+            'postcode' => 'nullable|string|max:12',
+            'radius_km' => 'nullable|numeric|min:0.1|max:500',
         ]);
 
         $lang = $request->header('lang', 'en');
@@ -100,19 +103,71 @@ class AdController extends Controller
         // query params) power distance sorting.
         $viewerLat = $request->header('lat') ?? $request->input('lat');
         $viewerLng = $request->header('lng') ?? $request->input('lng');
-        AdSort::apply(
-            $query,
-            $sort,
-            is_numeric($viewerLat) ? (float) $viewerLat : null,
-            is_numeric($viewerLng) ? (float) $viewerLng : null
-        );
+        $viewerLat = is_numeric($viewerLat) ? (float) $viewerLat : null;
+        $viewerLng = is_numeric($viewerLng) ? (float) $viewerLng : null;
+
+        // Radius search: an explicit postcode wins over the viewer's coordinates,
+        // so "show me places near campus" works from anywhere.
+        $radiusKm = isset($validated['radius_km']) ? (float) $validated['radius_km'] : null;
+        $originLat = $viewerLat;
+        $originLng = $viewerLng;
+        $resolvedPostcode = null;
+
+        if (! empty($validated['postcode'])) {
+            $details = app(PostcodeService::class)->getDetails($validated['postcode']);
+
+            if ($details && is_numeric($details['latitude']) && is_numeric($details['longitude'])) {
+                $originLat = (float) $details['latitude'];
+                $originLng = (float) $details['longitude'];
+                $resolvedPostcode = $details['postcode'];
+            }
+        }
+
+        if ($radiusKm !== null && $originLat !== null && $originLng !== null) {
+            // Same great-circle formula AdSort uses; ads without coordinates are
+            // excluded rather than treated as distance zero.
+            $query->whereNotNull('latitude')
+                ->whereNotNull('longitude')
+                ->whereRaw(
+                    '(6371 * acos(LEAST(1, cos(radians(?)) * cos(radians(latitude)) '
+                    .'* cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude))))) <= ?',
+                    [$originLat, $originLng, $originLat, $radiusKm]
+                );
+        }
+
+        AdSort::apply($query, $sort, $originLat, $originLng);
 
         $this->attachFavoriteIds($request);
 
         $ads = $query->paginate($perPage);
 
+        // Some subcategories (Laptops, Tablets, Mobile phones, Computers, Home
+        // Electronics) carry their own attributes; the rest inherit the main
+        // category's. Prefer the subcategory when it defines any, else fall back.
+        $attributeCategoryId = 0;
+        if ($subCategoryId > 0) {
+            $hasOwnDefinitions = CategoryAttributeDefinition::query()
+                ->where('category_id', $subCategoryId)
+                ->where('is_active', true)
+                ->exists();
+
+            $attributeCategoryId = $hasOwnDefinitions
+                ? $subCategoryId
+                : (int) (Category::whereKey($subCategoryId)->value('parent_id') ?? $subCategoryId);
+        }
+        if ($attributeCategoryId === 0) {
+            $attributeCategoryId = $mainCategoryId;
+        }
+
+        // Mileage/year sorts are offered wherever those attributes are defined,
+        // which keeps this data-driven instead of pinned to a hard-coded Cars id.
+        $supportsVehicleSorts = $attributeCategoryId > 0 && CategoryAttributeDefinition::query()
+            ->where('category_id', $attributeCategoryId)
+            ->whereIn('slug', ['mileage', 'year'])
+            ->exists();
+
         $response = AdResource::collection($ads)->response()->getData(true);
-        $response['sort_options'] = AdSort::options($lang);
+        $response['sort_options'] = AdSort::options($lang, $supportsVehicleSorts);
         $response['current_sort'] = AdSort::normalize($sort);
         $response['applied_filters'] = array_filter([
             'search' => $search !== '' ? $search : null,
@@ -122,15 +177,19 @@ class AdController extends Controller
             'price_min' => $validated['price_min'] ?? null,
             'price_max' => $validated['price_max'] ?? null,
             'is_negotiable' => $validated['is_negotiable'] ?? null,
+            'postcode' => $resolvedPostcode,
+            'radius_km' => $radiusKm,
             'attributes' => $attributeFilters ?: null,
-        ]);
+        ], static fn ($value) => $value !== null);
 
-        // Attribute definitions live on the main category, so resolve to it
-        // even when the viewer is browsing a subcategory.
-        $attributeCategoryId = $mainCategoryId;
-        if ($attributeCategoryId === 0 && $subCategoryId > 0) {
-            $attributeCategoryId = (int) (Category::whereKey($subCategoryId)->value('parent_id') ?? $subCategoryId);
-        }
+        // Drives the "N filters active" badge on the filter panel. Price min/max
+        // counts once, as does postcode + radius, matching how the UI groups them.
+        $response['active_filter_count'] = AdFilters::activeCount($attributeFilters)
+            + (isset($validated['city_id']) ? 1 : 0)
+            + (isset($validated['price_min']) || isset($validated['price_max']) ? 1 : 0)
+            + (array_key_exists('is_negotiable', $validated) ? 1 : 0)
+            + ($radiusKm !== null ? 1 : 0);
+
         if ($attributeCategoryId > 0) {
             $response['filter_options'] = $this->filterOptionsForCategory($attributeCategoryId, $lang);
         }
@@ -181,6 +240,24 @@ class AdController extends Controller
         return sendResponse(new AdDetailResource($ad));
     }
 
+    /**
+     * Attribute definitions for an ad, keyed by slug.
+     *
+     * A main category and its subcategory can define the same slug — Electronics
+     * and Electronics > Laptops both have "brand". Sorting the subcategory last
+     * makes keyBy() keep it, so the value binds to the more specific definition
+     * instead of whichever row happened to have the lower id.
+     */
+    protected function definitionsForCategories(array $specCategoryIds, int $subCategoryId): \Illuminate\Support\Collection
+    {
+        return CategoryAttributeDefinition::query()
+            ->whereIn('category_id', $specCategoryIds)
+            ->where('is_active', true)
+            ->get()
+            ->sortBy(fn (CategoryAttributeDefinition $definition) => $definition->category_id === $subCategoryId ? 1 : 0)
+            ->keyBy('slug');
+    }
+
     protected function filterOptionsForCategory(int $categoryId, string $lang): array
     {
         return CategoryAttributeDefinition::query()
@@ -207,7 +284,6 @@ class AdController extends Controller
         $lang = $request->header('lang') === 'ar';
         $user = Auth::user();
         $data = $request->validated();
-        $confirmPublish = (bool) ($data['confirm_publish'] ?? false);
         $attributes = (array) ($data['attributes'] ?? []);
         // Attribute definitions live on the main category; resolve from both.
         $specCategoryIds = array_values(array_filter([
@@ -215,7 +291,7 @@ class AdController extends Controller
             (int) ($data['sub_category_id'] ?? 0),
         ]));
 
-        $ad = DB::transaction(function () use ($request, $user, $data, $confirmPublish, $attributes, $specCategoryIds) {
+        $ad = DB::transaction(function () use ($request, $user, $data, $attributes, $specCategoryIds) {
             $imagePaths = [];
             foreach ($request->file('images', []) as $index => $image) {
                 $imagePaths[] = [
@@ -250,7 +326,10 @@ class AdController extends Controller
                 'is_negotiable' => (bool) ($data['is_negotiable'] ?? false),
                 'is_verified' => false,
                 'slug' => Str::slug($title.'-'.$publicId),
-                'status' => 'draft',
+                // A posted ad is "pending" until the fee is settled; only then does
+                // it become "published". Drafts are created by storeDraft() and stay
+                // "draft" — that is what separates the two.
+                'status' => 'pending',
             ]);
 
             foreach ($imagePaths as $row) {
@@ -261,11 +340,10 @@ class AdController extends Controller
                 ]);
             }
 
-            $definitions = CategoryAttributeDefinition::query()
-                ->whereIn('category_id', $specCategoryIds)
-                ->where('is_active', true)
-                ->get()
-                ->keyBy('slug');
+            $definitions = $this->definitionsForCategories(
+                $specCategoryIds,
+                (int) ($data['sub_category_id'] ?? 0)
+            );
 
             foreach ($attributes as $slug => $value) {
                 if ($value === null || $value === '' || ! isset($definitions[$slug])) {
@@ -282,7 +360,10 @@ class AdController extends Controller
             return $ad;
         });
 
-        $publication = $confirmPublish ? $this->startPublication($ad, $request->input('coupon_code')) : null;
+        // Posting always enters the publication flow: there is no admin approval
+        // step, so the ad goes live as soon as the fee is settled — covered by the
+        // free quota, zeroed by a coupon, or paid via Stripe.
+        $publication = $this->startPublication($ad, $request->input('coupon_code'));
         if (isset($publication['coupon_error'])) {
             return sendError('The coupon code could not be applied.', ['coupon_code' => $publication['coupon_error']], 422);
         }
@@ -407,6 +488,10 @@ class AdController extends Controller
             'longitude' => 'nullable|numeric|between:-180,180',
             'attributes' => 'nullable|array',
             'attributes.*' => 'nullable|string|max:1000',
+            // Optional on a draft — the user may not have chosen photos yet — but
+            // stored when supplied. publishDraft() is what insists on at least one.
+            'images' => 'nullable|array|max:10',
+            'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
         ]);
 
         $attributes = (array) ($validated['attributes'] ?? []);
@@ -418,6 +503,19 @@ class AdController extends Controller
         ]));
 
         $ad = DB::transaction(function () use ($request, $user, $validated, $attributes, $specCategoryIds, $cityId) {
+            $imagePaths = [];
+            foreach ($request->file('images', []) as $index => $image) {
+                $imagePaths[] = [
+                    'path' => uploader($image, 'ads'),
+                    'sort_order' => $index,
+                ];
+            }
+
+            // A draft may have no photos yet, so there is not always a cover.
+            $coverPath = isset($imagePaths[0])
+                ? ltrim(str_replace('/storage/', '', $imagePaths[0]['path']), '/')
+                : null;
+
             $title = $validated['title'];
             $publicId = strtoupper(Str::random(10));
 
@@ -441,15 +539,23 @@ class AdController extends Controller
                 'latitude' => $validated['latitude'] ?? null,
                 'longitude' => $validated['longitude'] ?? null,
                 'is_verified' => false,
+                'cover_image' => $coverPath,
                 'slug' => Str::slug($title.'-'.$publicId),
                 'status' => 'draft',
             ]);
 
-            $definitions = CategoryAttributeDefinition::query()
-                ->whereIn('category_id', $specCategoryIds)
-                ->where('is_active', true)
-                ->get()
-                ->keyBy('slug');
+            foreach ($imagePaths as $row) {
+                AdImage::create([
+                    'ad_id' => $ad->id,
+                    'path' => ltrim(str_replace('/storage/', '', $row['path']), '/'),
+                    'sort_order' => $row['sort_order'],
+                ]);
+            }
+
+            $definitions = $this->definitionsForCategories(
+                $specCategoryIds,
+                (int) ($validated['sub_category_id'] ?? 0)
+            );
 
             foreach ($attributes as $slug => $value) {
                 if ($value === null || $value === '' || ! isset($definitions[$slug])) {

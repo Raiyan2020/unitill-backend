@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\Dashboard\AdminSettingController;
 use App\Http\Controllers\Api\Dashboard\TrustedSellerApplicationAdminController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AccountSecurityController;
+use App\Http\Controllers\Api\AccountSettingsController;
 use App\Http\Controllers\Api\AdController;
 use App\Http\Controllers\Api\AdReportController;
 use App\Http\Controllers\Api\AuthController;
@@ -263,6 +264,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('my-ads/{id}/mark-sold', [MyAdController::class, 'markAsSold']);
     Route::post('my-ads/{id}/pause', [MyAdController::class, 'pause']);
     Route::post('my-ads/{id}/activate', [MyAdController::class, 'activate']);
+    // "Sell again" — copies a sold ad into a new listing and charges for it.
+    Route::post('my-ads/{id}/sell-again', [MyAdController::class, 'sellAgain']);
     Route::delete('my-ads/{id}', [MyAdController::class, 'destroy']);
     Route::get('ratings/{user_id?}', [UserRatingController::class, 'index']);
     Route::post('ratings', [UserRatingController::class, 'store']);
@@ -292,6 +295,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('delete-account', [UserController::class, 'destroy']);
     // GDPR Subject Access Request — emails the user a copy of their data.
     Route::post('account/data-request', [UserController::class, 'requestDataExport']);
+    // Privacy & notification toggles for the Settings screen.
+    Route::get('account/settings', [AccountSettingsController::class, 'show']);
+    Route::put('account/settings', [AccountSettingsController::class, 'update']);
     Route::get('account-security', [AccountSecurityController::class, 'index']);
     Route::post('change-password', [AccountSecurityController::class, 'changePassword']);
     Route::post('logout-other-devices', [AccountSecurityController::class, 'logoutOtherDevices']);

@@ -15,10 +15,14 @@ class AdDetailResource extends JsonResource
         $lang = $request->header('lang', 'en');
         $locale = $lang === 'ar' ? 'ar' : 'en';
         $favoriteIds = $request->attributes->get('favorite_ad_ids', []);
-        $publishedAt = $this->published_at ?? $this->created_at;
+        // No created_at fallback — see AdResource. Null until payment settles.
+        $publishedAt = $this->published_at;
 
+        // The seller's "show first name only" preference governs how they are
+        // named on their own listings.
         $sellerName = trim(
-            ($this->user?->first_name ?? '').' '.($this->user?->last_name ?? '')
+            ($this->user?->first_name ?? '')
+            .($this->user?->show_last_name ? ' '.($this->user?->last_name ?? '') : '')
         );
         if ($sellerName === '') {
             $sellerName = (string) ($this->user?->name ?? '');

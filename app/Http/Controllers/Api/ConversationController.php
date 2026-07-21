@@ -23,27 +23,55 @@ class ConversationController extends Controller
         $validated = $request->validate([
             'tab' => ['nullable', Rule::in(['active', 'archived'])],
             'per_page' => 'nullable|integer|min:1|max:50',
+            'search' => 'nullable|string|max:255',
+            'q' => 'nullable|string|max:255',
         ]);
 
         $user = Auth::user();
         $tab = $validated['tab'] ?? 'active';
         $perPage = (int) ($validated['per_page'] ?? 20);
         $lang = $request->header('lang') === 'ar';
+        $search = trim((string) ($validated['search'] ?? $validated['q'] ?? ''));
 
-        $conversations = Conversation::query()
+        $query = Conversation::query()
             ->visibleToUser($user->id)
             ->where('status', $tab === 'archived' ? 'archived' : 'active')
             ->with([
                 'ad:id,public_id,title,cover_image,price,currency,status',
                 'buyer:id,first_name,last_name,name,image',
                 'seller:id,first_name,last_name,name,image',
-            ])
+            ]);
+
+        if ($search !== '') {
+            // Metadata only: the ad's title and the other participant's name.
+            // Message bodies are deliberately not searched — the messages table
+            // grows without bound and a LIKE scan over it has no index to use.
+            $matchesName = function ($builder) use ($search, $user) {
+                $builder->whereKeyNot($user->id)->where(function ($name) use ($search) {
+                    $name->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('name', 'like', "%{$search}%");
+                });
+            };
+
+            $query->where(function ($outer) use ($search, $matchesName) {
+                $outer->whereHas('ad', fn ($ad) => $ad->where('title', 'like', "%{$search}%"))
+                    ->orWhereHas('buyer', $matchesName)
+                    ->orWhereHas('seller', $matchesName);
+            });
+        }
+
+        $conversations = $query
             ->orderByDesc('last_message_at')
             ->orderByDesc('updated_at')
-            ->paginate($perPage);
+            ->paginate($perPage)
+            ->withQueryString();
 
         $response = ConversationResource::collection($conversations)
-            ->additional(['current_tab' => $tab])
+            ->additional([
+                'current_tab' => $tab,
+                'search' => $search !== '' ? $search : null,
+            ])
             ->response()
             ->getData(true);
 
@@ -87,6 +115,16 @@ class ConversationController extends Controller
                     $lang ? 'لم يعد هذا البائع متاحاً' : 'This seller is no longer available',
                     [],
                     422
+                );
+            }
+
+            if ($e->getMessage() === 'buyer_not_verified') {
+                return sendError(
+                    $lang
+                        ? 'هذا البائع يستقبل الرسائل من الحسابات المُوثّقة فقط. يرجى إكمال توثيق بريدك الجامعي.'
+                        : 'This seller only accepts messages from verified accounts. Please verify your student email first.',
+                    ['needs_verification' => true],
+                    403
                 );
             }
 

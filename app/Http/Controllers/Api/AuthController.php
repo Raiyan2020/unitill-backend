@@ -67,7 +67,7 @@ class AuthController extends Controller
             // The password is checked before restoring so a deleted account
             // cannot be revived by anyone who merely knows the email.
             if (! Hash::check($request->password, $user->password)) {
-                return sendError($lang ? 'كلمة المرور غير صحيحة' : 'Incorrect password', [], 400);
+                return sendError($lang ? 'كلمة المرور غير صحيحة' : 'Wrong password', [], 400);
             }
 
             // Restores the account together with the ads and chats that were
@@ -81,7 +81,7 @@ class AuthController extends Controller
         }
 
         if (! Hash::check($request->password, $user->password)) {
-            return sendError($lang ? 'كلمة المرور غير صحيحة' : 'Incorrect password', [], 400);
+            return sendError($lang ? 'كلمة المرور غير صحيحة' : 'Wrong password', [], 400);
         }
 
         return $this->completeLogin($user, $request, $lang, UserLoginLog::TYPE_DATA);
