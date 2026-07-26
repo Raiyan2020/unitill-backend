@@ -1,0 +1,260 @@
+### ads_filter_category   (11)
+  ADDED    body.data.active_filter_count                              int
+  ADDED    body.data.data[0].region                                   null
+  ADDED    body.data.data[0].is_approximate_location                  bool
+  VALUE    body.data.data[0].postcode                                    'LS2 9JT' -> 'LS2'
+  VALUE    body.data.data[0].latitude                                    '53.8007554' -> '53.8000000'
+  VALUE    body.data.data[0].longitude                                   '-1.5490774' -> '-1.5500000'
+  ADDED    body.data.data[1].region                                   null
+  ADDED    body.data.data[1].is_approximate_location                  bool
+  VALUE    body.data.data[1].postcode                                    'LS2 9JT' -> 'LS2'
+  VALUE    body.data.data[1].latitude                                    '53.8007554' -> '53.8000000'
+  VALUE    body.data.data[1].longitude                                   '-1.5490774' -> '-1.5500000'
+
+### ads_filter_price   (11)
+  ADDED    body.data.active_filter_count                              int
+  ADDED    body.data.data[0].region                                   null
+  ADDED    body.data.data[0].is_approximate_location                  bool
+  VALUE    body.data.data[0].postcode                                    'LS2 9JT' -> 'LS2'
+  VALUE    body.data.data[0].latitude                                    '53.8007554' -> '53.8000000'
+  VALUE    body.data.data[0].longitude                                   '-1.5490774' -> '-1.5500000'
+  ADDED    body.data.data[1].region                                   null
+  ADDED    body.data.data[1].is_approximate_location                  bool
+  VALUE    body.data.data[1].postcode                                    'LS2 9JT' -> 'LS2'
+  VALUE    body.data.data[1].latitude                                    '53.8007554' -> '53.8000000'
+  VALUE    body.data.data[1].longitude                                   '-1.5490774' -> '-1.5500000'
+
+### ads_legacy_near   (11)
+  ADDED    body.data.active_filter_count                              int
+  ADDED    body.data.data[0].region                                   null
+  ADDED    body.data.data[0].is_approximate_location                  bool
+  VALUE    body.data.data[0].postcode                                    'LS2 9JT' -> 'LS2'
+  VALUE    body.data.data[0].latitude                                    '53.8007554' -> '53.8000000'
+  VALUE    body.data.data[0].longitude                                   '-1.5490774' -> '-1.5500000'
+  ADDED    body.data.data[1].region                                   null
+  ADDED    body.data.data[1].is_approximate_location                  bool
+  VALUE    body.data.data[1].postcode                                    'LS2 9JT' -> 'LS2'
+  VALUE    body.data.data[1].latitude                                    '53.8007554' -> '53.8000000'
+  VALUE    body.data.data[1].longitude                                   '-1.5490774' -> '-1.5500000'
+
+### ads_pagination   (6)
+  ADDED    body.data.active_filter_count                              int
+  ADDED    body.data.data[0].region                                   null
+  ADDED    body.data.data[0].is_approximate_location                  bool
+  VALUE    body.data.data[0].postcode                                    'LS2 9JT' -> 'LS2'
+  VALUE    body.data.data[0].latitude                                    '53.8007554' -> '53.8000000'
+  VALUE    body.data.data[0].longitude                                   '-1.5490774' -> '-1.5500000'
+
+### ads_search_empty   (1)
+  ADDED    body.data.active_filter_count                              int
+
+### ads_sort_newest   (11)
+  ADDED    body.data.active_filter_count                              int
+  ADDED    body.data.data[0].region                                   null
+  ADDED    body.data.data[0].is_approximate_location                  bool
+  VALUE    body.data.data[0].postcode                                    'LS2 9JT' -> 'LS2'
+  VALUE    body.data.data[0].latitude                                    '53.8007554' -> '53.8000000'
+  VALUE    body.data.data[0].longitude                                   '-1.5490774' -> '-1.5500000'
+  ADDED    body.data.data[1].region                                   null
+  ADDED    body.data.data[1].is_approximate_location                  bool
+  VALUE    body.data.data[1].postcode                                    'LS2 9JT' -> 'LS2'
+  VALUE    body.data.data[1].latitude                                    '53.8007554' -> '53.8000000'
+  VALUE    body.data.data[1].longitude                                   '-1.5490774' -> '-1.5500000'
+
+### ads_sort_price_asc   (11)
+  ADDED    body.data.active_filter_count                              int
+  ADDED    body.data.data[0].region                                   null
+  ADDED    body.data.data[0].is_approximate_location                  bool
+  VALUE    body.data.data[0].postcode                                    'LS2 9JT' -> 'LS2'
+  VALUE    body.data.data[0].latitude                                    '53.8007554' -> '53.8000000'
+  VALUE    body.data.data[0].longitude                                   '-1.5490774' -> '-1.5500000'
+  ADDED    body.data.data[1].region                                   null
+  ADDED    body.data.data[1].is_approximate_location                  bool
+  VALUE    body.data.data[1].postcode                                    'LS2 9JT' -> 'LS2'
+  VALUE    body.data.data[1].latitude                                    '53.8007554' -> '53.8000000'
+  VALUE    body.data.data[1].longitude                                   '-1.5490774' -> '-1.5500000'
+
+### ads_unknown_param   (11)
+  ADDED    body.data.active_filter_count                              int
+  ADDED    body.data.data[0].region                                   null
+  ADDED    body.data.data[0].is_approximate_location                  bool
+  VALUE    body.data.data[0].postcode                                    'LS2 9JT' -> 'LS2'
+  VALUE    body.data.data[0].latitude                                    '53.8007554' -> '53.8000000'
+  VALUE    body.data.data[0].longitude                                   '-1.5490774' -> '-1.5500000'
+  ADDED    body.data.data[1].region                                   null
+  ADDED    body.data.data[1].is_approximate_location                  bool
+  VALUE    body.data.data[1].postcode                                    'LS2 9JT' -> 'LS2'
+  VALUE    body.data.data[1].latitude                                    '53.8007554' -> '53.8000000'
+  VALUE    body.data.data[1].longitude                                   '-1.5490774' -> '-1.5500000'
+
+### auth_ad_detail_ar   (2)
+  ADDED    body.data.region                                           null
+  ADDED    body.data.is_approximate_location                          bool
+
+### auth_ad_detail_en   (2)
+  ADDED    body.data.region                                           null
+  ADDED    body.data.is_approximate_location                          bool
+
+### auth_conversations_ar   (1)
+  ADDED    body.data.search                                           null
+
+### auth_conversations_en   (1)
+  ADDED    body.data.search                                           null
+
+### auth_coupon_unknown   (1)
+  ADDED    body.data                                                  object
+
+### auth_coupon_valid   (10)
+  REMOVED  body.data.value                                            int
+  REMOVED  body.data.listing_fee                                      int
+  REMOVED  body.data.discount                                         int
+  REMOVED  body.data.total                                            int
+  REMOVED  body.data.formatted_total                                  string
+  ADDED    body.data.original_amount                                  int
+  ADDED    body.data.discount_amount                                  int
+  ADDED    body.data.final_amount                                     int
+  ADDED    body.data.formatted_final                                  string
+  VALUE    body.data.type                                                'percent' -> 'percentage'
+
+### auth_login_ok   (1)
+  ADDED    body.data.user.settings                                    object
+
+### auth_login_ok_ar   (1)
+  ADDED    body.data.user.settings                                    object
+
+### auth_my_ads_ar   (2)
+  VALUE    body.message                                                  'The status must be one of the following values: active, inactive, sold.' -> 'يجب أن تكون الحالة واحدة من القيم التالية:
+  VALUE    body.data.status[0]                                           'The status must be one of the following values: active, inactive, sold.' -> 'يجب أن تكون الحالة واحدة من القيم التالية:
+
+### auth_my_ads_draft_ar   (2)
+  VALUE    body.message                                                  'The status must be one of the following values: active, inactive, sold.' -> 'يجب أن تكون الحالة واحدة من القيم التالية:
+  VALUE    body.data.status[0]                                           'The status must be one of the following values: active, inactive, sold.' -> 'يجب أن تكون الحالة واحدة من القيم التالية:
+
+### auth_my_ads_novalid_ar   (2)
+  VALUE    body.message                                                  'The status field is required.' -> 'حقل الحالة مطلوب.'
+  VALUE    body.data.status[0]                                           'The status field is required.' -> 'حقل الحالة مطلوب.'
+
+### auth_profile_ar   (1)
+  ADDED    body.data.settings                                         object
+
+### auth_profile_en   (1)
+  ADDED    body.data.settings                                         object
+
+### auth_security_ar   (1)
+  VALUE    body.data.sessions[0]                                         '<sessions:23>' -> '<sessions:7>'
+
+### auth_security_en   (1)
+  VALUE    body.data.sessions[0]                                         '<sessions:23>' -> '<sessions:7>'
+
+### public_ad_detail_ar   (5)
+  ADDED    body.data.region                                           null
+  ADDED    body.data.is_approximate_location                          bool
+  VALUE    body.data.postcode                                            'LS2 9JT' -> 'LS2'
+  VALUE    body.data.latitude                                            '53.8007554' -> '53.8000000'
+  VALUE    body.data.longitude                                           '-1.5490774' -> '-1.5500000'
+
+### public_ad_detail_en   (5)
+  ADDED    body.data.region                                           null
+  ADDED    body.data.is_approximate_location                          bool
+  VALUE    body.data.postcode                                            'LS2 9JT' -> 'LS2'
+  VALUE    body.data.latitude                                            '53.8007554' -> '53.8000000'
+  VALUE    body.data.longitude                                           '-1.5490774' -> '-1.5500000'
+
+### public_ad_detail_nolang   (5)
+  ADDED    body.data.region                                           null
+  ADDED    body.data.is_approximate_location                          bool
+  VALUE    body.data.postcode                                            'LS2 9JT' -> 'LS2'
+  VALUE    body.data.latitude                                            '53.8007554' -> '53.8000000'
+  VALUE    body.data.longitude                                           '-1.5490774' -> '-1.5500000'
+
+### public_ads_ar   (11)
+  ADDED    body.data.active_filter_count                              int
+  ADDED    body.data.data[0].region                                   null
+  ADDED    body.data.data[0].is_approximate_location                  bool
+  VALUE    body.data.data[0].postcode                                    'LS2 9JT' -> 'LS2'
+  VALUE    body.data.data[0].latitude                                    '53.8007554' -> '53.8000000'
+  VALUE    body.data.data[0].longitude                                   '-1.5490774' -> '-1.5500000'
+  ADDED    body.data.data[1].region                                   null
+  ADDED    body.data.data[1].is_approximate_location                  bool
+  VALUE    body.data.data[1].postcode                                    'LS2 9JT' -> 'LS2'
+  VALUE    body.data.data[1].latitude                                    '53.8007554' -> '53.8000000'
+  VALUE    body.data.data[1].longitude                                   '-1.5490774' -> '-1.5500000'
+
+### public_ads_en   (11)
+  ADDED    body.data.active_filter_count                              int
+  ADDED    body.data.data[0].region                                   null
+  ADDED    body.data.data[0].is_approximate_location                  bool
+  VALUE    body.data.data[0].postcode                                    'LS2 9JT' -> 'LS2'
+  VALUE    body.data.data[0].latitude                                    '53.8007554' -> '53.8000000'
+  VALUE    body.data.data[0].longitude                                   '-1.5490774' -> '-1.5500000'
+  ADDED    body.data.data[1].region                                   null
+  ADDED    body.data.data[1].is_approximate_location                  bool
+  VALUE    body.data.data[1].postcode                                    'LS2 9JT' -> 'LS2'
+  VALUE    body.data.data[1].latitude                                    '53.8007554' -> '53.8000000'
+  VALUE    body.data.data[1].longitude                                   '-1.5490774' -> '-1.5500000'
+
+### public_ads_nolang   (11)
+  ADDED    body.data.active_filter_count                              int
+  ADDED    body.data.data[0].region                                   null
+  ADDED    body.data.data[0].is_approximate_location                  bool
+  VALUE    body.data.data[0].postcode                                    'LS2 9JT' -> 'LS2'
+  VALUE    body.data.data[0].latitude                                    '53.8007554' -> '53.8000000'
+  VALUE    body.data.data[0].longitude                                   '-1.5490774' -> '-1.5500000'
+  ADDED    body.data.data[1].region                                   null
+  ADDED    body.data.data[1].is_approximate_location                  bool
+  VALUE    body.data.data[1].postcode                                    'LS2 9JT' -> 'LS2'
+  VALUE    body.data.data[1].latitude                                    '53.8007554' -> '53.8000000'
+  VALUE    body.data.data[1].longitude                                   '-1.5490774' -> '-1.5500000'
+
+### public_home_ar   (10)
+  ADDED    body.data.recent_ads.data[0].region                        null
+  ADDED    body.data.recent_ads.data[0].is_approximate_location       bool
+  VALUE    body.data.recent_ads.data[0].postcode                         'LS2 9JT' -> 'LS2'
+  VALUE    body.data.recent_ads.data[0].latitude                         '53.8007554' -> '53.8000000'
+  VALUE    body.data.recent_ads.data[0].longitude                        '-1.5490774' -> '-1.5500000'
+  ADDED    body.data.recent_ads.data[1].region                        null
+  ADDED    body.data.recent_ads.data[1].is_approximate_location       bool
+  VALUE    body.data.recent_ads.data[1].postcode                         'LS2 9JT' -> 'LS2'
+  VALUE    body.data.recent_ads.data[1].latitude                         '53.8007554' -> '53.8000000'
+  VALUE    body.data.recent_ads.data[1].longitude                        '-1.5490774' -> '-1.5500000'
+
+### public_home_en   (10)
+  ADDED    body.data.recent_ads.data[0].region                        null
+  ADDED    body.data.recent_ads.data[0].is_approximate_location       bool
+  VALUE    body.data.recent_ads.data[0].postcode                         'LS2 9JT' -> 'LS2'
+  VALUE    body.data.recent_ads.data[0].latitude                         '53.8007554' -> '53.8000000'
+  VALUE    body.data.recent_ads.data[0].longitude                        '-1.5490774' -> '-1.5500000'
+  ADDED    body.data.recent_ads.data[1].region                        null
+  ADDED    body.data.recent_ads.data[1].is_approximate_location       bool
+  VALUE    body.data.recent_ads.data[1].postcode                         'LS2 9JT' -> 'LS2'
+  VALUE    body.data.recent_ads.data[1].latitude                         '53.8007554' -> '53.8000000'
+  VALUE    body.data.recent_ads.data[1].longitude                        '-1.5490774' -> '-1.5500000'
+
+### public_home_nolang   (10)
+  ADDED    body.data.recent_ads.data[0].region                        null
+  ADDED    body.data.recent_ads.data[0].is_approximate_location       bool
+  VALUE    body.data.recent_ads.data[0].postcode                         'LS2 9JT' -> 'LS2'
+  VALUE    body.data.recent_ads.data[0].latitude                         '53.8007554' -> '53.8000000'
+  VALUE    body.data.recent_ads.data[0].longitude                        '-1.5490774' -> '-1.5500000'
+  ADDED    body.data.recent_ads.data[1].region                        null
+  ADDED    body.data.recent_ads.data[1].is_approximate_location       bool
+  VALUE    body.data.recent_ads.data[1].postcode                         'LS2 9JT' -> 'LS2'
+  VALUE    body.data.recent_ads.data[1].latitude                         '53.8007554' -> '53.8000000'
+  VALUE    body.data.recent_ads.data[1].longitude                        '-1.5490774' -> '-1.5500000'
+
+### public_settings_ar   (2)
+  ADDED    body.data.free_ads_per_user                                int
+  ADDED    body.data.app.url                                          string
+
+### public_settings_en   (2)
+  ADDED    body.data.free_ads_per_user                                int
+  ADDED    body.data.app.url                                          string
+
+### public_settings_nolang   (2)
+  ADDED    body.data.free_ads_per_user                                int
+  ADDED    body.data.app.url                                          string
+
+
+======================================================================
+identical: 39/74    differing findings: 186
+clean: auth_coupon_missing, auth_favorites_ar, auth_favorites_en, auth_my_ads_draft_en, auth_my_ads_en, auth_my_ads_novalid_en, auth_notif_unread_ar, auth_notif_unread_en, auth_notifications_ar, auth_notifications_en, auth_profile_other_ar, auth_profile_other_en, auth_ratings_ar, auth_ratings_en, auth_trusted_seller_ar, auth_trusted_seller_en, err_ad_missing, err_login_bad, err_login_no_user, err_login_validation, err_method_not_allowed, err_register_domain, err_unauth_profile, err_unknown_route, public_categories_ar, public_categories_en, public_categories_nolang, public_cities_ar, public_cities_en, public_cities_nolang, public_languages_ar, public_languages_en, public_languages_nolang, public_legal_affairs_ar, public_legal_affairs_en, public_legal_affairs_nolang, public_report_reasons_ar, public_report_reasons_en, public_report_reasons_nolang

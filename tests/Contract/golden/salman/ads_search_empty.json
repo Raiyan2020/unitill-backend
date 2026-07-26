@@ -1,0 +1,78 @@
+{
+    "request": {
+        "method": "GET",
+        "uri": "/api/ads",
+        "headers": {
+            "lang": "en"
+        }
+    },
+    "status": 200,
+    "body": {
+        "status": true,
+        "data": {
+            "data": [],
+            "links": {
+                "first": "<host>/api/ads?page=1",
+                "last": "<host>/api/ads?page=1",
+                "prev": null,
+                "next": null
+            },
+            "meta": {
+                "current_page": 1,
+                "from": null,
+                "last_page": 1,
+                "links": [
+                    {
+                        "url": null,
+                        "label": "&laquo; Previous",
+                        "active": false
+                    },
+                    {
+                        "url": "<host>/api/ads?page=1",
+                        "label": "1",
+                        "active": true
+                    },
+                    {
+                        "url": null,
+                        "label": "Next &raquo;",
+                        "active": false
+                    }
+                ],
+                "path": "<host>/api/ads",
+                "per_page": 20,
+                "to": null,
+                "total": 0
+            },
+            "sort_options": [
+                {
+                    "value": "newest",
+                    "label": "Newest First"
+                },
+                {
+                    "value": "oldest",
+                    "label": "Oldest First"
+                },
+                {
+                    "value": "price_low_to_high",
+                    "label": "Price: Low to High"
+                },
+                {
+                    "value": "price_high_to_low",
+                    "label": "Price: High to Low"
+                },
+                {
+                    "value": "distance_nearest",
+                    "label": "Distance: Nearest"
+                },
+                {
+                    "value": "distance_farthest",
+                    "label": "Distance: Farthest"
+                }
+            ],
+            "current_sort": "newest",
+            "applied_filters": {
+                "search": "zzzz-no-match-zzzz"
+            }
+        }
+    }
+}

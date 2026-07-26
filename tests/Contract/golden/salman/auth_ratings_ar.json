@@ -1,0 +1,76 @@
+{
+    "request": {
+        "method": "GET",
+        "uri": "/api/ratings/9001",
+        "headers": {
+            "lang": "ar",
+            "Authorization": "Bearer 23|LsiZ6qmdhCNTqBVG6VBz6ElIwi0QbwkVYO92Ivyc204a5615"
+        }
+    },
+    "status": 200,
+    "body": {
+        "status": true,
+        "data": {
+            "user_id": 9001,
+            "average_rating": 0,
+            "total_reviews": 0,
+            "distribution": [
+                {
+                    "stars": 5,
+                    "count": 0
+                },
+                {
+                    "stars": 4,
+                    "count": 0
+                },
+                {
+                    "stars": 3,
+                    "count": 0
+                },
+                {
+                    "stars": 2,
+                    "count": 0
+                },
+                {
+                    "stars": 1,
+                    "count": 0
+                }
+            ],
+            "reviews": {
+                "data": [],
+                "links": {
+                    "first": "<host>/api/ratings/9001?page=1",
+                    "last": "<host>/api/ratings/9001?page=1",
+                    "prev": null,
+                    "next": null
+                },
+                "meta": {
+                    "current_page": 1,
+                    "from": null,
+                    "last_page": 1,
+                    "links": [
+                        {
+                            "url": null,
+                            "label": "&laquo; Previous",
+                            "active": false
+                        },
+                        {
+                            "url": "<host>/api/ratings/9001?page=1",
+                            "label": "1",
+                            "active": true
+                        },
+                        {
+                            "url": null,
+                            "label": "Next &raquo;",
+                            "active": false
+                        }
+                    ],
+                    "path": "<host>/api/ratings/9001",
+                    "per_page": 10,
+                    "to": null,
+                    "total": 0
+                }
+            }
+        }
+    }
+}

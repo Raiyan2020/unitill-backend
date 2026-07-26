@@ -1,0 +1,33 @@
+{
+    "request": {
+        "method": "GET",
+        "uri": "/api/show-profile/9002",
+        "headers": {
+            "lang": "ar",
+            "Authorization": "Bearer 23|LsiZ6qmdhCNTqBVG6VBz6ElIwi0QbwkVYO92Ivyc204a5615"
+        }
+    },
+    "status": 200,
+    "body": {
+        "status": true,
+        "data": {
+            "id": 9002,
+            "name": "Alan Turing",
+            "first_name": "Alan",
+            "last_name": "Turing",
+            "image": null,
+            "phone": "+44712345672",
+            "email": "buyer@example.com",
+            "member_since": "يونيو 2026",
+            "ads_count": 0,
+            "average_rating": 0,
+            "total_reviews": 0,
+            "is_trusted_seller": false,
+            "device_type": null,
+            "city_id": 9001,
+            "city_name": null,
+            "status": "active",
+            "student_email_masked": "bu***@leeds.ac.uk"
+        }
+    }
+}

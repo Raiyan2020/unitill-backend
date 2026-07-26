@@ -1,0 +1,14 @@
+{
+    "request": {
+        "method": "GET",
+        "uri": "/api/show-profile",
+        "headers": {
+            "lang": "en"
+        }
+    },
+    "status": 401,
+    "body": {
+        "status": false,
+        "message": "Unauthenticated"
+    }
+}

@@ -1,0 +1,1353 @@
+{
+    "request": {
+        "method": "GET",
+        "uri": "/api/categories",
+        "headers": {
+            "lang": "ar"
+        }
+    },
+    "status": 200,
+    "body": {
+        "status": true,
+        "data": [
+            {
+                "id": 1,
+                "name": "السكن",
+                "status": "active",
+                "image": null,
+                "children": [
+                    {
+                        "id": 2,
+                        "name": "غرف للإيجار",
+                        "status": "active"
+                    },
+                    {
+                        "id": 3,
+                        "name": "شقق مشتركة",
+                        "status": "active"
+                    },
+                    {
+                        "id": 4,
+                        "name": "سكن طلابي",
+                        "status": "active"
+                    },
+                    {
+                        "id": 5,
+                        "name": "إيجارات قصيرة المدى",
+                        "status": "active"
+                    },
+                    {
+                        "id": 6,
+                        "name": "إيجارات طويلة المدى",
+                        "status": "active"
+                    },
+                    {
+                        "id": 7,
+                        "name": "أخرى",
+                        "status": "active"
+                    }
+                ],
+                "attributes": [
+                    {
+                        "slug": "contract_type",
+                        "label": "نوع العقد",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "Short-term",
+                                "label": "Short-term"
+                            },
+                            {
+                                "value": "Long-term",
+                                "label": "Long-term"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "property_type",
+                        "label": "نوع العقار",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "Flat",
+                                "label": "Flat"
+                            },
+                            {
+                                "value": "House",
+                                "label": "House"
+                            },
+                            {
+                                "value": "Studio",
+                                "label": "Studio"
+                            },
+                            {
+                                "value": "Student accommodation",
+                                "label": "Student accommodation"
+                            },
+                            {
+                                "value": "Shared room",
+                                "label": "Shared room"
+                            },
+                            {
+                                "value": "Other",
+                                "label": "Other"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "bedrooms",
+                        "label": "غرف النوم",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "1",
+                                "label": "1"
+                            },
+                            {
+                                "value": "2",
+                                "label": "2"
+                            },
+                            {
+                                "value": "3",
+                                "label": "3"
+                            },
+                            {
+                                "value": "4+",
+                                "label": "4+"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "bathrooms",
+                        "label": "الحمامات",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "1",
+                                "label": "1"
+                            },
+                            {
+                                "value": "2",
+                                "label": "2"
+                            },
+                            {
+                                "value": "3+",
+                                "label": "3+"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "payment_term",
+                        "label": "مدة الدفع",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "Per week",
+                                "label": "Per week"
+                            },
+                            {
+                                "value": "Per month",
+                                "label": "Per month"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "furnishing",
+                        "label": "الفرش",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "Furnished",
+                                "label": "Furnished"
+                            },
+                            {
+                                "value": "Unfurnished",
+                                "label": "Unfurnished"
+                            },
+                            {
+                                "value": "Part-furnished",
+                                "label": "Part-furnished"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "bills_included",
+                        "label": "الفواتير مشمولة",
+                        "input_type": "boolean",
+                        "options": [],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "availability_from",
+                        "label": "متاح من",
+                        "input_type": "string",
+                        "options": [],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "features",
+                        "label": "المميزات",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "Parking",
+                                "label": "Parking"
+                            },
+                            {
+                                "value": "Garden",
+                                "label": "Garden"
+                            },
+                            {
+                                "value": "Balcony",
+                                "label": "Balcony"
+                            }
+                        ],
+                        "is_required": false
+                    }
+                ]
+            },
+            {
+                "id": 8,
+                "name": "السيارات",
+                "status": "active",
+                "image": null,
+                "children": [
+                    {
+                        "id": 9,
+                        "name": "سيارات",
+                        "status": "active"
+                    },
+                    {
+                        "id": 10,
+                        "name": "قطع غيار",
+                        "status": "active"
+                    },
+                    {
+                        "id": 11,
+                        "name": "أخرى",
+                        "status": "active"
+                    }
+                ],
+                "attributes": [
+                    {
+                        "slug": "listing_type",
+                        "label": "نوع الإعلان",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "Car",
+                                "label": "Car"
+                            },
+                            {
+                                "value": "Parts",
+                                "label": "Parts"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "make",
+                        "label": "الماركة",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "Toyota",
+                                "label": "Toyota"
+                            },
+                            {
+                                "value": "BMW",
+                                "label": "BMW"
+                            },
+                            {
+                                "value": "Honda",
+                                "label": "Honda"
+                            },
+                            {
+                                "value": "Ford",
+                                "label": "Ford"
+                            },
+                            {
+                                "value": "Volkswagen",
+                                "label": "Volkswagen"
+                            },
+                            {
+                                "value": "Audi",
+                                "label": "Audi"
+                            },
+                            {
+                                "value": "Mercedes",
+                                "label": "Mercedes"
+                            },
+                            {
+                                "value": "Nissan",
+                                "label": "Nissan"
+                            },
+                            {
+                                "value": "Vauxhall",
+                                "label": "Vauxhall"
+                            },
+                            {
+                                "value": "Other",
+                                "label": "Other"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "model",
+                        "label": "الموديل",
+                        "input_type": "string",
+                        "options": [],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "year",
+                        "label": "السنة",
+                        "input_type": "number",
+                        "options": [],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "mileage",
+                        "label": "المسافة المقطوعة",
+                        "input_type": "number",
+                        "options": [],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "fuel_type",
+                        "label": "نوع الوقود",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "Petrol",
+                                "label": "Petrol"
+                            },
+                            {
+                                "value": "Diesel",
+                                "label": "Diesel"
+                            },
+                            {
+                                "value": "Hybrid",
+                                "label": "Hybrid"
+                            },
+                            {
+                                "value": "Electric",
+                                "label": "Electric"
+                            },
+                            {
+                                "value": "Other",
+                                "label": "Other"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "transmission",
+                        "label": "ناقل الحركة",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "Manual",
+                                "label": "Manual"
+                            },
+                            {
+                                "value": "Automatic",
+                                "label": "Automatic"
+                            },
+                            {
+                                "value": "Other",
+                                "label": "Other"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "body_type",
+                        "label": "نوع الهيكل",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "Hatchback",
+                                "label": "Hatchback"
+                            },
+                            {
+                                "value": "Saloon",
+                                "label": "Saloon"
+                            },
+                            {
+                                "value": "SUV",
+                                "label": "SUV"
+                            },
+                            {
+                                "value": "Estate",
+                                "label": "Estate"
+                            },
+                            {
+                                "value": "Coupe",
+                                "label": "Coupe"
+                            },
+                            {
+                                "value": "Convertible",
+                                "label": "Convertible"
+                            },
+                            {
+                                "value": "Pickup",
+                                "label": "Pickup"
+                            },
+                            {
+                                "value": "Other",
+                                "label": "Other"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "engine_size",
+                        "label": "سعة المحرك",
+                        "input_type": "number",
+                        "options": [],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "seats",
+                        "label": "المقاعد",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "2",
+                                "label": "2"
+                            },
+                            {
+                                "value": "4",
+                                "label": "4"
+                            },
+                            {
+                                "value": "5",
+                                "label": "5"
+                            },
+                            {
+                                "value": "7+",
+                                "label": "7+"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "colour",
+                        "label": "اللون",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "Black",
+                                "label": "Black"
+                            },
+                            {
+                                "value": "White",
+                                "label": "White"
+                            },
+                            {
+                                "value": "Silver",
+                                "label": "Silver"
+                            },
+                            {
+                                "value": "Grey",
+                                "label": "Grey"
+                            },
+                            {
+                                "value": "Blue",
+                                "label": "Blue"
+                            },
+                            {
+                                "value": "Red",
+                                "label": "Red"
+                            },
+                            {
+                                "value": "Green",
+                                "label": "Green"
+                            },
+                            {
+                                "value": "Other",
+                                "label": "Other"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "condition",
+                        "label": "الحالة",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "Excellent",
+                                "label": "Excellent"
+                            },
+                            {
+                                "value": "Very good",
+                                "label": "Very good"
+                            },
+                            {
+                                "value": "Good",
+                                "label": "Good"
+                            }
+                        ],
+                        "is_required": false
+                    }
+                ]
+            },
+            {
+                "id": 12,
+                "name": "الأثاث والمنزل",
+                "status": "active",
+                "image": null,
+                "children": [
+                    {
+                        "id": 13,
+                        "name": "أسِرّة ومراتب",
+                        "status": "active"
+                    },
+                    {
+                        "id": 14,
+                        "name": "مكاتب وكراسي",
+                        "status": "active"
+                    },
+                    {
+                        "id": 15,
+                        "name": "كنب وتخزين",
+                        "status": "active"
+                    },
+                    {
+                        "id": 16,
+                        "name": "أدوات المطبخ",
+                        "status": "active"
+                    },
+                    {
+                        "id": 17,
+                        "name": "أخرى",
+                        "status": "active"
+                    }
+                ],
+                "attributes": [
+                    {
+                        "slug": "item_type",
+                        "label": "نوع القطعة",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "Beds & mattresses",
+                                "label": "Beds & mattresses"
+                            },
+                            {
+                                "value": "Desks & chairs",
+                                "label": "Desks & chairs"
+                            },
+                            {
+                                "value": "Sofas & storage",
+                                "label": "Sofas & storage"
+                            },
+                            {
+                                "value": "Kitchen items",
+                                "label": "Kitchen items"
+                            },
+                            {
+                                "value": "Other",
+                                "label": "Other"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "condition",
+                        "label": "الحالة",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "New",
+                                "label": "New"
+                            },
+                            {
+                                "value": "Like new",
+                                "label": "Like new"
+                            },
+                            {
+                                "value": "Refurbished",
+                                "label": "Refurbished"
+                            },
+                            {
+                                "value": "Used",
+                                "label": "Used"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "collection_delivery",
+                        "label": "الاستلام أو التوصيل",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "Collection",
+                                "label": "Collection"
+                            },
+                            {
+                                "value": "Delivery",
+                                "label": "Delivery"
+                            },
+                            {
+                                "value": "Both",
+                                "label": "Both"
+                            }
+                        ],
+                        "is_required": false
+                    }
+                ]
+            },
+            {
+                "id": 18,
+                "name": "الإلكترونيات",
+                "status": "active",
+                "image": null,
+                "children": [
+                    {
+                        "id": 19,
+                        "name": "لابتوبات",
+                        "status": "active"
+                    },
+                    {
+                        "id": 20,
+                        "name": "هواتف محمولة",
+                        "status": "active"
+                    },
+                    {
+                        "id": 21,
+                        "name": "تابلت",
+                        "status": "active"
+                    },
+                    {
+                        "id": 22,
+                        "name": "إكسسوارات",
+                        "status": "active"
+                    },
+                    {
+                        "id": 23,
+                        "name": "أخرى",
+                        "status": "active"
+                    }
+                ],
+                "attributes": [
+                    {
+                        "slug": "item_type",
+                        "label": "النوع",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "Laptop",
+                                "label": "Laptop"
+                            },
+                            {
+                                "value": "Mobile phone",
+                                "label": "Mobile phone"
+                            },
+                            {
+                                "value": "Tablet",
+                                "label": "Tablet"
+                            },
+                            {
+                                "value": "Accessories",
+                                "label": "Accessories"
+                            },
+                            {
+                                "value": "Other",
+                                "label": "Other"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "brand",
+                        "label": "العلامة التجارية",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "Apple",
+                                "label": "Apple"
+                            },
+                            {
+                                "value": "Samsung",
+                                "label": "Samsung"
+                            },
+                            {
+                                "value": "Dell",
+                                "label": "Dell"
+                            },
+                            {
+                                "value": "HP",
+                                "label": "HP"
+                            },
+                            {
+                                "value": "Lenovo",
+                                "label": "Lenovo"
+                            },
+                            {
+                                "value": "Huawei",
+                                "label": "Huawei"
+                            },
+                            {
+                                "value": "Sony",
+                                "label": "Sony"
+                            },
+                            {
+                                "value": "Other",
+                                "label": "Other"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "condition",
+                        "label": "الحالة",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "New",
+                                "label": "New"
+                            },
+                            {
+                                "value": "Like new",
+                                "label": "Like new"
+                            },
+                            {
+                                "value": "Refurbished",
+                                "label": "Refurbished"
+                            },
+                            {
+                                "value": "Used",
+                                "label": "Used"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "storage",
+                        "label": "التخزين",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "64GB",
+                                "label": "64GB"
+                            },
+                            {
+                                "value": "128GB",
+                                "label": "128GB"
+                            },
+                            {
+                                "value": "256GB",
+                                "label": "256GB"
+                            },
+                            {
+                                "value": "512GB",
+                                "label": "512GB"
+                            },
+                            {
+                                "value": "1TB+",
+                                "label": "1TB+"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "warranty",
+                        "label": "الضمان",
+                        "input_type": "boolean",
+                        "options": [],
+                        "is_required": false
+                    }
+                ]
+            },
+            {
+                "id": 24,
+                "name": "الأجهزة المنزلية",
+                "status": "active",
+                "image": null,
+                "children": [
+                    {
+                        "id": 25,
+                        "name": "ثلاجات",
+                        "status": "active"
+                    },
+                    {
+                        "id": 26,
+                        "name": "غسالات",
+                        "status": "active"
+                    },
+                    {
+                        "id": 27,
+                        "name": "ميكروويف",
+                        "status": "active"
+                    },
+                    {
+                        "id": 28,
+                        "name": "دفايات ومراوح",
+                        "status": "active"
+                    },
+                    {
+                        "id": 29,
+                        "name": "أخرى",
+                        "status": "active"
+                    }
+                ],
+                "attributes": [
+                    {
+                        "slug": "appliance_type",
+                        "label": "نوع الجهاز",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "Fridge",
+                                "label": "Fridge"
+                            },
+                            {
+                                "value": "Washing machine",
+                                "label": "Washing machine"
+                            },
+                            {
+                                "value": "Microwave",
+                                "label": "Microwave"
+                            },
+                            {
+                                "value": "Heaters & fans",
+                                "label": "Heaters & fans"
+                            },
+                            {
+                                "value": "Other",
+                                "label": "Other"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "brand",
+                        "label": "العلامة التجارية",
+                        "input_type": "string",
+                        "options": [],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "condition",
+                        "label": "الحالة",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "New",
+                                "label": "New"
+                            },
+                            {
+                                "value": "Like new",
+                                "label": "Like new"
+                            },
+                            {
+                                "value": "Refurbished",
+                                "label": "Refurbished"
+                            },
+                            {
+                                "value": "Used",
+                                "label": "Used"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "collection_delivery",
+                        "label": "الاستلام أو التوصيل",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "Collection",
+                                "label": "Collection"
+                            },
+                            {
+                                "value": "Delivery",
+                                "label": "Delivery"
+                            },
+                            {
+                                "value": "Both",
+                                "label": "Both"
+                            }
+                        ],
+                        "is_required": false
+                    }
+                ]
+            },
+            {
+                "id": 30,
+                "name": "الدراجات",
+                "status": "active",
+                "image": null,
+                "children": [
+                    {
+                        "id": 31,
+                        "name": "دراجات هوائية",
+                        "status": "active"
+                    },
+                    {
+                        "id": 32,
+                        "name": "دراجات كهربائية",
+                        "status": "active"
+                    },
+                    {
+                        "id": 33,
+                        "name": "دراجات نارية",
+                        "status": "active"
+                    },
+                    {
+                        "id": 34,
+                        "name": "سكوتر",
+                        "status": "active"
+                    },
+                    {
+                        "id": 35,
+                        "name": "أخرى",
+                        "status": "active"
+                    }
+                ],
+                "attributes": [
+                    {
+                        "slug": "bike_type",
+                        "label": "النوع",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "Bicycle",
+                                "label": "Bicycle"
+                            },
+                            {
+                                "value": "Electric bike",
+                                "label": "Electric bike"
+                            },
+                            {
+                                "value": "Motorbike",
+                                "label": "Motorbike"
+                            },
+                            {
+                                "value": "Scooter",
+                                "label": "Scooter"
+                            },
+                            {
+                                "value": "Other",
+                                "label": "Other"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "brand",
+                        "label": "العلامة التجارية",
+                        "input_type": "string",
+                        "options": [],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "condition",
+                        "label": "الحالة",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "New",
+                                "label": "New"
+                            },
+                            {
+                                "value": "Like new",
+                                "label": "Like new"
+                            },
+                            {
+                                "value": "Refurbished",
+                                "label": "Refurbished"
+                            },
+                            {
+                                "value": "Used",
+                                "label": "Used"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "electric",
+                        "label": "كهربائية",
+                        "input_type": "boolean",
+                        "options": [],
+                        "is_required": false
+                    }
+                ]
+            },
+            {
+                "id": 36,
+                "name": "الكتب والمواد الدراسية",
+                "status": "active",
+                "image": null,
+                "children": [
+                    {
+                        "id": 37,
+                        "name": "كتب دراسية",
+                        "status": "active"
+                    },
+                    {
+                        "id": 38,
+                        "name": "ملخصات ومراجعات",
+                        "status": "active"
+                    },
+                    {
+                        "id": 39,
+                        "name": "أدوات مكتبية",
+                        "status": "active"
+                    },
+                    {
+                        "id": 40,
+                        "name": "أخرى",
+                        "status": "active"
+                    }
+                ],
+                "attributes": [
+                    {
+                        "slug": "book_type",
+                        "label": "النوع",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "Textbook",
+                                "label": "Textbook"
+                            },
+                            {
+                                "value": "Notes & revision materials",
+                                "label": "Notes & revision materials"
+                            },
+                            {
+                                "value": "Stationery",
+                                "label": "Stationery"
+                            },
+                            {
+                                "value": "Other",
+                                "label": "Other"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "subject",
+                        "label": "المادة أو المقرر",
+                        "input_type": "string",
+                        "options": [],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "condition",
+                        "label": "الحالة",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "New",
+                                "label": "New"
+                            },
+                            {
+                                "value": "Like new",
+                                "label": "Like new"
+                            },
+                            {
+                                "value": "Refurbished",
+                                "label": "Refurbished"
+                            },
+                            {
+                                "value": "Used",
+                                "label": "Used"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "format",
+                        "label": "الصيغة",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "Physical",
+                                "label": "Physical"
+                            },
+                            {
+                                "value": "Digital notes",
+                                "label": "Digital notes"
+                            }
+                        ],
+                        "is_required": false
+                    }
+                ]
+            },
+            {
+                "id": 41,
+                "name": "الأزياء والأغراض الشخصية",
+                "status": "active",
+                "image": null,
+                "children": [
+                    {
+                        "id": 42,
+                        "name": "ملابس",
+                        "status": "active"
+                    },
+                    {
+                        "id": 43,
+                        "name": "أحذية",
+                        "status": "active"
+                    },
+                    {
+                        "id": 44,
+                        "name": "حقائب وإكسسوارات",
+                        "status": "active"
+                    },
+                    {
+                        "id": 45,
+                        "name": "أخرى",
+                        "status": "active"
+                    }
+                ],
+                "attributes": [
+                    {
+                        "slug": "item_type",
+                        "label": "النوع",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "Clothing",
+                                "label": "Clothing"
+                            },
+                            {
+                                "value": "Shoes",
+                                "label": "Shoes"
+                            },
+                            {
+                                "value": "Bags & accessories",
+                                "label": "Bags & accessories"
+                            },
+                            {
+                                "value": "Other",
+                                "label": "Other"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "gender",
+                        "label": "الفئة",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "Men",
+                                "label": "Men"
+                            },
+                            {
+                                "value": "Women",
+                                "label": "Women"
+                            },
+                            {
+                                "value": "Unisex",
+                                "label": "Unisex"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "size",
+                        "label": "المقاس",
+                        "input_type": "string",
+                        "options": [],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "condition",
+                        "label": "الحالة",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "New",
+                                "label": "New"
+                            },
+                            {
+                                "value": "Like new",
+                                "label": "Like new"
+                            },
+                            {
+                                "value": "Refurbished",
+                                "label": "Refurbished"
+                            },
+                            {
+                                "value": "Used",
+                                "label": "Used"
+                            }
+                        ],
+                        "is_required": false
+                    }
+                ]
+            },
+            {
+                "id": 46,
+                "name": "الخدمات",
+                "status": "active",
+                "image": null,
+                "children": [
+                    {
+                        "id": 47,
+                        "name": "دروس خصوصية",
+                        "status": "active"
+                    },
+                    {
+                        "id": 48,
+                        "name": "مساعدة في النقل",
+                        "status": "active"
+                    },
+                    {
+                        "id": 49,
+                        "name": "تنظيف",
+                        "status": "active"
+                    },
+                    {
+                        "id": 50,
+                        "name": "دعم تقني",
+                        "status": "active"
+                    },
+                    {
+                        "id": 51,
+                        "name": "خدمات طلابية / حرة",
+                        "status": "active"
+                    },
+                    {
+                        "id": 52,
+                        "name": "أخرى",
+                        "status": "active"
+                    }
+                ],
+                "attributes": [
+                    {
+                        "slug": "service_type",
+                        "label": "نوع الخدمة",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "Tutoring",
+                                "label": "Tutoring"
+                            },
+                            {
+                                "value": "Moving help",
+                                "label": "Moving help"
+                            },
+                            {
+                                "value": "Cleaning",
+                                "label": "Cleaning"
+                            },
+                            {
+                                "value": "IT / tech help",
+                                "label": "IT / tech help"
+                            },
+                            {
+                                "value": "Freelance",
+                                "label": "Freelance"
+                            },
+                            {
+                                "value": "Other",
+                                "label": "Other"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "delivery_mode",
+                        "label": "طريقة التقديم",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "In-person",
+                                "label": "In-person"
+                            },
+                            {
+                                "value": "Online",
+                                "label": "Online"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "price_type",
+                        "label": "نوع السعر",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "Fixed",
+                                "label": "Fixed"
+                            },
+                            {
+                                "value": "Hourly",
+                                "label": "Hourly"
+                            }
+                        ],
+                        "is_required": false
+                    },
+                    {
+                        "slug": "availability",
+                        "label": "التوفر",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "Weekdays",
+                                "label": "Weekdays"
+                            },
+                            {
+                                "value": "Weekends",
+                                "label": "Weekends"
+                            },
+                            {
+                                "value": "Evenings",
+                                "label": "Evenings"
+                            }
+                        ],
+                        "is_required": false
+                    }
+                ]
+            },
+            {
+                "id": 53,
+                "name": "أخرى",
+                "status": "active",
+                "image": null,
+                "children": [],
+                "attributes": [
+                    {
+                        "slug": "condition",
+                        "label": "الحالة",
+                        "input_type": "select",
+                        "options": [
+                            {
+                                "value": "New",
+                                "label": "New"
+                            },
+                            {
+                                "value": "Like new",
+                                "label": "Like new"
+                            },
+                            {
+                                "value": "Refurbished",
+                                "label": "Refurbished"
+                            },
+                            {
+                                "value": "Used",
+                                "label": "Used"
+                            }
+                        ],
+                        "is_required": false
+                    }
+                ]
+            }
+        ]
+    }
+}

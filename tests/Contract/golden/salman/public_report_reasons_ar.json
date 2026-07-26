@@ -1,0 +1,39 @@
+{
+    "request": {
+        "method": "GET",
+        "uri": "/api/ad-report-reasons",
+        "headers": {
+            "lang": "ar"
+        }
+    },
+    "status": 200,
+    "body": {
+        "status": true,
+        "data": [
+            {
+                "value": "scam_or_fraudulent",
+                "label": "احتيال أو نصب"
+            },
+            {
+                "value": "inappropriate_content",
+                "label": "محتوى غير لائق"
+            },
+            {
+                "value": "item_doesnt_match_description",
+                "label": "المنتج لا يطابق الوصف"
+            },
+            {
+                "value": "prohibited_or_restricted_item",
+                "label": "منتج محظور أو مقيّد"
+            },
+            {
+                "value": "wrong_category",
+                "label": "قسم خاطئ"
+            },
+            {
+                "value": "other",
+                "label": "سبب آخر"
+            }
+        ]
+    }
+}

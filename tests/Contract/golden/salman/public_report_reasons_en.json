@@ -1,0 +1,39 @@
+{
+    "request": {
+        "method": "GET",
+        "uri": "/api/ad-report-reasons",
+        "headers": {
+            "lang": "en"
+        }
+    },
+    "status": 200,
+    "body": {
+        "status": true,
+        "data": [
+            {
+                "value": "scam_or_fraudulent",
+                "label": "Scam or fraudulent"
+            },
+            {
+                "value": "inappropriate_content",
+                "label": "Inappropriate content"
+            },
+            {
+                "value": "item_doesnt_match_description",
+                "label": "Item doesn't match description"
+            },
+            {
+                "value": "prohibited_or_restricted_item",
+                "label": "Prohibited or restricted item"
+            },
+            {
+                "value": "wrong_category",
+                "label": "Wrong category"
+            },
+            {
+                "value": "other",
+                "label": "Other"
+            }
+        ]
+    }
+}

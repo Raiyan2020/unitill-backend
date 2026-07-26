@@ -1,0 +1,34 @@
+{
+    "request": {
+        "method": "POST",
+        "uri": "/api/login",
+        "headers": {
+            "lang": "en"
+        }
+    },
+    "status": 422,
+    "body": {
+        "status": false,
+        "message": "The type field is required.",
+        "data": {
+            "type": [
+                "The type field is required."
+            ],
+            "device_id": [
+                "The device id field is required when device identifier is not present."
+            ],
+            "device_identifier": [
+                "The device identifier field is required when device id is not present."
+            ],
+            "email": [
+                "The email address field is required when login is not present."
+            ],
+            "login": [
+                "The login field is required when email address is not present."
+            ],
+            "password": [
+                "The password field is required."
+            ]
+        }
+    }
+}

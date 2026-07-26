@@ -1,0 +1,14 @@
+{
+    "request": {
+        "method": "POST",
+        "uri": "/api/login",
+        "headers": {
+            "lang": "en"
+        }
+    },
+    "status": 400,
+    "body": {
+        "status": false,
+        "message": "Wrong password"
+    }
+}

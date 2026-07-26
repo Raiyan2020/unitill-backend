@@ -87,6 +87,18 @@ class ConversationController extends Controller
         $lang = $request->header('lang') === 'ar';
         $user = Auth::user();
 
+        // Students past their term deadline cannot start new conversations
+        // until they reconfirm. Existing threads are never cut off mid-chat.
+        if ($user->needsReverification()) {
+            return sendError(
+                $lang
+                    ? 'يجب إعادة تأكيد حالتك كطالب قبل بدء محادثة'
+                    : 'Please re-verify your student status before messaging',
+                ['needs_reverify' => true],
+                403
+            );
+        }
+
         $ad = Ad::query()
             ->published()
             ->where(function ($query) use ($validated) {
@@ -204,6 +216,17 @@ class ConversationController extends Controller
         ]);
 
         $lang = $request->header('lang') === 'ar';
+
+        if (Auth::user()->needsReverification()) {
+            return sendError(
+                $lang
+                    ? 'يجب إعادة تأكيد حالتك كطالب قبل إرسال رسالة'
+                    : 'Please re-verify your student status before messaging',
+                ['needs_reverify' => true],
+                403
+            );
+        }
+
         $conversation = $this->findParticipantConversation($id);
 
         if (! $conversation) {

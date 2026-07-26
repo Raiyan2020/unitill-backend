@@ -256,6 +256,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('ads/{id}/payment/complete', [AdController::class, 'completeStripePayment']);
     Route::post('ads', [AdController::class, 'store']);
     Route::post('ads/{id}/report', [AdReportController::class, 'store']);
+    // Student status reconfirmation (term-based re-verification).
+    Route::post('reverify/send-otp', [AuthController::class, 'sendReverifyOtp']);
+    Route::post('reverify/confirm', [AuthController::class, 'confirmReverify']);
     Route::post('coupons/validate', [CouponController::class, 'validateCode']);
     Route::get('my-ads', [MyAdController::class, 'index']);
     Route::get('my-orders', [\App\Http\Controllers\Api\OrderController::class, 'index']);

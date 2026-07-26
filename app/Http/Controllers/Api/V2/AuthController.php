@@ -147,10 +147,15 @@ class AuthController extends Controller
 
     protected function sendLoginOtp(User $user, string $target): void
     {
-        // Fixed test code by default (matches the rest of the app's OTP
-        // convention). Set MOBILE_LOGIN_OTP_TEST_CODE to empty in production
-        // to send a real random code.
-        $otp = (int) (config('mobile_auth.login_otp_test_code') ?: random_int(100000, 999999));
+        // A fixed code is honoured only under the testing environment. Reading
+        // it unconditionally meant a misconfigured or simply un-set production
+        // environment fell back to a hard-coded default and accepted the same
+        // OTP for every account.
+        $fixed = app()->environment('testing')
+            ? config('mobile_auth.login_otp_test_code')
+            : null;
+
+        $otp = (int) ($fixed ?: random_int(100000, 999999));
 
         $user->forceFill([
             'login_otp' => (string) $otp,
