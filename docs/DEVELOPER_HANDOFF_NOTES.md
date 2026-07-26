@@ -178,6 +178,50 @@ branch reviewable — worth separate tickets.
    against a concurrent double-redeem. Supporting multi-use coupons means
    dropping that index and enforcing the limit transactionally instead.
 
+## Completeness: what "all of Salman is in Takwa" does and does not mean
+
+Checked mechanically, not by eye.
+
+**Complete:**
+
+- all 138 Salman API routes resolve here (0 missing), plus 28 Takwa-only
+- all 40 Salman university domains are present. Eleven were missing —
+  Leicester, Loughborough, Surrey, Aston, Coventry, Leeds Beckett, Manchester
+  Met, Northumbria, Portsmouth, Strathclyde, Dundee — and because registration
+  validates the student email against this table, every student at those
+  eleven was being rejected at sign-up. Fixed; the list now holds 53 domains
+  (Salman's 40 plus Takwa's subdomain entries).
+- comparing every public method in the 41 shared files that still differ, only
+  two exist in Salman and not here, and neither is reachable:
+  `User::posts()` belongs to the dead blade admin, and
+  `Coupon::usabilityError()` is superseded by `CouponRedemptionService`
+  (except multi-use, below).
+- `ads:expire-old` kept as an alias of `ads:expire`, so existing cron entries
+  keep working.
+
+**Deliberately not carried over:**
+
+- Salman's three migration files — replaced by two guarded equivalents, for the
+  reasons in the schema section above.
+- `CouponTrait` — dead in both trees and unusable against either schema.
+- Salman's `coupons.max_uses` / `max_uses_per_user` / `used_count`. Takwa's
+  coupon schema won because the Stripe flow depends on it, so **multi-use
+  coupons are not supported** — one redemption per user, enforced by a unique
+  index.
+
+**Not verified — the real gap:**
+
+The 74 contract scenarios cover read paths. **Write paths are untested**:
+creating an ad, publishing, paying, uploading images, sending a message,
+placing an order, rating, favouriting, account deletion, data export, and all
+`/api/admin/*` endpoints. Those files carry the largest diffs
+(`AdController` alone is ~324 non-cosmetic lines), and the payment work landed
+squarely in them.
+
+So: the read contract is measured and reconciled. The write contract is
+reviewed but not proven. Extending the harness to cover publish and payment is
+the highest-value next step, and should happen before this reaches production.
+
 ## Still to do
 
 - Write paths are not contract-tested: create ad, publish, pay, send message.

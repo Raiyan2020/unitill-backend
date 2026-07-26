@@ -15,6 +15,13 @@ use Illuminate\Support\Facades\Log;
  */
 class ExpireAds extends Command
 {
+    /**
+     * The Salman deployment scheduled this as ads:expire-old. Any cron entry or
+     * ops runbook still using that name would silently stop expiring ads, so
+     * keep it as an alias rather than renaming out from under them.
+     */
+    protected $aliases = ['ads:expire-old'];
+
     protected $signature = 'ads:expire
                             {--dry-run : List what would change without updating}';
 
