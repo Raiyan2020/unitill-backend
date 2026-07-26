@@ -37,10 +37,11 @@ class UserRatingController extends Controller
 
             app(PushNotificationService::class)->notifyUser(
                 $ratedUser,
-                $lang ? 'تقييم جديد' : 'New rating',
-                $lang
-                    ? "قام {$raterName} بتقييمك بـ {$score} نجوم"
-                    : "{$raterName} rated you {$score} stars",
+                __('api.rating.new_title'),
+                // NOTE: this resolves in the rater's language, not the recipient's.
+                // Users have no stored locale, so the notification is sent in
+                // whatever language the sender's app was set to.
+                __('api.rating.new_body', ['name' => $raterName, 'score' => $score]),
                 [
                     'type' => 'rating',
                     'related_data' => (string) $ratedUser->id,
@@ -53,7 +54,7 @@ class UserRatingController extends Controller
 
         return sendResponse(
             new UserRatingResource($rating),
-            $lang ? 'تم إرسال التقييم بنجاح' : 'Rating submitted successfully'
+            __('api.rating.submitted')
         );
     }
 
@@ -65,7 +66,7 @@ class UserRatingController extends Controller
             $user = Auth::user();
             if (! $user) {
                 return sendError(
-                    $request->header('lang') === 'ar' ? 'يجب تسجيل الدخول' : 'Authentication required',
+                    __('api.session.auth_required'),
                     [],
                     401
                 );

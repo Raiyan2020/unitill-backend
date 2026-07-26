@@ -25,6 +25,15 @@ class SettingSeeder extends Seeder
         ]);
 
         Setting::create([
+            'key_id' => 'free_ads_per_user',
+            'title_en' => 'Free Ads Per User',
+            'title_ar' => 'عدد الإعلانات المجانية لكل مستخدم',
+            'value' => '0',
+            'set_group' => 'app',
+            'is_object' => '0',
+        ]);
+
+        Setting::create([
             'key_id' => 'post_duration',
             'title_en' => 'Post Duration (days)',
             'title_ar' => 'مدة الإعلان (أيام)',
@@ -47,6 +56,15 @@ class SettingSeeder extends Seeder
             'title_en' => 'App Slogan',
             'title_ar' => 'شعار التطبيق',
             'value' => 'BUY, SELL, REPEAT!',
+            'set_group' => 'app',
+            'is_object' => '0',
+        ]);
+
+        Setting::create([
+            'key_id' => 'app_url',
+            'title_en' => 'App URL',
+            'title_ar' => 'رابط التطبيق',
+            'value' => config('app.url'),
             'set_group' => 'app',
             'is_object' => '0',
         ]);

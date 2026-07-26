@@ -45,7 +45,7 @@ class AccountSecurityController extends Controller
 
         if (! Hash::check($request->input('current_password'), $user->password)) {
             return sendError(
-                $lang ? 'كلمة المرور الحالية غير صحيحة' : 'Current password is incorrect',
+                __('api.profile.current_password_incorrect'),
                 [],
                 422
             );
@@ -64,7 +64,7 @@ class AccountSecurityController extends Controller
                     ? strtoupper($passwordUpdatedAt->locale($locale)->diffForHumans())
                     : null,
             ],
-        ], $lang ? 'تم تغيير كلمة المرور بنجاح' : 'Password changed successfully');
+        ], __('api.profile.password_changed'));
     }
 
     public function logoutOtherDevices(Request $request)
@@ -74,7 +74,7 @@ class AccountSecurityController extends Controller
         $currentToken = $user->currentAccessToken();
 
         if (! $currentToken) {
-            return sendError($lang ? 'غير مسجّل الدخول' : 'Not authenticated', [], 401);
+            return sendError(__('api.profile.not_authenticated'), [], 401);
         }
 
         $deletedCount = $user->tokens()
@@ -102,7 +102,7 @@ class AccountSecurityController extends Controller
 
         return sendResponse(
             ['logged_out_devices_count' => $deletedCount],
-            $lang ? 'تم تسجيل الخروج من الأجهزة الأخرى' : 'Logged out from other devices'
+            __('api.profile.logged_out_other_devices')
         );
     }
 }

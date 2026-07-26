@@ -9,6 +9,13 @@ import { useI18n } from '../providers/i18n-provider';
 
 type AdStatus = 'draft' | 'pending' | 'published' | 'rejected' | 'sold' | 'expired';
 
+type AdAttribute = {
+  slug: string;
+  label: string;
+  input_type: 'string' | 'number' | 'boolean' | 'select' | 'date' | 'multiselect';
+  value: string | null;
+};
+
 type AdDetails = {
   id: number;
   public_id: string;
@@ -28,10 +35,40 @@ type AdDetails = {
   city: { id: number; code: string | null } | null;
   main_category_id: number | null;
   sub_category_id: number | null;
+  main_category_name: string | null;
+  sub_category_name: string | null;
+  attributes: AdAttribute[];
   images: { id: number; url: string; sort_order: number }[];
   created_at: string | null;
   updated_at: string | null;
 };
+
+/**
+ * Attribute values are always stored as strings, so each input_type needs its own
+ * read-back. Unknown types fall through to the raw value rather than rendering blank,
+ * so a newly added input_type still shows something useful here.
+ */
+function formatAttributeValue(attribute: AdAttribute) {
+  const raw = (attribute.value ?? '').trim();
+  if (!raw) return '-';
+
+  switch (attribute.input_type) {
+    case 'multiselect':
+      return raw
+        .split(',')
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .join(', ');
+    case 'boolean':
+      return ['1', 'true', 'yes'].includes(raw.toLowerCase()) ? 'Yes' : 'No';
+    case 'date': {
+      const parsed = new Date(raw);
+      return Number.isNaN(parsed.getTime()) ? raw : parsed.toLocaleDateString();
+    }
+    default:
+      return raw;
+  }
+}
 
 export function AdDetailsPage() {
   const { t } = useI18n();
@@ -132,11 +169,39 @@ export function AdDetailsPage() {
               <p className="text-xs text-[#8a8da8]">Created At</p>
               <p className="mt-1 text-sm">{ad.created_at || '-'}</p>
             </div>
+            <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
+              <p className="text-xs text-[#8a8da8]">Category</p>
+              <p className="mt-1 text-sm">
+                {ad.main_category_name || '-'}
+                {ad.sub_category_name ? ` › ${ad.sub_category_name}` : ''}
+              </p>
+            </div>
           </div>
 
           <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
             <p className="text-xs text-[#8a8da8]">Description</p>
             <p className="mt-1 whitespace-pre-wrap text-sm">{ad.description || '-'}</p>
+          </div>
+
+          <div>
+            <p className="mb-2 text-sm font-semibold">Specifications</p>
+            {ad.attributes?.length ? (
+              <div className="grid gap-3 md:grid-cols-3">
+                {ad.attributes.map((attribute) => (
+                  <div
+                    key={attribute.slug}
+                    className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]"
+                  >
+                    <p className="text-xs text-[#8a8da8]">{attribute.label}</p>
+                    <p className="mt-1 text-sm font-semibold">{formatAttributeValue(attribute)}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed border-[#ececf3] p-3 text-sm text-[#8a8da8] dark:border-[#44485f]">
+                No specifications submitted for this ad.
+              </div>
+            )}
           </div>
 
           {ad.images?.length ? (

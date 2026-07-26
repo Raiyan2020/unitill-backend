@@ -145,7 +145,7 @@ export function PaymentMethodsPage() {
               </option>
             ))}
           </select>
-          <Input className="h-9 w-[220px]" placeholder="Search" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Input className="h-9 w-[220px]" placeholder={t.search} value={search} onChange={(e) => setSearch(e.target.value)} />
           <Button size="sm" onClick={openCreate}>+ Add Payment Method</Button>
         </div>
       </div>
@@ -156,11 +156,11 @@ export function PaymentMethodsPage() {
             <table className="w-full text-sm">
               <thead className="bg-[#f8f7fb] text-[#6f6b7d] dark:bg-[#383d56] dark:text-[#b6b8cc]">
                 <tr>
-                  <th className="px-4 py-3 text-start">ID</th>
-                  <th className="px-4 py-3 text-start">Name AR</th>
-                  <th className="px-4 py-3 text-start">Name EN</th>
-                  <th className="px-4 py-3 text-start">Slug</th>
-                  <th className="px-4 py-3 text-start">Status</th>
+                  <th className="px-4 py-3 text-start">{t.id}</th>
+                  <th className="px-4 py-3 text-start">{t.nameAr}</th>
+                  <th className="px-4 py-3 text-start">{t.nameEn}</th>
+                  <th className="px-4 py-3 text-start">{t.slug}</th>
+                  <th className="px-4 py-3 text-start">{t.status}</th>
                   <th className="px-4 py-3 text-start">{t.actions}</th>
                 </tr>
               </thead>
@@ -211,9 +211,9 @@ export function PaymentMethodsPage() {
               <Button variant="ghost" size="icon" onClick={() => setFormOpen(false)}><X className="h-4 w-4" /></Button>
             </CardHeader>
             <CardContent className="grid gap-3 md:grid-cols-2">
-              <Input placeholder="Name AR" value={form.name_ar} onChange={(e) => setForm((s) => ({ ...s, name_ar: e.target.value }))} />
-              <Input placeholder="Name EN" value={form.name_en} onChange={(e) => setForm((s) => ({ ...s, name_en: e.target.value }))} />
-              <Input placeholder="Slug" value={form.slug} onChange={(e) => setForm((s) => ({ ...s, slug: e.target.value }))} />
+              <Input placeholder={t.nameAr} value={form.name_ar} onChange={(e) => setForm((s) => ({ ...s, name_ar: e.target.value }))} />
+              <Input placeholder={t.nameEn} value={form.name_en} onChange={(e) => setForm((s) => ({ ...s, name_en: e.target.value }))} />
+              <Input placeholder={t.slug} value={form.slug} onChange={(e) => setForm((s) => ({ ...s, slug: e.target.value }))} />
               <div className="flex items-center gap-3">
                 <Input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] ?? null)} />
                 {editing?.image ? (
@@ -232,8 +232,8 @@ export function PaymentMethodsPage() {
                 onChange={(e) => setForm((s) => ({ ...s, status: e.target.value as 'active' | 'inactive' }))}
                 className="h-10 rounded-xl border border-[#dbdbe8] bg-white px-3 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]"
               >
-                <option value="active">active</option>
-                <option value="inactive">inactive</option>
+                <option value="active">{t.active}</option>
+                <option value="inactive">{t.inactive}</option>
               </select>
               <div className="col-span-full flex justify-end gap-2">
                 <Button variant="secondary" onClick={() => setFormOpen(false)}>{t.cancel}</Button>

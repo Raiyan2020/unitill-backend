@@ -37,6 +37,6 @@ class UserDeviceController extends Controller
             'id' => $device->id,
             'device_id' => $device->device_identifier,
             'device_identifier' => $device->device_identifier,
-        ], $lang ? 'تم حفظ معرّف الجهاز' : 'Device identifier saved');
+        ], __('api.session.device_saved'));
     }
 }

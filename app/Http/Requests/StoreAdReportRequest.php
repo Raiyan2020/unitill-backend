@@ -45,9 +45,9 @@ class StoreAdReportRequest extends FormRequest
         $ar = $this->header('lang') === 'ar';
 
         return [
-            'reason.required' => $ar ? 'سبب البلاغ مطلوب' : 'Report reason is required',
-            'reason.in' => $ar ? 'سبب البلاغ غير صالح' : 'Invalid report reason',
-            'comment.required' => $ar ? 'يرجى كتابة تفاصيل البلاغ' : 'Please provide report details',
+            'reason.required' => __('api.report.reason_required'),
+            'reason.in' => __('api.report.reason_invalid'),
+            'comment.required' => __('api.report.details_required'),
         ];
     }
 }

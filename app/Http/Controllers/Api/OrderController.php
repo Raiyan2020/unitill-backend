@@ -88,10 +88,11 @@ class OrderController extends Controller
 
             app(PushNotificationService::class)->notifyUser(
                 $seller,
-                $lang ? 'تم بيع إعلانك' : 'Your item was purchased',
-                $lang
-                    ? "قام {$buyerName} بشراء \"{$ad->title}\""
-                    : "{$buyerName} purchased \"{$ad->title}\"",
+                __('api.order.item_purchased'),
+                // NOTE: resolves in the buyer's language, not the seller's, for
+                // the same reason as the rating notification — users have no
+                // stored locale.
+                __('api.order.purchased_body', ['name' => $buyerName, 'title' => $ad->title]),
                 [
                     'type' => 'order',
                     'related_data' => (string) $order->id,

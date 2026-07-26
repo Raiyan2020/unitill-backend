@@ -170,7 +170,7 @@ export function UsersPage() {
               </option>
             ))}
           </select>
-          <Input className="h-9 max-w-[220px]" placeholder="Search" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Input className="h-9 max-w-[220px]" placeholder={t.search} value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
       </div>
 
@@ -180,7 +180,7 @@ export function UsersPage() {
             <table className="w-full text-sm">
               <thead className="bg-[#f8f7fb] text-[#6f6b7d] dark:bg-[#383d56] dark:text-[#b6b8cc]">
                 <tr>
-                  <th className="px-4 py-3 text-start">ID</th>
+                  <th className="px-4 py-3 text-start">{t.id}</th>
                   <th className="px-4 py-3 text-start">{t.firstName}</th>
                   <th className="px-4 py-3 text-start">{t.lastName}</th>
                   <th className="px-4 py-3 text-start">{t.email}</th>

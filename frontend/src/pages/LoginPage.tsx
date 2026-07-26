@@ -73,7 +73,7 @@ export function LoginPage() {
                 <label className="text-sm text-[#b8bcde]">{t.email} or Username</label>
                 <Input
                   className="h-11 rounded-lg border-[#444a6c] bg-[#2f3453] text-[#d7d9ee] placeholder:text-[#8f95bc] focus-visible:ring-[#7367f0]"
-                  placeholder="Enter your email or username"
+                  placeholder={t.enterEmailOrUsername}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
@@ -93,7 +93,7 @@ export function LoginPage() {
                     type="button"
                     onClick={() => setShowPassword((s) => !s)}
                     className="absolute end-3 top-1/2 -translate-y-1/2 text-[#8f95bc] hover:text-[#cfd3ef]"
-                    aria-label="Toggle password visibility"
+                    aria-label={t.togglePassword}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>

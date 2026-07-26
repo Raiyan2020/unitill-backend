@@ -9,6 +9,7 @@ use App\Models\Ad;
 use App\Models\ChatReport;
 use App\Models\Conversation;
 use App\Services\ChatService;
+use App\Support\ChatReportReason;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -22,27 +23,55 @@ class ConversationController extends Controller
         $validated = $request->validate([
             'tab' => ['nullable', Rule::in(['active', 'archived'])],
             'per_page' => 'nullable|integer|min:1|max:50',
+            'search' => 'nullable|string|max:255',
+            'q' => 'nullable|string|max:255',
         ]);
 
         $user = Auth::user();
         $tab = $validated['tab'] ?? 'active';
         $perPage = (int) ($validated['per_page'] ?? 20);
         $lang = $request->header('lang') === 'ar';
+        $search = trim((string) ($validated['search'] ?? $validated['q'] ?? ''));
 
-        $conversations = Conversation::query()
+        $query = Conversation::query()
             ->visibleToUser($user->id)
             ->where('status', $tab === 'archived' ? 'archived' : 'active')
             ->with([
                 'ad:id,public_id,title,cover_image,price,currency,status',
                 'buyer:id,first_name,last_name,name,image',
                 'seller:id,first_name,last_name,name,image',
-            ])
+            ]);
+
+        if ($search !== '') {
+            // Metadata only: the ad's title and the other participant's name.
+            // Message bodies are deliberately not searched — the messages table
+            // grows without bound and a LIKE scan over it has no index to use.
+            $matchesName = function ($builder) use ($search, $user) {
+                $builder->whereKeyNot($user->id)->where(function ($name) use ($search) {
+                    $name->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('name', 'like', "%{$search}%");
+                });
+            };
+
+            $query->where(function ($outer) use ($search, $matchesName) {
+                $outer->whereHas('ad', fn ($ad) => $ad->where('title', 'like', "%{$search}%"))
+                    ->orWhereHas('buyer', $matchesName)
+                    ->orWhereHas('seller', $matchesName);
+            });
+        }
+
+        $conversations = $query
             ->orderByDesc('last_message_at')
             ->orderByDesc('updated_at')
-            ->paginate($perPage);
+            ->paginate($perPage)
+            ->withQueryString();
 
         $response = ConversationResource::collection($conversations)
-            ->additional(['current_tab' => $tab])
+            ->additional([
+                'current_tab' => $tab,
+                'search' => $search !== '' ? $search : null,
+            ])
             ->response()
             ->getData(true);
 
@@ -67,12 +96,12 @@ class ConversationController extends Controller
             ->first();
 
         if (! $ad) {
-            return sendError($lang ? 'الإعلان غير متاح' : 'Ad is not available', [], 404);
+            return sendError(__('api.chat.ad_not_available'), [], 404);
         }
 
         if ($ad->user_id === $user->id) {
             return sendError(
-                $lang ? 'لا يمكنك مراسلة إعلانك' : 'You cannot message your own ad',
+                __('api.chat.cannot_message_own_ad'),
                 [],
                 422
             );
@@ -80,9 +109,25 @@ class ConversationController extends Controller
 
         try {
             $conversation = $this->chatService->findOrCreateConversation($ad, $user);
-        } catch (\InvalidArgumentException) {
+        } catch (\InvalidArgumentException $e) {
+            if ($e->getMessage() === 'seller_unavailable') {
+                return sendError(
+                    __('api.chat.seller_unavailable'),
+                    [],
+                    422
+                );
+            }
+
+            if ($e->getMessage() === 'buyer_not_verified') {
+                return sendError(
+                    __('api.chat.buyer_not_verified'),
+                    ['needs_verification' => true],
+                    403
+                );
+            }
+
             return sendError(
-                $lang ? 'لا يمكن بدء المحادثة' : 'Cannot start conversation',
+                __('api.chat.cannot_start'),
                 [],
                 422
             );
@@ -90,7 +135,7 @@ class ConversationController extends Controller
 
         return sendResponse(
             new ConversationResource($conversation),
-            $lang ? 'تم بدء المحادثة' : 'Conversation started'
+            __('api.chat.started')
         );
     }
 
@@ -100,7 +145,7 @@ class ConversationController extends Controller
 
         if (! $conversation) {
             return sendError(
-                $request->header('lang') === 'ar' ? 'المحادثة غير موجودة' : 'Conversation not found',
+                __('api.chat.not_found'),
                 [],
                 404
             );
@@ -126,7 +171,7 @@ class ConversationController extends Controller
 
         if (! $conversation) {
             return sendError(
-                $request->header('lang') === 'ar' ? 'المحادثة غير موجودة' : 'Conversation not found',
+                __('api.chat.not_found'),
                 [],
                 404
             );
@@ -162,11 +207,11 @@ class ConversationController extends Controller
         $conversation = $this->findParticipantConversation($id);
 
         if (! $conversation) {
-            return sendError($lang ? 'المحادثة غير موجودة' : 'Conversation not found', [], 404);
+            return sendError(__('api.chat.not_found'), [], 404);
         }
 
         if (empty(trim($validated['body'] ?? '')) && !$request->hasFile('attachment')) {
-            return sendError($lang ? 'الرسالة فارغة' : 'Message is empty', [], 422);
+            return sendError(__('api.chat.message_empty'), [], 422);
         }
 
         $attachmentPath = null;
@@ -187,18 +232,23 @@ class ConversationController extends Controller
             );
         } catch (\InvalidArgumentException $e) {
             return match ($e->getMessage()) {
+                'participant_unavailable' => sendError(
+                    __('api.chat.user_unavailable'),
+                    ['can_send_messages' => false],
+                    422
+                ),
                 'messaging_disabled' => sendError(
-                    $lang ? 'المراسلة معطّلة: الإعلان مباع' : 'Messaging disabled: item sold',
+                    __('api.chat.messaging_disabled_sold'),
                     ['can_send_messages' => false],
                     422
                 ),
                 'empty_message' => sendError(
-                    $lang ? 'الرسالة فارغة' : 'Message is empty',
+                    __('api.chat.message_empty'),
                     [],
                     422
                 ),
                 default => sendError(
-                    $lang ? 'لا يمكن إرسال الرسالة' : 'Cannot send message',
+                    __('api.chat.cannot_send'),
                     [],
                     422
                 ),
@@ -207,7 +257,7 @@ class ConversationController extends Controller
 
         return sendResponse(
             new MessageResource($message),
-            $lang ? 'تم إرسال الرسالة' : 'Message sent'
+            __('api.chat.message_sent')
         );
     }
 
@@ -217,7 +267,7 @@ class ConversationController extends Controller
 
         if (! $conversation) {
             return sendError(
-                $request->header('lang') === 'ar' ? 'المحادثة غير موجودة' : 'Conversation not found',
+                __('api.chat.not_found'),
                 [],
                 404
             );
@@ -234,13 +284,13 @@ class ConversationController extends Controller
         $conversation = $this->findParticipantConversation($id);
 
         if (! $conversation) {
-            return sendError($lang ? 'المحادثة غير موجودة' : 'Conversation not found', [], 404);
+            return sendError(__('api.chat.not_found'), [], 404);
         }
 
         if ($conversation->status === 'archived') {
             return sendResponse(
                 new ConversationResource($conversation),
-                $lang ? 'المحادثة مؤرشفة مسبقاً' : 'Conversation already archived'
+                __('api.chat.already_archived')
             );
         }
 
@@ -248,7 +298,7 @@ class ConversationController extends Controller
 
         return sendResponse(
             new ConversationResource($conversation->fresh(['ad', 'buyer', 'seller'])),
-            $lang ? 'تم أرشفة المحادثة' : 'Conversation archived'
+            __('api.chat.archived')
         );
     }
 
@@ -258,24 +308,20 @@ class ConversationController extends Controller
         $conversation = $this->findParticipantConversation($id);
 
         if (! $conversation) {
-            return sendError($lang ? 'المحادثة غير موجودة' : 'Conversation not found', [], 404);
+            return sendError(__('api.chat.not_found'), [], 404);
         }
 
         $result = $this->chatService->unarchiveConversation($conversation);
 
         if (isset($result['error'])) {
             $messages = [
-                'not_archived' => $lang ? 'المحادثة ليست مؤرشفة' : 'Conversation is not archived',
-                'sold_listing' => $lang
-                    ? 'لا يمكن إلغاء الأرشفة — الإعلان مُباع'
-                    : 'Cannot unarchive — listing was sold',
-                'ad_not_available' => $lang
-                    ? 'لا يمكن إلغاء الأرشفة — الإعلان غير متاح'
-                    : 'Cannot unarchive — ad is not available',
+                'not_archived' => __('api.chat.not_archived'),
+                'sold_listing' => __('api.chat.cannot_unarchive_sold'),
+                'ad_not_available' => __('api.chat.cannot_unarchive_ad_unavailable'),
             ];
 
             return sendError(
-                $messages[$result['error']] ?? ($lang ? 'لا يمكن إلغاء الأرشفة' : 'Cannot unarchive'),
+                $messages[$result['error']] ?? (__('api.chat.cannot_unarchive')),
                 ['error_code' => $result['error']],
                 422
             );
@@ -283,7 +329,7 @@ class ConversationController extends Controller
 
         return sendResponse(
             new ConversationResource($result['conversation']),
-            $lang ? 'تم إلغاء أرشفة المحادثة' : 'Conversation unarchived'
+            __('api.chat.unarchived')
         );
     }
 
@@ -293,7 +339,7 @@ class ConversationController extends Controller
         $conversation = $this->findParticipantConversation($id, includeDeleted: true);
 
         if (! $conversation) {
-            return sendError($lang ? 'المحادثة غير موجودة' : 'Conversation not found', [], 404);
+            return sendError(__('api.chat.not_found'), [], 404);
         }
 
         $userId = Auth::id();
@@ -306,7 +352,17 @@ class ConversationController extends Controller
 
         return sendResponse(
             ['conversation_id' => $conversation->id],
-            $lang ? 'تم حذف المحادثة من قائمتك' : 'Conversation removed from your list'
+            __('api.chat.removed')
+        );
+    }
+
+    /**
+     * Chat report reasons. Public so the app can load them before sign-in.
+     */
+    public function reportReasons(Request $request)
+    {
+        return sendResponse(
+            ChatReportReason::options($request->header('lang', 'en'))
         );
     }
 
@@ -314,8 +370,14 @@ class ConversationController extends Controller
     {
         $validated = $request->validate([
             'type' => ['required', Rule::in(['user', 'chat'])],
-            'reason' => 'nullable|string|max:80',
-            'description' => 'nullable|string|max:2000',
+            // Reason comes from a fixed list; the explanation is optional except for "other"
+            'reason' => ['required', Rule::in(ChatReportReason::allowed())],
+            'description' => [
+                Rule::requiredIf(fn () => $request->input('reason') === ChatReportReason::OTHER),
+                'nullable',
+                'string',
+                'max:2000',
+            ],
             'reported_user_id' => 'nullable|integer|exists:users,id',
         ]);
 
@@ -323,7 +385,7 @@ class ConversationController extends Controller
         $conversation = $this->findParticipantConversation($id);
 
         if (! $conversation) {
-            return sendError($lang ? 'المحادثة غير موجودة' : 'Conversation not found', [], 404);
+            return sendError(__('api.chat.not_found'), [], 404);
         }
 
         $reporter = Auth::user();
@@ -332,7 +394,7 @@ class ConversationController extends Controller
 
         if (! $reportedUserId || ! $conversation->isParticipant($reportedUserId)) {
             return sendError(
-                $lang ? 'المستخدم المبلّغ عنه غير صالح' : 'Invalid reported user',
+                __('api.chat.invalid_reported_user'),
                 [],
                 422
             );
@@ -340,7 +402,23 @@ class ConversationController extends Controller
 
         if ($reportedUserId === $reporter->id) {
             return sendError(
-                $lang ? 'لا يمكنك الإبلاغ عن نفسك' : 'You cannot report yourself',
+                __('api.chat.cannot_report_self'),
+                [],
+                422
+            );
+        }
+
+        // Stop the same pending report being filed repeatedly, as ad reports already do
+        $duplicate = ChatReport::query()
+            ->where('reporter_id', $reporter->id)
+            ->where('conversation_id', $conversation->id)
+            ->where('type', $validated['type'])
+            ->where('status', 'pending')
+            ->exists();
+
+        if ($duplicate) {
+            return sendError(
+                __('api.chat.report_pending_exists'),
                 [],
                 422
             );
@@ -360,7 +438,7 @@ class ConversationController extends Controller
                 'id' => $report->id,
                 'status' => $report->status,
             ],
-            $lang ? 'تم إرسال البلاغ' : 'Report submitted'
+            __('api.chat.report_submitted')
         );
     }
 

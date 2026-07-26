@@ -35,6 +35,10 @@ class RolePermissionSeeder extends Seeder
             'cities.create',
             'cities.update',
             'cities.delete',
+            'universities.view',
+            'universities.create',
+            'universities.update',
+            'universities.delete',
             'payment_methods.view',
             'payment_methods.create',
             'payment_methods.update',
@@ -62,6 +66,14 @@ class RolePermissionSeeder extends Seeder
             'subcategories.delete',
             'notifications.view',
             'notifications.send',
+            'ad_reports.view',
+            'ad_reports.update',
+            'coupons.view',
+            'coupons.create',
+            'coupons.update',
+            'coupons.delete',
+            'chat_reports.view',
+            'chat_reports.update',
         ];
 
         foreach ($permissions as $permissionName) {

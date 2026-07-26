@@ -165,7 +165,7 @@ export function LegalAffairsPage() {
           <select value={pageSize} onChange={(e) => { setPage(1); setPageSize(Number(e.target.value)); }} className="h-9 rounded-lg border border-[#dbdbe8] bg-white px-2 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]">
             {[10, 25, 50, 100].map((size) => <option key={size} value={size}>{size}</option>)}
           </select>
-          <Input className="h-9 w-[220px]" placeholder="Search" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Input className="h-9 w-[220px]" placeholder={t.search} value={search} onChange={(e) => setSearch(e.target.value)} />
           <Button size="sm" onClick={openCreate}>+ Add Legal Affair</Button>
         </div>
       </div>
@@ -176,11 +176,11 @@ export function LegalAffairsPage() {
             <table className="w-full text-sm">
               <thead className="bg-[#f8f7fb] text-[#6f6b7d] dark:bg-[#383d56] dark:text-[#b6b8cc]">
                 <tr>
-                  <th className="px-4 py-3 text-start">ID</th>
-                  <th className="px-4 py-3 text-start">Section</th>
-                  <th className="px-4 py-3 text-start">Title</th>
-                  <th className="px-4 py-3 text-start">Active</th>
-                  <th className="px-4 py-3 text-start">Sort</th>
+                  <th className="px-4 py-3 text-start">{t.id}</th>
+                  <th className="px-4 py-3 text-start">{t.section}</th>
+                  <th className="px-4 py-3 text-start">{t.title}</th>
+                  <th className="px-4 py-3 text-start">{t.active}</th>
+                  <th className="px-4 py-3 text-start">{t.sort}</th>
                   <th className="px-4 py-3 text-start">{t.actions}</th>
                 </tr>
               </thead>
@@ -221,8 +221,8 @@ export function LegalAffairsPage() {
             </CardHeader>
             <CardContent className="max-h-[72vh] space-y-3 overflow-y-auto p-4 md:max-h-[78vh] md:p-6">
               <div className="grid gap-3 md:grid-cols-3">
-                <Input placeholder="Section" value={form.section} onChange={(e) => setForm((s) => ({ ...s, section: e.target.value }))} />
-                <Input placeholder="Sort" value={form.sort_order} onChange={(e) => setForm((s) => ({ ...s, sort_order: e.target.value }))} />
+                <Input placeholder={t.section} value={form.section} onChange={(e) => setForm((s) => ({ ...s, section: e.target.value }))} />
+                <Input placeholder={t.sort} value={form.sort_order} onChange={(e) => setForm((s) => ({ ...s, sort_order: e.target.value }))} />
                 <label className="flex items-center gap-2 rounded-xl border border-[#dbdbe8] px-3 text-sm dark:border-[#4a4f68]"><input type="checkbox" checked={form.is_active} onChange={(e) => setForm((s) => ({ ...s, is_active: e.target.checked }))} /> Active</label>
               </div>
 

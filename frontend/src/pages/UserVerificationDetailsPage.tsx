@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { api } from '../lib/api';
 import { ensureApiSuccess } from '../lib/api-response';
 import { useNotify } from '../lib/notify';
+import { useI18n } from '../providers/i18n-provider';
 
 type RequestRow = {
   id: number;
@@ -21,6 +22,7 @@ type RequestRow = {
 type PaginatedResponse<T> = { data: T[]; total: number };
 
 export function UserVerificationDetailsPage() {
+  const { t } = useI18n();
   const notify = useNotify();
   const { userId } = useParams();
   const [loading, setLoading] = useState(false);
@@ -109,10 +111,10 @@ export function UserVerificationDetailsPage() {
               <table className="w-full text-sm">
                 <thead className="bg-[#f8f7fb] text-[#6f6b7d] dark:bg-[#383d56] dark:text-[#b6b8cc]">
                   <tr>
-                    <th className="px-4 py-3 text-start">Request #</th>
-                    <th className="px-4 py-3 text-start">Status</th>
-                    <th className="px-4 py-3 text-start">Seller Type</th>
-                    <th className="px-4 py-3 text-start">Created At</th>
+                    <th className="px-4 py-3 text-start">{t.requestNumber}</th>
+                    <th className="px-4 py-3 text-start">{t.status}</th>
+                    <th className="px-4 py-3 text-start">{t.sellerType}</th>
+                    <th className="px-4 py-3 text-start">{t.createdAt}</th>
                   </tr>
                 </thead>
                 <tbody>

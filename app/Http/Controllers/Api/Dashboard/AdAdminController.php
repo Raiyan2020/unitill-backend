@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\Ad;
+use App\Models\Category;
 use App\Services\PushNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -87,8 +88,11 @@ class AdAdminController extends Controller
             'country:id,country_code',
             'city:id,country_id,code',
             'mainCategory:id,parent_id',
+            'mainCategory.translations',
             'subCategory:id,parent_id',
+            'subCategory.translations',
             'images:id,ad_id,path,sort_order',
+            'attributeValues.definition.translations',
         ])->find($id);
 
         if (! $ad) {
@@ -137,6 +141,20 @@ class AdAdminController extends Controller
             ] : null,
             'main_category_id' => $ad->main_category_id,
             'sub_category_id' => $ad->sub_category_id,
+            'main_category_name' => $this->categoryName($ad->mainCategory),
+            'sub_category_name' => $this->categoryName($ad->subCategory),
+            // Seller-submitted specs, so a moderator can see them while reviewing
+            'attributes' => $ad->attributeValues
+                ->filter(fn ($value) => $value->definition !== null)
+                ->sortBy(fn ($value) => $value->definition->sort_order)
+                ->map(fn ($value) => [
+                    'slug' => $value->definition->slug,
+                    'label' => $value->definition->labelForLanguageCode('en')
+                        ?: $value->definition->slug,
+                    'input_type' => $value->definition->input_type,
+                    'value' => $value->value,
+                ])
+                ->values(),
             'images' => $ad->images->map(function ($img) {
                 $path = ltrim((string) $img->path, '/');
                 return [
@@ -149,6 +167,21 @@ class AdAdminController extends Controller
             'created_at' => optional($ad->created_at)->toDateTimeString(),
             'updated_at' => optional($ad->updated_at)->toDateTimeString(),
         ], 'Ad details');
+    }
+
+    /**
+     * English category name for the dashboard, falling back to any translation.
+     */
+    private function categoryName(?Category $category): ?string
+    {
+        if (! $category) {
+            return null;
+        }
+
+        $translations = $category->translations;
+
+        return $translations->firstWhere('language_id', 1)?->name
+            ?? $translations->first()?->name;
     }
 
     public function update(Request $request, int $id)
@@ -174,30 +207,19 @@ class AdAdminController extends Controller
         $ad->save();
 
         if ($oldStatus !== $newStatus && $ad->user) {
-            $lang = $request->header('lang') === 'ar';
-            $title = $lang ? 'تحديث حالة الإعلان' : 'Ad Status Update';
-            
-            $statusName = $newStatus;
-            if ($lang) {
-                $statusMap = [
-                    'published' => 'مقبول / منشور',
-                    'rejected' => 'مرفوض',
-                    'pending' => 'قيد المراجعة',
-                    'expired' => 'منتهي',
-                    'draft' => 'مسودة',
-                    'sold' => 'مباع',
-                ];
-                $statusName = $statusMap[$newStatus] ?? $newStatus;
+            // NOTE: resolves in the acting admin's language, not the ad owner's.
+            // Users have no stored locale, so a student can be notified in
+            // whatever language the dashboard operator happens to be using.
+            $statusKey = "api.ad_status.{$newStatus}";
+            $statusName = __($statusKey);
+            if ($statusName === $statusKey) {
+                $statusName = $newStatus;
             }
-
-            $body = $lang 
-                ? "تم تغيير حالة إعلانك '{$ad->title}' إلى {$statusName}"
-                : "Your ad '{$ad->title}' status has been updated to {$statusName}";
 
             $this->pushNotificationService->sendToUser(
                 $ad->user,
-                $title,
-                $body,
+                __('api.ad_status.title'),
+                __('api.ad_status.body', ['title' => $ad->title, 'status' => $statusName]),
                 ['type' => 'ad_status_update', 'ad_id' => $ad->id]
             );
         }

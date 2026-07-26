@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             LegalAffairSeeder::class,
             AdminSeeder::class,
             CitySeeder::class,
+            UniversitySeeder::class,
             SettingSeeder::class,
  
             CategorySeeder::class,

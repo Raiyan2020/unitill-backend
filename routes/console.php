@@ -2,6 +2,7 @@
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,3 +18,17 @@ use Illuminate\Support\Facades\Artisan;
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+/*
+|--------------------------------------------------------------------------
+| Scheduled Tasks
+|--------------------------------------------------------------------------
+*/
+
+// Hourly rather than daily: ads are hidden from the public feed the moment
+// they expire (see Ad::scopePublished), so this only corrects the stored
+// status — but an owner should not see a dead ad under "Active" for a day.
+Schedule::command('ads:expire')
+    ->hourly()
+    ->withoutOverlapping()
+    ->runInBackground();

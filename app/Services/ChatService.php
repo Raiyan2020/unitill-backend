@@ -15,10 +15,38 @@ class ChatService
 {
     public function __construct(protected FirebaseService $firebase) {}
 
+    /**
+     * A fully verified account: status "1". Status "2" is still awaiting student
+     * email verification and "3" is disabled.
+     *
+     * Note: the 30 Sep / 31 Mar re-verification deadlines from the spec are not
+     * modelled anywhere yet, so an account that has lapsed still reads as "1"
+     * until that is implemented.
+     */
+    protected function isFullyVerified(User $user): bool
+    {
+        return (string) $user->status === '1';
+    }
+
     public function findOrCreateConversation(Ad $ad, User $buyer): Conversation
     {
         if ($ad->user_id === $buyer->id) {
             throw new \InvalidArgumentException('cannot_message_own_ad');
+        }
+
+        // The seller may have closed their account since the ad was cached by
+        // the client, so a new thread must not be opened against them.
+        $seller = User::whereKey($ad->user_id)->first();
+        if (! $seller) {
+            throw new \InvalidArgumentException('seller_unavailable');
+        }
+
+        // "Only verified users can message me": when the seller has opted in, the
+        // buyer must be fully active — not pending student verification and not
+        // disabled. Checked only for new threads, so an existing conversation is
+        // never cut off midway by a status change.
+        if ($seller->trusted_users_only && ! $this->isFullyVerified($buyer)) {
+            throw new \InvalidArgumentException('buyer_not_verified');
         }
 
         $conversation = Conversation::query()->firstOrCreate(
@@ -55,6 +83,12 @@ class ChatService
     {
         if (! $conversation->isParticipant($sender->id)) {
             throw new \InvalidArgumentException('not_participant');
+        }
+
+        // Checked before the generic gate so the caller can tell "the other
+        // person left" apart from "the item is sold".
+        if (! $conversation->bothParticipantsExist()) {
+            throw new \InvalidArgumentException('participant_unavailable');
         }
 
         if (! $conversation->canSendMessages()) {

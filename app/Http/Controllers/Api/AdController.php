@@ -11,6 +11,11 @@ use App\Models\AdAttributeValue;
 use App\Models\AdImage;
 use App\Models\Category;
 use App\Models\CategoryAttributeDefinition;
+use App\Services\CouponRedemptionService;
+use App\Services\StripeService;
+use App\Services\ListingPaymentService;
+use App\Services\PostcodeService;
+use App\Traits\HandlesListingPayments;
 use App\Support\AdFilters;
 use App\Support\AdSort;
 use Illuminate\Http\Request;
@@ -21,6 +26,7 @@ use Illuminate\Validation\Rule;
 
 class AdController extends Controller
 {
+    use HandlesListingPayments;
     public function index(Request $request)
     {
         $validated = $request->validate([
@@ -36,6 +42,8 @@ class AdController extends Controller
             'is_negotiable' => 'nullable|boolean',
             'per_page' => 'nullable|integer|min:1|max:50',
             'filters' => 'nullable',
+            'postcode' => 'nullable|string|max:12',
+            'radius_km' => 'nullable|numeric|min:0.1|max:500',
         ]);
 
         $lang = $request->header('lang', 'en');
@@ -95,19 +103,71 @@ class AdController extends Controller
         // query params) power distance sorting.
         $viewerLat = $request->header('lat') ?? $request->input('lat');
         $viewerLng = $request->header('lng') ?? $request->input('lng');
-        AdSort::apply(
-            $query,
-            $sort,
-            is_numeric($viewerLat) ? (float) $viewerLat : null,
-            is_numeric($viewerLng) ? (float) $viewerLng : null
-        );
+        $viewerLat = is_numeric($viewerLat) ? (float) $viewerLat : null;
+        $viewerLng = is_numeric($viewerLng) ? (float) $viewerLng : null;
+
+        // Radius search: an explicit postcode wins over the viewer's coordinates,
+        // so "show me places near campus" works from anywhere.
+        $radiusKm = isset($validated['radius_km']) ? (float) $validated['radius_km'] : null;
+        $originLat = $viewerLat;
+        $originLng = $viewerLng;
+        $resolvedPostcode = null;
+
+        if (! empty($validated['postcode'])) {
+            $details = app(PostcodeService::class)->getDetails($validated['postcode']);
+
+            if ($details && is_numeric($details['latitude']) && is_numeric($details['longitude'])) {
+                $originLat = (float) $details['latitude'];
+                $originLng = (float) $details['longitude'];
+                $resolvedPostcode = $details['postcode'];
+            }
+        }
+
+        if ($radiusKm !== null && $originLat !== null && $originLng !== null) {
+            // Same great-circle formula AdSort uses; ads without coordinates are
+            // excluded rather than treated as distance zero.
+            $query->whereNotNull('latitude')
+                ->whereNotNull('longitude')
+                ->whereRaw(
+                    '(6371 * acos(LEAST(1, cos(radians(?)) * cos(radians(latitude)) '
+                    .'* cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude))))) <= ?',
+                    [$originLat, $originLng, $originLat, $radiusKm]
+                );
+        }
+
+        AdSort::apply($query, $sort, $originLat, $originLng);
 
         $this->attachFavoriteIds($request);
 
         $ads = $query->paginate($perPage);
 
+        // Some subcategories (Laptops, Tablets, Mobile phones, Computers, Home
+        // Electronics) carry their own attributes; the rest inherit the main
+        // category's. Prefer the subcategory when it defines any, else fall back.
+        $attributeCategoryId = 0;
+        if ($subCategoryId > 0) {
+            $hasOwnDefinitions = CategoryAttributeDefinition::query()
+                ->where('category_id', $subCategoryId)
+                ->where('is_active', true)
+                ->exists();
+
+            $attributeCategoryId = $hasOwnDefinitions
+                ? $subCategoryId
+                : (int) (Category::whereKey($subCategoryId)->value('parent_id') ?? $subCategoryId);
+        }
+        if ($attributeCategoryId === 0) {
+            $attributeCategoryId = $mainCategoryId;
+        }
+
+        // Mileage/year sorts are offered wherever those attributes are defined,
+        // which keeps this data-driven instead of pinned to a hard-coded Cars id.
+        $supportsVehicleSorts = $attributeCategoryId > 0 && CategoryAttributeDefinition::query()
+            ->where('category_id', $attributeCategoryId)
+            ->whereIn('slug', ['mileage', 'year'])
+            ->exists();
+
         $response = AdResource::collection($ads)->response()->getData(true);
-        $response['sort_options'] = AdSort::options($lang);
+        $response['sort_options'] = AdSort::options($lang, $supportsVehicleSorts);
         $response['current_sort'] = AdSort::normalize($sort);
         $response['applied_filters'] = array_filter([
             'search' => $search !== '' ? $search : null,
@@ -117,15 +177,19 @@ class AdController extends Controller
             'price_min' => $validated['price_min'] ?? null,
             'price_max' => $validated['price_max'] ?? null,
             'is_negotiable' => $validated['is_negotiable'] ?? null,
+            'postcode' => $resolvedPostcode,
+            'radius_km' => $radiusKm,
             'attributes' => $attributeFilters ?: null,
-        ]);
+        ], static fn ($value) => $value !== null);
 
-        // Attribute definitions live on the main category, so resolve to it
-        // even when the viewer is browsing a subcategory.
-        $attributeCategoryId = $mainCategoryId;
-        if ($attributeCategoryId === 0 && $subCategoryId > 0) {
-            $attributeCategoryId = (int) (Category::whereKey($subCategoryId)->value('parent_id') ?? $subCategoryId);
-        }
+        // Drives the "N filters active" badge on the filter panel. Price min/max
+        // counts once, as does postcode + radius, matching how the UI groups them.
+        $response['active_filter_count'] = AdFilters::activeCount($attributeFilters)
+            + (isset($validated['city_id']) ? 1 : 0)
+            + (isset($validated['price_min']) || isset($validated['price_max']) ? 1 : 0)
+            + (array_key_exists('is_negotiable', $validated) ? 1 : 0)
+            + ($radiusKm !== null ? 1 : 0);
+
         if ($attributeCategoryId > 0) {
             $response['filter_options'] = $this->filterOptionsForCategory($attributeCategoryId, $lang);
         }
@@ -158,11 +222,14 @@ class AdController extends Controller
             ->first();
 
         // The owner may view their own ad in any status (draft / inactive /
-        // sold); everyone else only sees published ads.
+        // sold); everyone else only sees published ads that have not expired.
+        // The expiry check matters because the scheduled command runs hourly,
+        // so an ad can be past expires_at while still flagged "published".
         $isOwner = $ad && $userId && (int) $ad->user_id === (int) $userId;
-        if (! $ad || ($ad->status !== 'published' && ! $isOwner)) {
+        $isVisible = $ad && $ad->status === 'published' && ! $ad->isExpired();
+        if (! $ad || (! $isVisible && ! $isOwner)) {
             return sendError(
-                $lang ? 'الإعلان غير موجود' : 'Ad not found',
+                __('api.ad.not_found'),
                 [],
                 404
             );
@@ -171,6 +238,24 @@ class AdController extends Controller
         $this->attachFavoriteIds($request);
 
         return sendResponse(new AdDetailResource($ad));
+    }
+
+    /**
+     * Attribute definitions for an ad, keyed by slug.
+     *
+     * A main category and its subcategory can define the same slug — Electronics
+     * and Electronics > Laptops both have "brand". Sorting the subcategory last
+     * makes keyBy() keep it, so the value binds to the more specific definition
+     * instead of whichever row happened to have the lower id.
+     */
+    protected function definitionsForCategories(array $specCategoryIds, int $subCategoryId): \Illuminate\Support\Collection
+    {
+        return CategoryAttributeDefinition::query()
+            ->whereIn('category_id', $specCategoryIds)
+            ->where('is_active', true)
+            ->get()
+            ->sortBy(fn (CategoryAttributeDefinition $definition) => $definition->category_id === $subCategoryId ? 1 : 0)
+            ->keyBy('slug');
     }
 
     protected function filterOptionsForCategory(int $categoryId, string $lang): array
@@ -199,7 +284,6 @@ class AdController extends Controller
         $lang = $request->header('lang') === 'ar';
         $user = Auth::user();
         $data = $request->validated();
-        $confirmPublish = (bool) ($data['confirm_publish'] ?? false);
         $attributes = (array) ($data['attributes'] ?? []);
         // Attribute definitions live on the main category; resolve from both.
         $specCategoryIds = array_values(array_filter([
@@ -207,7 +291,7 @@ class AdController extends Controller
             (int) ($data['sub_category_id'] ?? 0),
         ]));
 
-        $ad = DB::transaction(function () use ($request, $user, $data, $confirmPublish, $attributes, $specCategoryIds) {
+        $ad = DB::transaction(function () use ($request, $user, $data, $attributes, $specCategoryIds) {
             $imagePaths = [];
             foreach ($request->file('images', []) as $index => $image) {
                 $imagePaths[] = [
@@ -220,18 +304,17 @@ class AdController extends Controller
             $title = $data['title'];
             $publicId = strtoupper(Str::random(10));
 
-            $publishedAt = $confirmPublish ? now() : null;
-            $durationDays = (int) (setting('post_duration') ?? 30);
-
             $ad = Ad::create([
                 'user_id' => $user->id,
                 'public_id' => $publicId,
                 'title' => $title,
                 'subtitle' => $data['subtitle'] ?? null,
+                'license_plate' => $data['license_plate'] ?? null,
                 'description' => $data['description'] ?? null,
                 'country_id' => $request->countryId(),
                 'city_id' => $data['city_id'],
                 'postcode' => $data['postcode'] ?? null,
+                'region' => $data['region'] ?? null,
                 'location_name' => $data['location_name'] ?? null,
                 'latitude' => $data['latitude'] ?? null,
                 'longitude' => $data['longitude'] ?? null,
@@ -243,9 +326,10 @@ class AdController extends Controller
                 'is_negotiable' => (bool) ($data['is_negotiable'] ?? false),
                 'is_verified' => false,
                 'slug' => Str::slug($title.'-'.$publicId),
-                'status' => $confirmPublish ? 'published' : 'pending',
-                'published_at' => $publishedAt,
-                'expires_at' => $publishedAt ? $publishedAt->copy()->addDays($durationDays) : null,
+                // A posted ad is "pending" until the fee is settled; only then does
+                // it become "published". Drafts are created by storeDraft() and stay
+                // "draft" — that is what separates the two.
+                'status' => 'pending',
             ]);
 
             foreach ($imagePaths as $row) {
@@ -256,11 +340,10 @@ class AdController extends Controller
                 ]);
             }
 
-            $definitions = CategoryAttributeDefinition::query()
-                ->whereIn('category_id', $specCategoryIds)
-                ->where('is_active', true)
-                ->get()
-                ->keyBy('slug');
+            $definitions = $this->definitionsForCategories(
+                $specCategoryIds,
+                (int) ($data['sub_category_id'] ?? 0)
+            );
 
             foreach ($attributes as $slug => $value) {
                 if ($value === null || $value === '' || ! isset($definitions[$slug])) {
@@ -277,7 +360,18 @@ class AdController extends Controller
             return $ad;
         });
 
-        $ad->load([
+        // Posting always enters the publication flow: there is no admin approval
+        // step, so the ad goes live as soon as the fee is settled — covered by the
+        // free quota, zeroed by a coupon, or paid via Stripe.
+        $publication = $this->startPublication($ad, $request->input('coupon_code'));
+        if (isset($publication['coupon_error'])) {
+            return sendError(__('api.ad.coupon_failed'), ['coupon_code' => $publication['coupon_error']], 422);
+        }
+        $appliedCoupon = $publication['coupon'] ?? null;
+        if ($publication !== null) {
+            unset($publication['coupon']);
+        }
+        $ad->refresh()->load([
             'images',
             'city.translations',
             'mainCategory.translations',
@@ -287,13 +381,64 @@ class AdController extends Controller
 
         $listingFee = (float) (setting('post_price') ?? 0);
 
-        return sendResponse([
-            'ad' => new AdDetailResource($ad),
+        return sendResponse(
+            array_replace(
+                $this->listingFeePayload($request, $ad, $listingFee, false),
+                [
+                    'coupon' => $appliedCoupon,
+                    'total_amount' => (float) ($publication['amount'] ?? 0),
+                    'formatted_total_amount' => '£' . number_format((float) ($publication['amount'] ?? 0), 2),
+                ]
+            )
+                + ['publication' => $publication]
+                + ['ad' => new AdDetailResource($ad)],
+            __('api.ad.created')
+        );
+    }
+
+    /**
+     * Builds the step-4 (Pay) payload for a newly created ad.
+     *
+     * The code is only consumed when the ad actually goes live — a draft that
+     * is never published must not burn the user's single use. If redemption
+     * fails the ad still stands; the fee simply comes back undiscounted rather
+     * than the whole request failing after the ad was already created.
+     */
+    protected function listingFeePayload(
+        Request $request,
+        Ad $ad,
+        float $listingFee,
+        bool $charge
+    ): array {
+        $due = $charge ? $listingFee : 0.0;
+        $coupon = null;
+
+        $code = trim((string) $request->input('coupon_code', ''));
+
+        if ($charge && $code !== '' && $listingFee > 0) {
+            $result = app(CouponRedemptionService::class)
+                ->redeem($code, $request->user(), $listingFee, $ad->id);
+
+            if (isset($result['error'])) {
+                $coupon = ['applied' => false, 'code' => $code, 'reason' => $result['error']];
+            } else {
+                $due = $result['final_amount'];
+                $coupon = [
+                    'applied' => true,
+                    'code' => $result['code'],
+                    'discount_amount' => $result['discount_amount'],
+                    'formatted_discount' => '£'.number_format($result['discount_amount'], 2),
+                ];
+            }
+        }
+
+        return [
             'listing_fee' => $listingFee,
             'formatted_listing_fee' => '£'.number_format($listingFee, 2),
-            'total_amount' => $confirmPublish ? $listingFee : 0,
-            'formatted_total_amount' => '£'.number_format($confirmPublish ? $listingFee : 0, 2),
-        ], $lang ? 'تم إنشاء الإعلان بنجاح' : 'Ad created successfully');
+            'coupon' => $coupon,
+            'total_amount' => $due,
+            'formatted_total_amount' => '£'.number_format($due, 2),
+        ];
     }
 
     protected function attachFavoriteIds(Request $request): void
@@ -326,16 +471,27 @@ class AdController extends Controller
             'sub_category_id' => 'nullable|integer|exists:categories,id',
             'title' => 'required|string|max:255',
             'subtitle' => 'nullable|string|max:255',
-            'description' => 'nullable|string|max:5000',
+            'license_plate' => [
+                'nullable',
+                'string',
+                'regex:/^[A-Z]{2}[0-9]{2}[A-Z]{3}$/', 
+                'max:7'
+            ],
+            'description' => 'required|string|max:5000',
             'price' => 'required|numeric|min:0',
             'currency' => 'nullable|string|size:3',
             'is_negotiable' => 'nullable|boolean',
-            'postcode' => 'nullable|string|max:20',
+            'postcode' => ['nullable', 'string', 'regex:/^([A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}|GIR ?0AA)$/i'],
+            'region' => 'nullable|string|max:191',
             'location_name' => 'nullable|string|max:255',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
             'attributes' => 'nullable|array',
             'attributes.*' => 'nullable|string|max:1000',
+            // Optional on a draft — the user may not have chosen photos yet — but
+            // stored when supplied. publishDraft() is what insists on at least one.
+            'images' => 'nullable|array|max:10',
+            'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
         ]);
 
         $attributes = (array) ($validated['attributes'] ?? []);
@@ -347,6 +503,19 @@ class AdController extends Controller
         ]));
 
         $ad = DB::transaction(function () use ($request, $user, $validated, $attributes, $specCategoryIds, $cityId) {
+            $imagePaths = [];
+            foreach ($request->file('images', []) as $index => $image) {
+                $imagePaths[] = [
+                    'path' => uploader($image, 'ads'),
+                    'sort_order' => $index,
+                ];
+            }
+
+            // A draft may have no photos yet, so there is not always a cover.
+            $coverPath = isset($imagePaths[0])
+                ? ltrim(str_replace('/storage/', '', $imagePaths[0]['path']), '/')
+                : null;
+
             $title = $validated['title'];
             $publicId = strtoupper(Str::random(10));
 
@@ -355,6 +524,7 @@ class AdController extends Controller
                 'public_id' => $publicId,
                 'title' => $title,
                 'subtitle' => $validated['subtitle'] ?? null,
+                'license_plate' => $validated['license_plate'] ?? null,
                 'description' => $validated['description'] ?? null,
                 'country_id' => \App\Models\City::find($cityId)?->country_id ?? 1,
                 'city_id' => $cityId,
@@ -364,19 +534,28 @@ class AdController extends Controller
                 'currency' => strtoupper($validated['currency'] ?? 'GBP'),
                 'is_negotiable' => (bool) ($validated['is_negotiable'] ?? false),
                 'postcode' => $validated['postcode'] ?? null,
+                'region' => $validated['region'] ?? null,
                 'location_name' => $validated['location_name'] ?? null,
                 'latitude' => $validated['latitude'] ?? null,
                 'longitude' => $validated['longitude'] ?? null,
                 'is_verified' => false,
+                'cover_image' => $coverPath,
                 'slug' => Str::slug($title.'-'.$publicId),
                 'status' => 'draft',
             ]);
 
-            $definitions = CategoryAttributeDefinition::query()
-                ->whereIn('category_id', $specCategoryIds)
-                ->where('is_active', true)
-                ->get()
-                ->keyBy('slug');
+            foreach ($imagePaths as $row) {
+                AdImage::create([
+                    'ad_id' => $ad->id,
+                    'path' => ltrim(str_replace('/storage/', '', $row['path']), '/'),
+                    'sort_order' => $row['sort_order'],
+                ]);
+            }
+
+            $definitions = $this->definitionsForCategories(
+                $specCategoryIds,
+                (int) ($validated['sub_category_id'] ?? 0)
+            );
 
             foreach ($attributes as $slug => $value) {
                 if ($value === null || $value === '' || ! isset($definitions[$slug])) {
@@ -403,7 +582,7 @@ class AdController extends Controller
 
         return sendResponse([
             'ad' => new AdDetailResource($ad),
-        ], $lang ? 'تم حفظ المسودة بنجاح' : 'Draft saved successfully');
+        ], __('api.ad.draft_saved'));
     }
 
     public function uploadImage(Request $request, $id)
@@ -413,7 +592,7 @@ class AdController extends Controller
         
         $ad = Ad::where('id', $id)->orWhere('public_id', $id)->first();
         if (!$ad || $ad->user_id !== $user->id) {
-            return sendError($lang ? 'الإعلان غير موجود' : 'Ad not found', [], 404);
+            return sendError(__('api.ad.not_found'), [], 404);
         }
 
         $request->validate([
@@ -435,7 +614,7 @@ class AdController extends Controller
             $ad->update(['cover_image' => $cleanPath]);
         }
 
-        return sendResponse(['path' => $path], $lang ? 'تم رفع الصورة' : 'Image uploaded');
+        return sendResponse(['path' => $path], __('api.ad.image_uploaded'));
     }
 
     public function publishDraft(Request $request, $id)
@@ -445,21 +624,17 @@ class AdController extends Controller
         
         $ad = Ad::where('id', $id)->orWhere('public_id', $id)->first();
         if (!$ad || $ad->user_id !== $user->id) {
-            return sendError($lang ? 'الإعلان غير موجود' : 'Ad not found', [], 404);
+            return sendError(__('api.ad.not_found'), [], 404);
         }
 
         if ($ad->images()->count() === 0) {
-            return sendError($lang ? 'يجب رفع صورة واحدة على الأقل' : 'At least one image is required', [], 422);
+            return sendError(__('api.ad.image_required'), [], 422);
         }
 
-        $publishedAt = now();
-        $durationDays = (int) (setting('post_duration') ?? 30);
-
-        $ad->update([
-            'status' => 'pending', // or 'published' based on your workflow
-            'published_at' => $publishedAt,
-            'expires_at' => $publishedAt->copy()->addDays($durationDays),
-        ]);
+        $publication = $this->startPublication($ad, $request->input('coupon_code'));
+        if (isset($publication['coupon_error'])) {
+            return sendError(__('api.ad.coupon_failed'), ['coupon_code' => $publication['coupon_error']], 422);
+        }
 
         $ad->load([
             'images',
@@ -469,14 +644,25 @@ class AdController extends Controller
             'attributeValues.definition.translations',
         ]);
 
-        $listingFee = (float) (setting('post_price') ?? 0);
+        return sendResponse(
+            ['publication' => $publication, 'ad' => new AdDetailResource($ad)],
+            __('api.ad.published')
+        );
+    }
 
-        return sendResponse([
-            'ad' => new AdDetailResource($ad),
-            'listing_fee' => $listingFee,
-            'formatted_listing_fee' => '£'.number_format($listingFee, 2),
-            'total_amount' => $listingFee,
-            'formatted_total_amount' => '£'.number_format($listingFee, 2),
-        ], $lang ? 'تم نشر الإعلان بنجاح' : 'Ad published successfully');
+    public function completeStripePayment(Request $request, string $id, ListingPaymentService $listings)
+    {
+        $ad = Ad::query()->where('user_id', Auth::id())->where(fn ($query) => $query->where('id', $id)->orWhere('public_id', $id))->first();
+        if (! $ad || ! $ad->stripe_payment_intent_id) {
+            return sendError('Payment for this ad was not found.', [], 404);
+        }
+
+        $intent = app(StripeService::class)->paymentIntent($ad->stripe_payment_intent_id);
+        if (($intent['status'] ?? null) !== 'succeeded') {
+            return sendError('The Stripe payment has not succeeded yet.', [], 422);
+        }
+
+        $ad = $listings->publishPaidListing($intent['id'], (int) $intent['amount_received'], (string) $intent['currency']);
+        return sendResponse(['ad' => new AdDetailResource($ad)], 'Payment verified and ad published successfully');
     }
 }

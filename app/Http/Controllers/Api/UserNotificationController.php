@@ -62,7 +62,7 @@ class UserNotificationController extends Controller
             ->first();
 
         if (! $notification) {
-            return sendError($lang ? 'الإشعار غير موجود' : 'Notification not found', [], 404);
+            return sendError(__('api.notification.not_found'), [], 404);
         }
 
         if (! $notification->read_at) {
@@ -71,7 +71,7 @@ class UserNotificationController extends Controller
 
         return sendResponse(
             new UserNotificationResource($notification->fresh()),
-            $lang ? 'تم تعليم الإشعار كمقروء' : 'Notification marked as read'
+            __('api.notification.marked_read')
         );
     }
 
@@ -86,7 +86,7 @@ class UserNotificationController extends Controller
 
         return sendResponse(
             ['marked_read' => $updated],
-            $lang ? 'تم تعليم جميع الإشعارات كمقروءة' : 'All notifications marked as read'
+            __('api.notification.all_marked_read')
         );
     }
 
@@ -100,12 +100,12 @@ class UserNotificationController extends Controller
             ->delete();
 
         if (! $deleted) {
-            return sendError($lang ? 'الإشعار غير موجود' : 'Notification not found', [], 404);
+            return sendError(__('api.notification.not_found'), [], 404);
         }
 
         return sendResponse(
             ['deleted' => true],
-            $lang ? 'تم حذف الإشعار' : 'Notification deleted'
+            __('api.notification.deleted')
         );
     }
 }

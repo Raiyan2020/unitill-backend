@@ -5,15 +5,22 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\MyAdResource;
 use App\Models\Ad;
+use App\Models\AdAttributeValue;
+use App\Models\AdImage;
 use App\Models\Conversation;
 use App\Models\User;
 use App\Services\ChatService;
+use App\Traits\HandlesListingPayments;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class MyAdController extends Controller
 {
+    use HandlesListingPayments;
+
     public function __construct(protected ChatService $chatService) {}
 
     public function index(Request $request)
@@ -71,12 +78,12 @@ class MyAdController extends Controller
         $ad = $this->findOwnedAd($id);
 
         if (! $ad) {
-            return sendError($lang ? 'الإعلان غير موجود' : 'Ad not found', [], 404);
+            return sendError(__('api.ad.not_found'), [], 404);
         }
 
         if ($ad->status !== 'published') {
             return sendError(
-                $lang ? 'يمكن عرض المشترين للإعلانات النشطة فقط' : 'Buyers are available for active ads only',
+                __('api.ad.buyers_active_only'),
                 [],
                 422
             );
@@ -116,12 +123,12 @@ class MyAdController extends Controller
         $ad = $this->findOwnedAd($id);
 
         if (! $ad) {
-            return sendError($lang ? 'الإعلان غير موجود' : 'Ad not found', [], 404);
+            return sendError(__('api.ad.not_found'), [], 404);
         }
 
         if ($ad->status !== 'published') {
             return sendError(
-                $lang ? 'يمكن تعليم الإعلانات النشطة فقط كمباعة' : 'Only active ads can be marked as sold',
+                __('api.ad.only_active_can_be_sold'),
                 [],
                 422
             );
@@ -137,7 +144,7 @@ class MyAdController extends Controller
 
         if (! $isSoldOutside && ! $buyerId) {
             return sendError(
-                $lang ? 'اختر مشترياً أو حدد البيع خارج التطبيق' : 'Select a buyer or mark as sold outside UniTill',
+                __('api.ad.select_buyer_or_outside'),
                 [],
                 422
             );
@@ -145,7 +152,7 @@ class MyAdController extends Controller
 
         if ($buyerId && (int) $buyerId === (int) Auth::id()) {
             return sendError(
-                $lang ? 'لا يمكنك اختيار نفسك كمشتري' : 'You cannot select yourself as buyer',
+                __('api.ad.cannot_select_self'),
                 [],
                 422
             );
@@ -164,7 +171,7 @@ class MyAdController extends Controller
 
         return sendResponse(
             new MyAdResource($ad),
-            $lang ? 'تم تعليم الإعلان كمباع' : 'Ad marked as sold'
+            __('api.ad.marked_sold')
         );
     }
 
@@ -175,7 +182,7 @@ class MyAdController extends Controller
 
         if (! $ad || $ad->status !== 'published') {
             return sendError(
-                $lang ? 'يمكن إيقاف الإعلانات النشطة فقط' : 'Only active ads can be paused',
+                __('api.ad.only_active_can_pause'),
                 [],
                 422
             );
@@ -189,7 +196,7 @@ class MyAdController extends Controller
 
         return sendResponse(
             new MyAdResource($ad->fresh()),
-            $lang ? 'تم إيقاف الإعلان' : 'Ad paused successfully'
+            __('api.ad.paused')
         );
     }
 
@@ -200,25 +207,128 @@ class MyAdController extends Controller
 
         if (! $ad || ! in_array($ad->status, ['paused', 'expired'], true)) {
             return sendError(
-                $lang ? 'يمكن تفعيل الإعلانات الموقوفة أو المنتهية فقط' : 'Only paused or expired ads can be activated',
+                __('api.ad.only_paused_expired_activate'),
                 [],
                 422
             );
         }
 
-        $durationDays = (int) (setting('post_duration') ?? 30);
-
+        // Reactivating starts a new 30-day listing period, so it is charged like
+        // any other. The previous intent must be cleared first — startPublication
+        // treats an existing one as "payment already in progress" and would skip
+        // creating a new one, letting the ad go live without paying again.
         $ad->update([
-            'status' => 'published',
-            'published_at' => now(),
-            'expires_at' => now()->addDays($durationDays),
             'paused_at' => null,
             'inactive_reason' => null,
+            'listing_fee' => null,
+            'payment_status' => 'not_required',
+            'stripe_payment_intent_id' => null,
         ]);
 
+        $publication = $this->startPublication($ad->fresh(), $request->input('coupon_code'));
+
+        if (isset($publication['coupon_error'])) {
+            return sendError(
+                __('api.ad.coupon_failed'),
+                ['coupon_code' => $publication['coupon_error']],
+                422
+            );
+        }
+
         return sendResponse(
-            new MyAdResource($ad->fresh()),
-            $lang ? 'تم تفعيل الإعلان' : 'Ad activated successfully'
+            [
+                'ad' => new MyAdResource($ad->fresh()),
+                'publication' => $publication,
+            ],
+            __('api.ad.activated')
+        );
+    }
+
+    /**
+     * "Sell again" on a sold ad: copies it into a brand new listing rather than
+     * reviving the original.
+     *
+     * The original keeps its sale record, and its conversations stay archived —
+     * reviving it in place would leave archived threads pointing at a live ad,
+     * which ChatService refuses to unarchive once an ad has been sold.
+     */
+    public function sellAgain(Request $request, string $id)
+    {
+        $lang = $request->header('lang') === 'ar';
+        $ad = $this->findOwnedAd($id);
+
+        if (! $ad) {
+            return sendError(__('api.ad.not_found'), [], 404);
+        }
+
+        if ($ad->status !== 'sold') {
+            return sendError(
+                __('api.ad.only_sold_relist'),
+                [],
+                422
+            );
+        }
+
+        $copy = DB::transaction(function () use ($ad) {
+            $publicId = strtoupper(Str::random(10));
+
+            $copy = $ad->replicate([
+                // Identity, lifecycle, sale record and payment state all start over.
+                'public_id', 'slug', 'status', 'published_at', 'expires_at', 'paused_at',
+                'sold_at', 'sold_to_user_id', 'is_sold_outside', 'inactive_reason',
+                'listing_fee', 'payment_status', 'stripe_payment_intent_id',
+                'is_free_listing', 'is_verified',
+            ]);
+
+            $copy->public_id = $publicId;
+            $copy->slug = Str::slug($ad->title.'-'.$publicId);
+            $copy->status = 'pending';
+            $copy->is_sold_outside = false;
+            $copy->is_free_listing = false;
+            $copy->is_verified = false;
+            $copy->save();
+
+            // Image rows point at the same stored files. Deleting an ad is a soft
+            // delete and a sold ad cannot be deleted at all, so nothing removes
+            // the originals from disk.
+            foreach ($ad->images()->orderBy('sort_order')->get() as $image) {
+                AdImage::create([
+                    'ad_id' => $copy->id,
+                    'path' => $image->path,
+                    'sort_order' => $image->sort_order,
+                ]);
+            }
+
+            foreach ($ad->attributeValues as $value) {
+                AdAttributeValue::create([
+                    'ad_id' => $copy->id,
+                    'category_attribute_definition_id' => $value->category_attribute_definition_id,
+                    'value' => $value->value,
+                ]);
+            }
+
+            return $copy;
+        });
+
+        // A relist is a fresh 30-day listing, so it goes through the same fee
+        // path as any new ad: free quota, then coupon, then Stripe.
+        $publication = $this->startPublication($copy, $request->input('coupon_code'));
+
+        if (isset($publication['coupon_error'])) {
+            return sendError(
+                __('api.ad.coupon_failed'),
+                ['coupon_code' => $publication['coupon_error']],
+                422
+            );
+        }
+
+        return sendResponse(
+            [
+                'ad' => new MyAdResource($copy->fresh()),
+                'relisted_from_ad_id' => (int) $ad->id,
+                'publication' => $publication,
+            ],
+            __('api.ad.relisted')
         );
     }
 
@@ -228,14 +338,14 @@ class MyAdController extends Controller
         $ad = $this->findOwnedAd($id);
 
         if (! $ad) {
-            return sendError($lang ? 'الإعلان غير موجود' : 'Ad not found', [], 404);
+            return sendError(__('api.ad.not_found'), [], 404);
         }
 
         // A sold ad keeps its record (purchase history); everything else the
         // owner created can be removed. Archive any open conversations first.
         if ($ad->status === 'sold') {
             return sendError(
-                $lang ? 'لا يمكن حذف إعلان مباع' : 'A sold ad cannot be deleted',
+                __('api.ad.sold_cannot_delete'),
                 [],
                 422
             );
@@ -249,7 +359,7 @@ class MyAdController extends Controller
 
         return sendResponse(
             ['ad_id' => (int) $id],
-            $lang ? 'تم حذف الإعلان' : 'Ad deleted successfully'
+            __('api.ad.deleted')
         );
     }
 

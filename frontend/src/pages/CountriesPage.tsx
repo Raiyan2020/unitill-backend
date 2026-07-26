@@ -160,7 +160,7 @@ export function CountriesPage() {
               </option>
             ))}
           </select>
-          <Input className="h-9 w-[220px]" placeholder="Search" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Input className="h-9 w-[220px]" placeholder={t.search} value={search} onChange={(e) => setSearch(e.target.value)} />
           <Button size="sm" onClick={openCreate}>+ Add Country</Button>
         </div>
       </div>
@@ -171,11 +171,11 @@ export function CountriesPage() {
             <table className="w-full text-sm">
               <thead className="bg-[#f8f7fb] text-[#6f6b7d] dark:bg-[#383d56] dark:text-[#b6b8cc]">
                 <tr>
-                  <th className="px-4 py-3 text-start">ID</th>
-                  <th className="px-4 py-3 text-start">Code</th>
-                  <th className="px-4 py-3 text-start">Name</th>
-                  <th className="px-4 py-3 text-start">Status</th>
-                  <th className="px-4 py-3 text-start">Sort</th>
+                  <th className="px-4 py-3 text-start">{t.id}</th>
+                  <th className="px-4 py-3 text-start">{t.code}</th>
+                  <th className="px-4 py-3 text-start">{t.name}</th>
+                  <th className="px-4 py-3 text-start">{t.status}</th>
+                  <th className="px-4 py-3 text-start">{t.sort}</th>
                   <th className="px-4 py-3 text-start">{t.actions}</th>
                 </tr>
               </thead>
@@ -225,8 +225,8 @@ export function CountriesPage() {
               <Button variant="ghost" size="icon" onClick={() => setFormOpen(false)}><X className="h-4 w-4" /></Button>
             </CardHeader>
             <CardContent className="grid gap-3 md:grid-cols-2">
-              <Input placeholder="Country Code (2)" value={form.country_code} onChange={(e) => setForm((s) => ({ ...s, country_code: e.target.value }))} />
-              <Input placeholder="Sort" value={form.sort} onChange={(e) => setForm((s) => ({ ...s, sort: e.target.value }))} />
+              <Input placeholder={t.countryCodeHint} value={form.country_code} onChange={(e) => setForm((s) => ({ ...s, country_code: e.target.value }))} />
+              <Input placeholder={t.sort} value={form.sort} onChange={(e) => setForm((s) => ({ ...s, sort: e.target.value }))} />
 
               {languages.map((language) => (
                 <Input
@@ -243,8 +243,8 @@ export function CountriesPage() {
               ))}
 
               <select value={form.status} onChange={(e) => setForm((s) => ({ ...s, status: e.target.value }))} className="h-10 rounded-xl border border-[#dbdbe8] bg-white px-3 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]">
-                <option value="active">active</option>
-                <option value="inactive">inactive</option>
+                <option value="active">{t.active}</option>
+                <option value="inactive">{t.inactive}</option>
               </select>
 
               <div className="col-span-full flex justify-end gap-2">

@@ -1,4 +1,4 @@
-import { BadgeCheck, Bell, Building2, FileText, FolderTree, Globe, KeyRound, Languages, LayoutDashboard, LogOut, Mail, Megaphone, Menu, MessageSquare, Moon, Settings, ShieldCheck, Sun, User, UserCog, Users, Wallet, X } from 'lucide-react';
+import { BadgeCheck, Bell, Building2, FileText, Flag, MessageSquareWarning, TicketPercent, FolderTree, GraduationCap, Globe, KeyRound, Languages, LayoutDashboard, LogOut, Mail, Megaphone, Menu, MessageSquare, Moon, Settings, ShieldCheck, Sun, User, UserCog, Users, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
@@ -11,18 +11,25 @@ const navItems = [
   { to: '/', labelKey: 'dashboard', icon: LayoutDashboard, permission: 'dashboard.view' },
   { to: '/users', labelKey: 'users', icon: Users, permission: 'users.view' },
   { to: '/ads', labelKey: 'ads', icon: Megaphone, permission: 'categories.view' },
+  { to: '/ad-reports', labelKey: 'adReports', icon: Flag, permission: 'ad_reports.view' },
+  { to: '/chat-reports', labelKey: 'chatReports', icon: MessageSquareWarning, permission: 'chat_reports.view' },
   { to: '/user-verifications', labelKey: 'userVerifications', icon: BadgeCheck, permission: 'users.view' },
   { to: '/admins', labelKey: 'admins', icon: UserCog, permission: 'admins.view' },
   { to: '/roles', labelKey: 'roles', icon: ShieldCheck, permission: 'roles.view' },
   { to: '/permissions', labelKey: 'permissions', icon: KeyRound, permission: 'permissions.view' },
   { to: '/countries', labelKey: 'countries', icon: Building2, permission: 'countries.view' },
+  { to: '/universities', labelKey: 'universities', icon: GraduationCap, permission: 'universities.view' },
   { to: '/categories', labelKey: 'categories', icon: FolderTree, permission: 'categories.view' },
   { to: '/languages', labelKey: 'languages', icon: Languages, permission: 'languages.view' },
   { to: '/legal-affairs', labelKey: 'legalAffairs', icon: FileText, permission: 'legal_affairs.view' },
   { to: '/contact-reasons', labelKey: 'contactReasons', icon: MessageSquare, permission: 'contact_reasons.view' },
   { to: '/contact-us', labelKey: 'contactUs', icon: Mail, permission: 'contact_us.view' },
   { to: '/push-notifications', labelKey: 'pushNotifications', icon: Bell, permission: 'dashboard.view' },
-  { to: '/payment-methods', labelKey: 'paymentMethods', icon: Wallet, permission: 'payment_methods.view' },
+  { to: '/coupons', labelKey: 'coupons', icon: TicketPercent, permission: 'coupons.view' },
+  // Payment methods is hidden from the sidebar: the listing fee goes through
+  // Stripe, which never consults this table. The route and page remain reachable
+  // by URL so nothing is lost if it is needed again.
+  // { to: '/payment-methods', labelKey: 'paymentMethods', icon: Wallet, permission: 'payment_methods.view' },
   { to: '/settings', labelKey: 'settings', icon: Settings, permission: 'dashboard.view' },
 ] as const;
 
@@ -90,7 +97,7 @@ export function AppLayout() {
       {sidebarOpen ? (
         <button
           type="button"
-          aria-label="Close sidebar"
+          aria-label={t.closeSidebar}
           onClick={() => setSidebarOpen(false)}
           className="fixed inset-0 z-20 bg-black/35 md:hidden"
         />
@@ -182,7 +189,7 @@ export function AppLayout() {
       <div className="ms-0 flex min-h-screen flex-col md:ms-[288px]">
         <header className="sticky top-0 z-10 m-2 flex h-auto min-h-16 items-center justify-between rounded-2xl border border-[#e6e6ef] bg-white px-3 py-2 shadow-[0_8px_22px_rgba(47,43,61,0.08)] backdrop-blur dark:border-[#44485f] dark:bg-[#2f3349]/95 dark:shadow-[0_10px_24px_rgba(0,0,0,0.28)] md:m-3 md:h-16 md:px-6 md:py-0">
           <input
-            placeholder="Search (CTRL + K)"
+            placeholder={t.searchShortcut}
             className="h-10 w-full max-w-[220px] rounded-lg border border-[#e0e1ec] bg-[#f8f8fc] px-3 text-sm outline-none focus:ring-2 focus:ring-[#7367f0] dark:border-[#484d66] dark:bg-[#383d56] md:max-w-[320px]"
           />
 

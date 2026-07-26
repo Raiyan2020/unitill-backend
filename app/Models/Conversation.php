@@ -103,9 +103,30 @@ class Conversation extends Model
             return false;
         }
 
+        if (! $this->bothParticipantsExist()) {
+            return false;
+        }
+
         $ad = $this->relationLoaded('ad') ? $this->ad : $this->ad()->first(['id', 'status']);
 
         return $ad && $ad->status === 'published';
+    }
+
+    /**
+     * Blocks messaging once either side has closed their account.
+     *
+     * A deleted seller is already covered indirectly, because their ad is
+     * soft-deleted with them. A deleted buyer is not: the ad stays alive, so
+     * without this check the seller could keep messaging a closed account.
+     * The thread itself stays readable for whoever is left.
+     */
+    public function bothParticipantsExist(): bool
+    {
+        $exists = fn (string $relation, string $key) => $this->relationLoaded($relation)
+            ? $this->{$relation} !== null
+            : User::whereKey($this->{$key})->exists();
+
+        return $exists('buyer', 'buyer_id') && $exists('seller', 'seller_id');
     }
 
     public function unreadCountFor(int $userId): int

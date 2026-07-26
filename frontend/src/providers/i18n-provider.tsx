@@ -8,6 +8,9 @@ type Dictionary = {
   dashboard: string;
   users: string;
   ads: string;
+  adReports: string;
+  chatReports: string;
+  coupons: string;
   userVerifications: string;
   admins: string;
   roles: string;
@@ -16,6 +19,7 @@ type Dictionary = {
   settings: string;
   countries: string;
   cities: string;
+  universities: string;
   paymentMethods: string;
   languages: string;
   categories: string;
@@ -58,6 +62,78 @@ type Dictionary = {
   createdAt: string;
   language: string;
   theme: string;
+
+  // Table headers and form field labels shared across the admin modules.
+  id: string;
+  name: string;
+  nameEn: string;
+  nameAr: string;
+  title: string;
+  type: string;
+  code: string;
+  slug: string;
+  sort: string;
+  state: string;
+  section: string;
+  isDefault: string;
+  native: string;
+  direction: string;
+  image: string;
+  date: string;
+  city: string;
+  cityId: string;
+  country: string;
+  domains: string;
+  emailDomains: string;
+  identifier: string;
+  deviceName: string;
+  lastSeen: string;
+  message: string;
+  recipients: string;
+  reason: string;
+  reporter: string;
+  reportedUser: string;
+  requestNumber: string;
+  sellerType: string;
+  owner: string;
+  price: string;
+  paid: string;
+  discount: string;
+  minSpend: string;
+  expires: string;
+  used: string;
+  user: string;
+  ad: string;
+  closeSidebar: string;
+  togglePassword: string;
+
+  // Filter controls: dropdown options and search placeholders.
+  search: string;
+  searchShortcut: string;
+  searchCode: string;
+  inactive: string;
+  expired: string;
+  allStatuses: string;
+  allReasons: string;
+  allTypes: string;
+  selectRole: string;
+  selectCountry: string;
+  percentage: string;
+  fixedAmount: string;
+  nativeName: string;
+  permissionName: string;
+  enterEmailOrUsername: string;
+  organization: string;
+  phoneNumber: string;
+  address: string;
+  zipCode: string;
+  countryCodeHint: string;
+  reportedConversation: string;
+  currentPassword: string;
+  newPassword: string;
+  confirmNewPassword: string;
+  messageBody: string;
+  roleName: string;
 };
 
 const dictionaries: Record<Locale, Dictionary> = {
@@ -66,6 +142,9 @@ const dictionaries: Record<Locale, Dictionary> = {
     dashboard: 'Dashboard',
     users: 'Users',
     ads: 'Ads',
+    adReports: 'Ad Reports',
+    chatReports: 'Chat Reports',
+    coupons: 'Coupons',
     userVerifications: 'User Verifications',
     admins: 'Admins',
     roles: 'Roles',
@@ -74,6 +153,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     settings: 'Settings',
     countries: 'Countries',
     cities: 'Cities',
+    universities: 'Universities',
     paymentMethods: 'Payment Methods',
     languages: 'Languages',
     categories: 'Categories',
@@ -116,12 +196,85 @@ const dictionaries: Record<Locale, Dictionary> = {
     createdAt: 'Created at',
     language: 'Language',
     theme: 'Theme',
+
+    id: 'ID',
+    name: 'Name',
+    nameEn: 'Name EN',
+    nameAr: 'Name AR',
+    title: 'Title',
+    type: 'Type',
+    code: 'Code',
+    slug: 'Slug',
+    sort: 'Sort',
+    state: 'State',
+    section: 'Section',
+    isDefault: 'Default',
+    native: 'Native',
+    direction: 'Dir',
+    image: 'Image',
+    date: 'Date',
+    city: 'City',
+    cityId: 'City ID',
+    country: 'Country',
+    domains: 'Domains',
+    emailDomains: 'Email domains / subdomains',
+    identifier: 'Identifier',
+    deviceName: 'Device Name',
+    lastSeen: 'Last Seen',
+    message: 'Message',
+    recipients: 'Recipients',
+    reason: 'Reason',
+    reporter: 'Reporter',
+    reportedUser: 'Reported user',
+    requestNumber: 'Request #',
+    sellerType: 'Seller Type',
+    owner: 'Owner',
+    price: 'Price',
+    paid: 'Paid',
+    discount: 'Discount',
+    minSpend: 'Min spend',
+    expires: 'Expires',
+    used: 'Used',
+    user: 'User',
+    ad: 'Ad',
+    closeSidebar: 'Close sidebar',
+    togglePassword: 'Toggle password visibility',
+
+    search: 'Search',
+    searchShortcut: 'Search (CTRL + K)',
+    searchCode: 'Search code',
+    inactive: 'Inactive',
+    expired: 'Expired',
+    allStatuses: 'All statuses',
+    allReasons: 'All reasons',
+    allTypes: 'All types',
+    selectRole: 'Select role',
+    selectCountry: 'Select country',
+    percentage: 'Percentage (%)',
+    fixedAmount: 'Fixed amount (£)',
+    nativeName: 'Native name',
+    permissionName: 'Permission name',
+    enterEmailOrUsername: 'Enter your email or username',
+    organization: 'Organization',
+    phoneNumber: 'Phone Number',
+    address: 'Address',
+    zipCode: 'Zip Code',
+    countryCodeHint: 'Country Code (2)',
+    reportedConversation: 'Reported conversation',
+    currentPassword: 'Current password',
+    newPassword: 'New password',
+    confirmNewPassword: 'Confirm new password',
+    messageBody: 'Message body',
+    roleName: 'Role name',
   },
   ar: {
        appName: 'لوحة يونيتل',
     dashboard: 'لوحة التحكم',
     users: 'المستخدمون',
     ads: 'الإعلانات',
+    adReports: 'بلاغات الإعلانات',
+    chatReports: 'بلاغات المحادثات',
+    coupons: 'الكوبونات',
     userVerifications: 'طلبات التوثيق',
     admins: 'المدراء',
     roles: 'الأدوار',
@@ -130,6 +283,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     settings: 'الإعدادات',
     countries: 'الدول',
     cities: 'المدن',
+    universities: 'الجامعات',
     paymentMethods: 'طرق الدفع',
     languages: 'اللغات',
     categories: 'الأقسام',
@@ -172,6 +326,76 @@ const dictionaries: Record<Locale, Dictionary> = {
     createdAt: 'تاريخ الإنشاء',
     language: 'اللغة',
     theme: 'السمة',
+
+    id: 'المعرّف',
+    name: 'الاسم',
+    nameEn: 'الاسم بالإنجليزية',
+    nameAr: 'الاسم بالعربية',
+    title: 'العنوان',
+    type: 'النوع',
+    code: 'الرمز',
+    slug: 'المعرّف النصي',
+    sort: 'الترتيب',
+    state: 'الحالة',
+    section: 'القسم',
+    isDefault: 'افتراضي',
+    native: 'الاسم الأصلي',
+    direction: 'الاتجاه',
+    image: 'الصورة',
+    date: 'التاريخ',
+    city: 'المدينة',
+    cityId: 'معرّف المدينة',
+    country: 'الدولة',
+    domains: 'النطاقات',
+    emailDomains: 'نطاقات البريد والنطاقات الفرعية',
+    identifier: 'المعرّف',
+    deviceName: 'اسم الجهاز',
+    lastSeen: 'آخر ظهور',
+    message: 'الرسالة',
+    recipients: 'المستلمون',
+    reason: 'السبب',
+    reporter: 'المُبلِّغ',
+    reportedUser: 'المستخدم المُبلَّغ عنه',
+    requestNumber: 'رقم الطلب',
+    sellerType: 'نوع البائع',
+    owner: 'المالك',
+    price: 'السعر',
+    paid: 'مدفوع',
+    discount: 'الخصم',
+    minSpend: 'الحد الأدنى للإنفاق',
+    expires: 'ينتهي في',
+    used: 'مرات الاستخدام',
+    user: 'المستخدم',
+    ad: 'الإعلان',
+    closeSidebar: 'إغلاق القائمة',
+    togglePassword: 'إظهار أو إخفاء كلمة المرور',
+
+    search: 'بحث',
+    searchShortcut: 'بحث (CTRL + K)',
+    searchCode: 'ابحث برمز الكوبون',
+    inactive: 'غير مفعّل',
+    expired: 'منتهي',
+    allStatuses: 'كل الحالات',
+    allReasons: 'كل الأسباب',
+    allTypes: 'كل الأنواع',
+    selectRole: 'اختر الدور',
+    selectCountry: 'اختر الدولة',
+    percentage: 'نسبة مئوية (%)',
+    fixedAmount: 'مبلغ ثابت (£)',
+    nativeName: 'الاسم بلغته الأصلية',
+    permissionName: 'اسم الصلاحية',
+    enterEmailOrUsername: 'أدخل بريدك الإلكتروني أو اسم المستخدم',
+    organization: 'الجهة',
+    phoneNumber: 'رقم الهاتف',
+    address: 'العنوان',
+    zipCode: 'الرمز البريدي',
+    countryCodeHint: 'رمز الدولة (حرفان)',
+    reportedConversation: 'المحادثة المُبلَّغ عنها',
+    currentPassword: 'كلمة المرور الحالية',
+    newPassword: 'كلمة المرور الجديدة',
+    confirmNewPassword: 'تأكيد كلمة المرور الجديدة',
+    messageBody: 'نص الرسالة',
+    roleName: 'اسم الدور',
   },
 };
 

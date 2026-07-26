@@ -44,6 +44,12 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->statefulApi();
         $middleware->throttleApi('api');
 
+        // Must run before controllers and FormRequests so __() and validation
+        // messages both resolve in the caller's language.
+        $middleware->api(prepend: [
+            \App\Http\Middleware\SetApiLocale::class,
+        ]);
+
         $middleware->replace(
             \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
@@ -89,6 +95,14 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $exceptions->render(function (\Throwable $e, Request $request) {
+            // HttpResponseException already carries the response the thrower
+            // wants returned (throttle limits, FormRequest::failedValidation).
+            // Without this it falls through to the catch-all below and every
+            // such response is rewritten as a 500.
+            if ($e instanceof \Illuminate\Http\Exceptions\HttpResponseException) {
+                return $e->getResponse();
+            }
+
             if ($e instanceof AuthenticationException) {
                 if ($request->is('api/*') || $request->expectsJson()) {
                     return sendError('Unauthenticated', [], 401);

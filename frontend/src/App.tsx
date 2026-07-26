@@ -2,6 +2,9 @@ import type { ReactElement } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppLayout } from './layouts/AppLayout';
 import { AdDetailsPage } from './pages/AdDetailsPage';
+import { AdReportsPage } from './pages/AdReportsPage';
+import { ChatReportsPage } from './pages/ChatReportsPage';
+import { CouponsPage } from './pages/CouponsPage';
 import { AdsPage } from './pages/AdsPage';
 import { AdminsPage } from './pages/AdminsPage';
 import { CitiesPage } from './pages/CitiesPage';
@@ -21,6 +24,7 @@ import { RolesPage } from './pages/RolesPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { SubCategoriesPage } from './pages/SubCategoriesPage';
 import { TrustedSellerApplicationsPage } from './pages/TrustedSellerApplicationsPage';
+import { UniversitiesPage } from './pages/UniversitiesPage';
 import { UserAdsPage } from './pages/UserAdsPage';
 import { UserDevicesPage } from './pages/UserDevicesPage';
 import { UserDetailsPage } from './pages/UserDetailsPage';
@@ -61,6 +65,9 @@ export default function App() {
         <Route path="ads" element={<PermissionRoute permission="categories.view"><AdsPage /></PermissionRoute>} />
         <Route path="ads/:id" element={<PermissionRoute permission="categories.view"><AdDetailsPage /></PermissionRoute>} />
         <Route path="ads/user/:userId" element={<PermissionRoute permission="categories.view"><UserAdsPage /></PermissionRoute>} />
+        <Route path="ad-reports" element={<PermissionRoute permission="ad_reports.view"><AdReportsPage /></PermissionRoute>} />
+        <Route path="chat-reports" element={<PermissionRoute permission="chat_reports.view"><ChatReportsPage /></PermissionRoute>} />
+        <Route path="coupons" element={<PermissionRoute permission="coupons.view"><CouponsPage /></PermissionRoute>} />
         <Route path="user-verifications" element={<PermissionRoute permission="users.view"><TrustedSellerApplicationsPage /></PermissionRoute>} />
         <Route path="user-verifications/user/:userId" element={<PermissionRoute permission="users.view"><UserVerificationDetailsPage /></PermissionRoute>} />
         <Route path="users/:id" element={<PermissionRoute permission="users.view"><UserDetailsPage /></PermissionRoute>} />
@@ -78,6 +85,7 @@ export default function App() {
         <Route path="contact-us" element={<PermissionRoute permission="contact_us.view"><ContactUsPage /></PermissionRoute>} />
         <Route path="push-notifications" element={<PermissionRoute permission="dashboard.view"><PushNotificationsPage /></PermissionRoute>} />
         <Route path="cities" element={<PermissionRoute permission="cities.view"><CitiesPage /></PermissionRoute>} />
+        <Route path="universities" element={<PermissionRoute permission="universities.view"><UniversitiesPage /></PermissionRoute>} />
         <Route path="payment-methods" element={<PermissionRoute permission="payment_methods.view"><PaymentMethodsPage /></PermissionRoute>} />
         <Route path="settings" element={<PermissionRoute permission="dashboard.view"><SettingsPage /></PermissionRoute>} />
         <Route path="profile" element={<ProfilePage />} />

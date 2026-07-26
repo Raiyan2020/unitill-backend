@@ -60,27 +60,27 @@ class MyAdResource extends JsonResource
 
         return match ($this->status) {
             'published' => [
-                'label' => $ar ? 'نشط' : 'LIVE',
+                'label' => __('api.my_ad.status_live'),
                 'badge' => 'live',
                 'actions' => ['edit', 'mark_as_sold'],
             ],
             'paused' => [
-                'label' => $ar ? 'موقوف' : 'PAUSED',
+                'label' => __('api.my_ad.status_paused'),
                 'badge' => 'paused',
                 'actions' => ['activate', 'delete'],
             ],
             'expired' => [
-                'label' => $ar ? 'منتهي' : 'EXPIRED',
+                'label' => __('api.my_ad.status_expired'),
                 'badge' => 'expired',
                 'actions' => ['activate', 'delete'],
             ],
             'sold' => [
-                'label' => $ar ? 'مباع' : 'SOLD',
+                'label' => __('api.my_ad.status_sold'),
                 'badge' => 'sold',
                 'actions' => ['see_details', 'relist'],
             ],
             'pending' => [
-                'label' => $ar ? 'قيد المراجعة' : 'PENDING',
+                'label' => __('api.my_ad.status_pending'),
                 'badge' => 'pending',
                 'actions' => ['see_details'],
             ],
@@ -118,8 +118,8 @@ class MyAdResource extends JsonResource
         $ar = $locale === 'ar';
 
         return match ($this->inactive_reason) {
-            'auto_expired' => $ar ? 'انتهى تلقائياً بعد 30 يوماً' : 'Auto-expired after 30 days',
-            'manual_pause' => $ar ? 'تم الإيقاف يدوياً' : 'Manually paused by seller',
+            'auto_expired' => __('api.my_ad.auto_expired'),
+            'manual_pause' => __('api.my_ad.manually_paused'),
             default => null,
         };
     }

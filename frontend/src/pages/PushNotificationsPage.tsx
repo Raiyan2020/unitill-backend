@@ -177,7 +177,7 @@ export function PushNotificationsPage() {
 
           <label className="block space-y-2 text-sm">
             <span className="font-medium">{t.notificationTitle}</span>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" />
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t.title} />
           </label>
 
           <label className="block space-y-2 text-sm">
@@ -187,7 +187,7 @@ export function PushNotificationsPage() {
               onChange={(e) => setBody(e.target.value)}
               rows={4}
               className="w-full rounded-lg border border-[#dbdbe8] bg-white px-3 py-2 dark:border-[#4a4f68] dark:bg-[#2f3349]"
-              placeholder="Message body"
+              placeholder={t.messageBody}
             />
           </label>
 
@@ -215,20 +215,20 @@ export function PushNotificationsPage() {
               >
                 {[10, 25, 50].map((size) => <option key={size} value={size}>{size}</option>)}
               </select>
-              <Input className="h-9 w-[220px]" placeholder="Search" value={search} onChange={(e) => setSearch(e.target.value)} />
+              <Input className="h-9 w-[220px]" placeholder={t.search} value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-[#f8f7fb] text-[#6f6b7d] dark:bg-[#383d56] dark:text-[#b6b8cc]">
                 <tr>
-                  <th className="px-4 py-3 text-start">ID</th>
-                  <th className="px-4 py-3 text-start">Audience</th>
-                  <th className="px-4 py-3 text-start">Title</th>
-                  <th className="px-4 py-3 text-start">User</th>
-                  <th className="px-4 py-3 text-start">Status</th>
-                  <th className="px-4 py-3 text-start">Recipients</th>
-                  <th className="px-4 py-3 text-start">Date</th>
+                  <th className="px-4 py-3 text-start">{t.id}</th>
+                  <th className="px-4 py-3 text-start">{t.audience}</th>
+                  <th className="px-4 py-3 text-start">{t.title}</th>
+                  <th className="px-4 py-3 text-start">{t.user}</th>
+                  <th className="px-4 py-3 text-start">{t.status}</th>
+                  <th className="px-4 py-3 text-start">{t.recipients}</th>
+                  <th className="px-4 py-3 text-start">{t.date}</th>
                 </tr>
               </thead>
               <tbody>

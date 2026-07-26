@@ -3,12 +3,15 @@
 use App\Http\Controllers\Api\Dashboard\AdminAuthController;
 use App\Http\Controllers\Api\Dashboard\AdminController;
 use App\Http\Controllers\Api\Dashboard\AdAdminController;
+use App\Http\Controllers\Api\Dashboard\AdReportAdminController;
+use App\Http\Controllers\Api\Dashboard\ChatReportAdminController;
 use App\Http\Controllers\Api\Dashboard\AdminUserController;
 use App\Http\Controllers\Api\Dashboard\CategoryAdminController;
 use App\Http\Controllers\Api\Dashboard\CityAdminController;
 use App\Http\Controllers\Api\Dashboard\ContactReasonAdminController;
 use App\Http\Controllers\Api\Dashboard\ContactUsAdminController;
 use App\Http\Controllers\Api\Dashboard\CountryController;
+use App\Http\Controllers\Api\Dashboard\UniversityController;
 use App\Http\Controllers\Api\Dashboard\LegalAffairController;
 use App\Http\Controllers\Api\Dashboard\LanguageController;
 use App\Http\Controllers\Api\Dashboard\PermissionController;
@@ -19,6 +22,7 @@ use App\Http\Controllers\Api\Dashboard\AdminSettingController;
 use App\Http\Controllers\Api\Dashboard\TrustedSellerApplicationAdminController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AccountSecurityController;
+use App\Http\Controllers\Api\AccountSettingsController;
 use App\Http\Controllers\Api\AdController;
 use App\Http\Controllers\Api\AdReportController;
 use App\Http\Controllers\Api\AuthController;
@@ -26,6 +30,7 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ContactReasonController;
 use App\Http\Controllers\Api\ContactUsController;
 use App\Http\Controllers\Api\ConversationController;
+use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\FcmController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\LanguageController as AppLanguageController;
@@ -36,7 +41,10 @@ use App\Http\Controllers\Api\TrustedSellerApplicationController;
 use App\Http\Controllers\Api\UserRatingController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserDeviceController;
+use App\Http\Controllers\Api\StripeWebhookController;
 use App\Http\Controllers\Api\UserNotificationController;
+use App\Http\Controllers\Api\VehicleLookupController;
+use App\Http\Controllers\Api\Dashboard\CouponAdminController;
 
 
 /*
@@ -59,6 +67,7 @@ Route::middleware('auth:sanctum')->post('broadcasting/auth', function (\Illumina
 });
 
 Route::get('settings', SettingController::class);
+Route::post('stripe/webhook', StripeWebhookController::class);
 Route::get('languages', AppLanguageController::class);
 Route::get('home', HomeController::class);
 Route::get('categories', CategoryController::class);
@@ -66,6 +75,7 @@ Route::get('cities', \App\Http\Controllers\Api\CityController::class);
 Route::get('ads', [AdController::class, 'index']);
 Route::get('ads/{id}', [AdController::class, 'show']);
 Route::get('ad-report-reasons', [AdReportController::class, 'reasons']);
+Route::get('chat-report-reasons', [ConversationController::class, 'reportReasons']);
 Route::get('legal-affairs', [\App\Http\Controllers\Api\LegalAffairController::class, 'index']);
 
 Route::controller(AuthController::class)->group(function () {
@@ -76,6 +86,14 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('resend-verification-email', 'resendVerificationEmail');
     Route::post('forgot-password', 'forgotPassword');
     Route::post('reset-password', 'resetPassword');
+});
+
+// V2 login: two-step OTP flow with a 30-day access token.
+Route::prefix('v2')->controller(\App\Http\Controllers\Api\V2\AuthController::class)->group(function () {
+    Route::post('login', 'login');
+    Route::post('login/verify-otp', 'verifyOtp');
+    Route::post('login/resend-otp', 'resendOtp');
+    Route::post('auth/refresh', 'refresh');
 });
 
 Route::prefix('admin')->controller(AdminAuthController::class)->group(function () {
@@ -97,6 +115,26 @@ Route::middleware('auth:sanctum')->prefix('admin')->controller(AdAdminController
     Route::get('ads/{id}', 'show')->middleware('permission:categories.view');
     Route::put('ads/{id}', 'update')->middleware('permission:categories.update');
     Route::delete('ads/{id}', 'destroy')->middleware('permission:categories.delete');
+});
+
+Route::middleware('auth:sanctum')->prefix('admin')->controller(AdReportAdminController::class)->group(function () {
+    Route::get('ad-reports', 'index')->middleware('permission:ad_reports.view');
+    Route::get('ad-reports/{id}', 'show')->middleware('permission:ad_reports.view');
+    Route::put('ad-reports/{id}', 'update')->middleware('permission:ad_reports.update');
+});
+
+Route::middleware('auth:sanctum')->prefix('admin')->controller(ChatReportAdminController::class)->group(function () {
+    Route::get('chat-reports', 'index')->middleware('permission:chat_reports.view');
+    Route::get('chat-reports/{id}', 'show')->middleware('permission:chat_reports.view');
+    Route::put('chat-reports/{id}', 'update')->middleware('permission:chat_reports.update');
+});
+
+Route::middleware('auth:sanctum')->prefix('admin')->controller(CouponAdminController::class)->group(function () {
+    Route::get('coupons', 'index')->middleware('permission:coupons.view');
+    Route::get('coupons/{id}', 'show')->middleware('permission:coupons.view');
+    Route::post('coupons', 'store')->middleware('permission:coupons.create');
+    Route::put('coupons/{id}', 'update')->middleware('permission:coupons.update');
+    Route::delete('coupons/{id}', 'destroy')->middleware('permission:coupons.delete');
 });
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(AdminController::class)->group(function () {
@@ -130,6 +168,13 @@ Route::middleware('auth:sanctum')->prefix('admin')->controller(CountryController
     Route::post('countries', 'store')->middleware('permission:countries.create');
     Route::put('countries/{id}', 'update')->middleware('permission:countries.update');
     Route::delete('countries/{id}', 'destroy')->middleware('permission:countries.delete');
+});
+
+Route::middleware('auth:sanctum')->prefix('admin')->controller(UniversityController::class)->group(function () {
+    Route::get('universities', 'index')->middleware('permission:universities.view');
+    Route::post('universities', 'store')->middleware('permission:universities.create');
+    Route::put('universities/{id}', 'update')->middleware('permission:universities.update');
+    Route::delete('universities/{id}', 'destroy')->middleware('permission:universities.delete');
 });
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(CategoryAdminController::class)->group(function () {
@@ -208,8 +253,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('ads/draft', [AdController::class, 'storeDraft']);
     Route::post('ads/{id}/images', [AdController::class, 'uploadImage']);
     Route::post('ads/{id}/publish', [AdController::class, 'publishDraft']);
+    Route::post('ads/{id}/payment/complete', [AdController::class, 'completeStripePayment']);
     Route::post('ads', [AdController::class, 'store']);
     Route::post('ads/{id}/report', [AdReportController::class, 'store']);
+    Route::post('coupons/validate', [CouponController::class, 'validateCode']);
     Route::get('my-ads', [MyAdController::class, 'index']);
     Route::get('my-orders', [\App\Http\Controllers\Api\OrderController::class, 'index']);
     Route::post('orders', [\App\Http\Controllers\Api\OrderController::class, 'store']);
@@ -217,6 +264,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('my-ads/{id}/mark-sold', [MyAdController::class, 'markAsSold']);
     Route::post('my-ads/{id}/pause', [MyAdController::class, 'pause']);
     Route::post('my-ads/{id}/activate', [MyAdController::class, 'activate']);
+    // "Sell again" — copies a sold ad into a new listing and charges for it.
+    Route::post('my-ads/{id}/sell-again', [MyAdController::class, 'sellAgain']);
     Route::delete('my-ads/{id}', [MyAdController::class, 'destroy']);
     Route::get('ratings/{user_id?}', [UserRatingController::class, 'index']);
     Route::post('ratings', [UserRatingController::class, 'store']);
@@ -245,7 +294,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('delete-account/send-otp', [UserController::class, 'sendDeletionOtp']);
     Route::delete('delete-account', [UserController::class, 'destroy']);
     // GDPR Subject Access Request — emails the user a copy of their data.
-    Route::post('account/data-request', [UserController::class, 'requestDataExport']);
+    // Both export routes are throttled separately from the global API limit:
+    // each one reads 15 tables, so repeated taps would hammer the database.
+    Route::post('account/data-request', [UserController::class, 'requestDataExport'])
+        ->middleware('throttle:data-export');
+    // "Download my data" — same payload, returned inline as a JSON file.
+    Route::get('account/data-download', [UserController::class, 'downloadData'])
+        ->middleware('throttle:data-export');
+    // Privacy & notification toggles for the Settings screen.
+    Route::get('account/settings', [AccountSettingsController::class, 'show']);
+    Route::put('account/settings', [AccountSettingsController::class, 'update']);
     Route::get('account-security', [AccountSecurityController::class, 'index']);
     Route::post('change-password', [AccountSecurityController::class, 'changePassword']);
     Route::post('logout-other-devices', [AccountSecurityController::class, 'logoutOtherDevices']);
@@ -266,5 +324,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('{id}/report', 'report');
         Route::delete('{id}', 'destroy');
     });
-});
 
+    Route::get('vehicles/lookup', [VehicleLookupController::class, 'lookup']);
+    Route::get('/postcode/lookup', [App\Http\Controllers\Api\PostcodeController::class, 'lookup']);
+});

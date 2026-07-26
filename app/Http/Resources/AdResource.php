@@ -2,16 +2,22 @@
 
 namespace App\Http\Resources;
 
+use App\Http\Resources\Concerns\ApproximatesLocation;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class AdResource extends JsonResource
 {
+    use ApproximatesLocation;
+
     public function toArray(Request $request): array
     {
         $lang = $request->header('lang', 'en');
         $favoriteIds = $request->attributes->get('favorite_ad_ids', []);
-        $publishedAt = $this->published_at ?? $this->created_at;
+        // No created_at fallback: an ad that has not been paid for has never been
+        // published, and reporting its creation time as "published 1 second ago"
+        // tells the buyer something untrue.
+        $publishedAt = $this->published_at;
 
         return [
             'id' => $this->id,
@@ -32,9 +38,7 @@ class AdResource extends JsonResource
             'location_name' => $this->location_name,
             'location_label' => $this->location_name
                 ?: ($this->city ? $this->city->nameForLanguageCode($lang) : null),
-            'postcode' => $this->postcode,
-            'latitude' => $this->latitude,
-            'longitude' => $this->longitude,
+            'region' => $this->region,
             'category_id' => $this->main_category_id,
             'category_name' => $this->mainCategory
                 ? $this->mainCategory->nameForLanguageCode($lang)
@@ -49,6 +53,6 @@ class AdResource extends JsonResource
                 : null,
             'favorited_at' => $this->pivot?->created_at?->toIso8601String(),
             'is_favorited' => in_array($this->id, $favoriteIds, true),
-        ];
+        ] + $this->locationPayload(); // Now location is masked for non-owners
     }
 }

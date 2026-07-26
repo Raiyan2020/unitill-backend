@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\UniversityDomain;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -34,19 +35,48 @@ class RegisterRequest extends FormRequest
     {
         $validator->after(function ($validator) {
             $studentEmail = $this->input('student_email');
-            if ($studentEmail) {
-                $lower = strtolower((string) $studentEmail);
-                if ($lower && ! str_ends_with($lower, '.ac.uk')) {
-                    $ar = $this->header('lang') === 'ar';
-                    $validator->errors()->add(
-                        'student_email',
-                        $ar
-                            ? 'من فضلك أدخل بريد جامعة بريطانية صحيح ينتهي بـ .ac.uk'
-                            : 'Please enter a valid UK university email address.'
-                    );
-                }
+            if (! $studentEmail) {
+                return;
+            }
+
+            // Already flagged as malformed by the `email` rule — skip the domain check.
+            if ($validator->errors()->has('student_email')) {
+                return;
+            }
+
+            $host = strtolower(trim(substr(strrchr((string) $studentEmail, '@') ?: '', 1)));
+            if ($host === '' || ! $this->isRegisteredUniversityDomain($host)) {
+                $validator->errors()->add(
+                    'student_email',
+                    __('api.auth.invalid_university_email')
+                );
             }
         });
+    }
+
+    /**
+     * The email host must exactly match an active university domain, or be a
+     * subdomain of one (e.g. "stcatz.ox.ac.uk" is accepted when "ox.ac.uk" exists).
+     */
+    private function isRegisteredUniversityDomain(string $host): bool
+    {
+        // Build the list of candidate domains: the host itself and each of its
+        // parent domains, so a single indexed lookup covers subdomains too.
+        $candidates = [];
+        $parts = explode('.', $host);
+        for ($i = 0; $i < count($parts) - 1; $i++) {
+            $candidates[] = implode('.', array_slice($parts, $i));
+        }
+
+        if (empty($candidates)) {
+            return false;
+        }
+
+        return UniversityDomain::query()
+            ->where('status', 'active')
+            ->whereIn('domain', $candidates)
+            ->whereHas('university', fn ($q) => $q->where('status', 'active'))
+            ->exists();
     }
 
     /**
@@ -69,16 +99,16 @@ class RegisterRequest extends FormRequest
         $ar = $this->header('lang') === 'ar';
 
         return [
-            'email.required' => $ar ? 'البريد الشخصي مطلوب' : 'Personal email is required',
-            'email.unique' => $ar ? 'البريد الشخصي مستخدم بالفعل' : 'Personal email is already registered',
-            'student_email.required' => $ar ? 'بريد الطالب الجامعي مطلوب' : 'Student email is required',
-            'student_email.unique' => $ar ? 'بريد الطالب مسجّل مسبقاً' : 'Student email is already registered',
-            'student_email.different' => $ar ? 'بريد الطالب يجب أن يختلف عن البريد الشخصي' : 'Student email must differ from personal email',
-            'phone.unique' => $ar ? 'رقم الهاتف مسجّل مسبقاً' : 'Phone number is already registered',
-            'terms_accepted.accepted' => $ar ? 'يجب الموافقة على الشروط والأحكام' : 'You must accept the terms and conditions',
-            'terms_accepted.required' => $ar ? 'يجب الموافقة على الشروط والأحكام' : 'You must accept the terms and conditions',
-            'password.confirmed' => $ar ? 'تأكيد كلمة المرور غير متطابق' : 'Password confirmation does not match',
-            'city_id.exists' => $ar ? 'المدينة غير صالحة' : 'Invalid city',
+            'email.required' => __('api.register.personal_email_required'),
+            'email.unique' => __('api.register.personal_email_taken'),
+            'student_email.required' => __('api.register.student_email_required'),
+            'student_email.unique' => __('api.register.student_email_taken'),
+            'student_email.different' => __('api.register.student_email_must_differ'),
+            'phone.unique' => __('api.register.phone_taken'),
+            'terms_accepted.accepted' => __('api.register.terms_required'),
+            'terms_accepted.required' => __('api.register.terms_required'),
+            'password.confirmed' => __('api.register.password_confirmed'),
+            'city_id.exists' => __('api.register.invalid_city'),
         ];
     }
 }

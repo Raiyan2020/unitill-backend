@@ -40,19 +40,39 @@ class StoreAdRequest extends FormRequest
         }
 
         // Fallback for hardcoded Flutter city_id=1
-        if ($this->input('city_id') == 1) {
-            if (!City::where('id', 1)->exists()) {
-                $userCity = Auth::user()->city_id;
-                if ($userCity && City::where('id', $userCity)->exists()) {
-                    $this->merge(['city_id' => $userCity]);
-                } else {
-                    $firstCity = City::first();
-                    if ($firstCity) {
-                        $this->merge(['city_id' => $firstCity->id]);
-                    }
-                }
-            }
+        // if ($this->input('city_id') == 1) {
+        //     if (!City::where('id', 1)->exists()) {
+        //         $userCity = Auth::user()->city_id;
+        //         if ($userCity && City::where('id', $userCity)->exists()) {
+        //             $this->merge(['city_id' => $userCity]);
+        //         } else {
+        //             $firstCity = City::first();
+        //             if ($firstCity) {
+        //                 $this->merge(['city_id' => $firstCity->id]);
+        //             }
+        //         }
+        //     }
+        // }
+    }
+
+    /**
+     * The licence plate is required for the Cars category only.
+     *
+     * The id used to be hardcoded to 2, which does not match the Cars category
+     * id after reseeding, so it is now resolved by name.
+     */
+    private function isCarsCategory(): bool
+    {
+        $id = $this->input('main_category_id');
+        if (! $id) {
+            return false;
         }
+
+        return Category::query()
+            ->whereNull('parent_id')
+            ->where('id', $id)
+            ->whereHas('translations', fn ($q) => $q->where('name', 'Cars'))
+            ->exists();
     }
 
     public function rules(): array
@@ -64,19 +84,29 @@ class StoreAdRequest extends FormRequest
             'sub_category_id' => 'nullable|integer|exists:categories,id',
             'title' => 'required|string|max:255',
             'subtitle' => 'nullable|string|max:255',
-            'description' => 'nullable|string|max:5000',
+            'license_plate' => [
+                Rule::requiredIf(fn() => $this->isCarsCategory()),
+                'nullable',
+                'string',
+                'regex:/^[A-Z]{2}[0-9]{2}[A-Z]{3}$/',
+                'max:7'
+            ],
+            'description' => 'required|string|max:5000',
             'price' => 'required|numeric|min:0',
             'currency' => 'nullable|string|size:3',
             'city_id' => 'required|integer|exists:cities,id',
             // UK postcode based location (resolved via postcodes.io on the client).
-            'postcode' => 'nullable|string|max:12',
+            'postcode' => ['nullable', 'string', 'regex:/^([A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}|GIR ?0AA)$/i'],
+            'region' => 'nullable|string|max:191',
             'location_name' => 'nullable|string|max:191',
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
             'is_negotiable' => 'nullable|boolean',
             'confirm_publish' => 'nullable|boolean',
+            'coupon_code' => 'nullable|string|max:40',
             'attributes' => 'nullable|array',
             'attributes.*' => 'nullable|string|max:1000',
+            
         ];
     }
 
@@ -98,7 +128,7 @@ class StoreAdRequest extends FormRequest
             if (! $mainCategory) {
                 $validator->errors()->add(
                     'main_category_id',
-                    $ar ? 'القسم الرئيسي غير صالح' : 'Invalid main category'
+                    __('api.ad_form.invalid_main_category')
                 );
 
                 return;
@@ -113,7 +143,7 @@ class StoreAdRequest extends FormRequest
                 if (! $subCategory) {
                     $validator->errors()->add(
                         'sub_category_id',
-                        $ar ? 'القسم الفرعي لا ينتمي للقسم الرئيسي' : 'Sub category does not belong to the main category'
+                        __('api.ad_form.sub_not_in_main')
                     );
 
                     return;
@@ -137,14 +167,31 @@ class StoreAdRequest extends FormRequest
                     if ($definition->is_required && ($value === null || $value === '')) {
                         $validator->errors()->add(
                             "attributes.{$definition->slug}",
-                            $ar
-                                ? "حقل {$definition->labelForLanguageCode('ar')} مطلوب"
-                                : "The {$definition->labelForLanguageCode('en')} field is required"
+                            __('api.ad_form.attribute_required', ['field' => $this->attributeLabel($definition)])
                         );
                     }
                 }
             }
         });
+    }
+
+    /**
+     * Attribute label in the caller's language.
+     *
+     * labelForLanguageCode() returns the raw slug when a locale has no
+     * translation, and only en/ar are seeded — so a French user would otherwise
+     * be told "fuel_type is required". English is tried before giving up.
+     */
+    protected function attributeLabel(CategoryAttributeDefinition $definition): string
+    {
+        $locale = app()->getLocale();
+        $label = $definition->labelForLanguageCode($locale);
+
+        if ($label === $definition->slug && $locale !== 'en') {
+            $label = $definition->labelForLanguageCode('en');
+        }
+
+        return $label;
     }
 
     public function countryId(): ?int
@@ -170,15 +217,15 @@ class StoreAdRequest extends FormRequest
         $ar = $this->header('lang') === 'ar';
 
         return [
-            'images.required' => $ar ? 'يجب رفع صورة واحدة على الأقل' : 'At least one image is required',
-            'images.min' => $ar ? 'يجب رفع صورة واحدة على الأقل' : 'At least one image is required',
-            'images.max' => $ar ? 'الحد الأقصى 10 صور' : 'Maximum 10 images allowed',
-            'images.*.image' => $ar ? 'يجب أن تكون الملفات صوراً' : 'Files must be images',
-            'images.*.max' => $ar ? 'حجم الصورة يجب ألا يتجاوز 5MB' : 'Image size must not exceed 5MB',
-            'main_category_id.required' => $ar ? 'القسم الرئيسي مطلوب' : 'Main category is required',
-            'title.required' => $ar ? 'عنوان الإعلان مطلوب' : 'Ad title is required',
-            'price.required' => $ar ? 'السعر مطلوب' : 'Price is required',
-            'city_id.required' => $ar ? 'المدينة مطلوبة' : 'City is required',
+            'images.required' => __('api.ad.image_required'),
+            'images.min' => __('api.ad.image_required'),
+            'images.max' => __('api.ad_form.images_max'),
+            'images.*.image' => __('api.ad_form.images_must_be_images'),
+            'images.*.max' => __('api.ad_form.image_max_size'),
+            'main_category_id.required' => __('api.ad_form.main_category_required'),
+            'title.required' => __('api.ad_form.title_required'),
+            'price.required' => __('api.ad_form.price_required'),
+            'city_id.required' => __('api.ad_form.city_required'),
         ];
     }
 }
