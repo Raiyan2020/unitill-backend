@@ -254,6 +254,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('ads/{id}/images', [AdController::class, 'uploadImage']);
     Route::post('ads/{id}/publish', [AdController::class, 'publishDraft']);
     Route::post('ads/{id}/payment/complete', [AdController::class, 'completeStripePayment']);
+    Route::get('ads/{id}/payment/status', [AdController::class, 'paymentStatus']);
     Route::post('ads', [AdController::class, 'store']);
     Route::post('ads/{id}/report', [AdReportController::class, 'store']);
     // Student status reconfirmation (term-based re-verification).

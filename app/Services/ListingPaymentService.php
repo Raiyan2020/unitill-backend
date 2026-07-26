@@ -8,6 +8,25 @@ use RuntimeException;
 
 class ListingPaymentService
 {
+    /**
+     * Mobile clients treat this block as the only authority on whether an ad is
+     * live. Keep the same shape on publish, completion, and status checks.
+     */
+    public function publicationState(Ad $ad): array
+    {
+        $published = $ad->status === 'published';
+
+        return [
+            'published' => $published,
+            'payment_required' => ! $published
+                && $ad->status === 'pending'
+                && $ad->payment_status === 'requires_payment',
+            'amount' => $ad->listing_fee !== null ? (float) $ad->listing_fee : 0.0,
+            'currency' => strtoupper(config('services.stripe.currency', 'GBP')),
+            'payment_status' => $ad->payment_status,
+        ];
+    }
+
     /** Publish exactly once, after Stripe has reported a successful intent. */
     public function publishPaidListing(string $intentId, int $amount, string $currency): Ad
     {

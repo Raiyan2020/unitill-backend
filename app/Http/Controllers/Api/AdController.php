@@ -389,17 +389,7 @@ class AdController extends Controller
                 (int) ($data['sub_category_id'] ?? 0)
             );
 
-            foreach ($attributes as $slug => $value) {
-                if ($value === null || $value === '' || ! isset($definitions[$slug])) {
-                    continue;
-                }
-
-                AdAttributeValue::create([
-                    'ad_id' => $ad->id,
-                    'category_attribute_definition_id' => $definitions[$slug]->id,
-                    'value' => (string) $value,
-                ]);
-            }
+            $this->persistAttributeValues($ad, $attributes, $definitions);
 
             return $ad;
         });
@@ -436,7 +426,9 @@ class AdController extends Controller
             )
                 + ['publication' => $publication]
                 + ['ad' => new AdDetailResource($ad)],
-            __('api.ad.created')
+            $publication['published']
+                ? __('api.ad.published')
+                : __('api.ad.payment_required')
         );
     }
 
@@ -531,7 +523,20 @@ class AdController extends Controller
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
             'attributes' => 'nullable|array',
-            'attributes.*' => 'nullable|string|max:1000',
+            'attributes.*' => [
+                'nullable',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $values = is_array($value) ? $value : [$value];
+
+                    foreach ($values as $item) {
+                        if (! is_scalar($item) || mb_strlen((string) $item) > 1000) {
+                            $fail("The {$attribute} field must contain text values no longer than 1000 characters.");
+
+                            return;
+                        }
+                    }
+                },
+            ],
             // Optional on a draft — the user may not have chosen photos yet — but
             // stored when supplied. publishDraft() is what insists on at least one.
             'images' => 'nullable|array|max:10',
@@ -601,17 +606,7 @@ class AdController extends Controller
                 (int) ($validated['sub_category_id'] ?? 0)
             );
 
-            foreach ($attributes as $slug => $value) {
-                if ($value === null || $value === '' || ! isset($definitions[$slug])) {
-                    continue;
-                }
-
-                AdAttributeValue::create([
-                    'ad_id' => $ad->id,
-                    'category_attribute_definition_id' => $definitions[$slug]->id,
-                    'value' => (string) $value,
-                ]);
-            }
+            $this->persistAttributeValues($ad, $attributes, $definitions);
 
             return $ad;
         });
@@ -690,7 +685,9 @@ class AdController extends Controller
 
         return sendResponse(
             ['publication' => $publication, 'ad' => new AdDetailResource($ad)],
-            __('api.ad.published')
+            $publication['published']
+                ? __('api.ad.published')
+                : __('api.ad.payment_required')
         );
     }
 
@@ -701,12 +698,65 @@ class AdController extends Controller
             return sendError('Payment for this ad was not found.', [], 404);
         }
 
+        if ($ad->status === 'published' && $ad->payment_status === 'paid') {
+            return sendResponse([
+                'publication' => $listings->publicationState($ad),
+                'ad' => new AdDetailResource($ad),
+            ], __('api.ad.published'));
+        }
+
         $intent = app(StripeService::class)->paymentIntent($ad->stripe_payment_intent_id);
         if (($intent['status'] ?? null) !== 'succeeded') {
-            return sendError('The Stripe payment has not succeeded yet.', [], 422);
+            return sendResponse([
+                'publication' => $listings->publicationState($ad),
+                'ad' => new AdDetailResource($ad),
+            ], __('api.ad.payment_pending'));
         }
 
         $ad = $listings->publishPaidListing($intent['id'], (int) $intent['amount_received'], (string) $intent['currency']);
-        return sendResponse(['ad' => new AdDetailResource($ad)], 'Payment verified and ad published successfully');
+
+        return sendResponse([
+            'publication' => $listings->publicationState($ad),
+            'ad' => new AdDetailResource($ad),
+        ], __('api.ad.published'));
+    }
+
+    public function paymentStatus(Request $request, string $id, ListingPaymentService $listings)
+    {
+        $ad = Ad::query()
+            ->where('user_id', Auth::id())
+            ->where(fn ($query) => $query->where('id', $id)->orWhere('public_id', $id))
+            ->first();
+
+        if (! $ad) {
+            return sendError(__('api.ad.not_found'), [], 404);
+        }
+
+        return sendResponse([
+            'publication' => $listings->publicationState($ad),
+        ]);
+    }
+
+    private function persistAttributeValues(Ad $ad, array $attributes, $definitions): void
+    {
+        foreach ($attributes as $slug => $rawValue) {
+            if (! isset($definitions[$slug])) {
+                continue;
+            }
+
+            $values = is_array($rawValue) ? $rawValue : [$rawValue];
+            $values = array_values(array_unique(array_filter(
+                $values,
+                static fn ($value) => is_scalar($value) && (string) $value !== ''
+            )));
+
+            foreach ($values as $value) {
+                AdAttributeValue::create([
+                    'ad_id' => $ad->id,
+                    'category_attribute_definition_id' => $definitions[$slug]->id,
+                    'value' => (string) $value,
+                ]);
+            }
+        }
     }
 }

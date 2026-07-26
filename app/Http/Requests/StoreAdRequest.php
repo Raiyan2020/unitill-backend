@@ -105,7 +105,20 @@ class StoreAdRequest extends FormRequest
             'confirm_publish' => 'nullable|boolean',
             'coupon_code' => 'nullable|string|max:40',
             'attributes' => 'nullable|array',
-            'attributes.*' => 'nullable|string|max:1000',
+            'attributes.*' => [
+                'nullable',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $values = is_array($value) ? $value : [$value];
+
+                    foreach ($values as $item) {
+                        if (! is_scalar($item) || mb_strlen((string) $item) > 1000) {
+                            $fail("The {$attribute} field must contain text values no longer than 1000 characters.");
+
+                            return;
+                        }
+                    }
+                },
+            ],
             
         ];
     }
