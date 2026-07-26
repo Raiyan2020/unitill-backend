@@ -26,10 +26,9 @@ return [
         'trim',
         explode(',', (string) env(
             'CORS_ALLOWED_ORIGINS',
-            'https://dashboard.unitill.uk,http://localhost:5173,http://127.0.0.1:5173'
+            'https://dashboard.unitill.uk,https://test-dashboard.unitill.uk,http://localhost:5173,http://127.0.0.1:5173'
         ))
     ))),
-
     'allowed_origins_patterns' => [],
 
     'allowed_headers' => ['*'],
