@@ -747,4 +747,3 @@ The reconciliation is complete only when all of the following are true:
   `origin/integration/salman-contract-takwa-features`;
 - a pull request documents response compatibility evidence, migration counts,
   feature-flag state, and rollback steps.
-
