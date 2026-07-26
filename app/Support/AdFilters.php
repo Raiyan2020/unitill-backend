@@ -31,6 +31,11 @@ class AdFilters
             'lng',
             'postcode',
             'radius_km',
+            // Legacy aliases still sent by shipped mobile builds. They mean the
+            // same thing as lat/lng; if they are not reserved they fall through
+            // to attribute matching and empty the result set.
+            'near_lat',
+            'near_lng',
         ];
     }
 
@@ -100,9 +105,38 @@ class AdFilters
         return [$ranges, $exact];
     }
 
+    /**
+     * Slugs that actually exist as filterable attribute definitions.
+     *
+     * Anything not in this set is ignored rather than matched. Without that
+     * guard an unrecognised query parameter becomes a whereHas against a slug
+     * that cannot exist, which returns zero ads instead of an unfiltered list —
+     * a silent empty screen rather than a visible error. Reserving known keys
+     * is not enough on its own, because it cannot cover parameters added by
+     * future client builds.
+     */
+    protected static function knownSlugs(): array
+    {
+        static $slugs = null;
+
+        if ($slugs === null) {
+            $slugs = \App\Models\CategoryAttributeDefinition::query()
+                ->where('is_active', true)
+                ->pluck('slug')
+                ->all();
+            $slugs = array_flip($slugs);
+        }
+
+        return $slugs;
+    }
+
     public static function apply(Builder $query, array $filters): void
     {
         [$ranges, $exact] = self::partition($filters);
+
+        $known = self::knownSlugs();
+        $exact = array_filter($exact, fn ($slug) => isset($known[$slug]), ARRAY_FILTER_USE_KEY);
+        $ranges = array_filter($ranges, fn ($slug) => isset($known[$slug]), ARRAY_FILTER_USE_KEY);
 
         foreach ($exact as $slug => $value) {
             // An array means multi-select: match any of the given values (OR).

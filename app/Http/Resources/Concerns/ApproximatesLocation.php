@@ -34,15 +34,21 @@ trait ApproximatesLocation
     }
 
     /**
-     * Rounds coordinates to 2 decimal places.
-     * 
-     * This provides a precision of approximately 1.1km. 
-     * Note: This does not affect distance sorting, as database 
-     * calculations use the original precise values.
+     * Rounds coordinates to 2 decimal places (~1.1km).
+     *
+     * Returned as a decimal-formatted string, not a float: the column is
+     * decimal(10,7) and Eloquent has always serialised it as a string, so the
+     * mobile client parses it as one. Emitting a JSON number here would be a
+     * silent type change on every ad in every list.
+     *
+     * Distance sorting is unaffected — that runs in SQL against the stored
+     * precise values.
      */
-    protected function approximateCoordinate(float|string|null $coordinate): ?float
+    protected function approximateCoordinate(float|string|null $coordinate): ?string
     {
-        return $coordinate === null ? null : round((float) $coordinate, 2);
+        return $coordinate === null
+            ? null
+            : number_format(round((float) $coordinate, 2), 7, '.', '');
     }
 
     /**

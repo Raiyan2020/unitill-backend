@@ -47,7 +47,14 @@ Route::get('/test', function () {
 // registered after this file, including the whole admin/* dashboard.
 Route::fallback(function (Request $request) {
     if ($request->is('api/*')) {
-        return response()->json(['message' => 'Not Found.'], 404);
+        // Must use the same envelope as every other API error. A bare
+        // {"message": ...} breaks clients that read `status` to decide whether
+        // a response succeeded.
+        return sendError(
+            "The route {$request->path()} could not be found.",
+            [],
+            404
+        );
     }
 
     $path = public_path('dist/index.html');

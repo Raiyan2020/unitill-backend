@@ -45,6 +45,10 @@ class ExpireAds extends Command
 
         $updated = $query->update([
             'status' => 'expired',
+            // MyAdResource renders inactive_reason / inactive_reason_label in
+            // the "Inactive" tab. Leaving it null makes an auto-expired ad show
+            // no reason at all, so the owner cannot tell why it stopped.
+            'inactive_reason' => 'auto_expired',
             'updated_at' => now(),
         ]);
 

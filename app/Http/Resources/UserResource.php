@@ -47,9 +47,12 @@ class UserResource extends JsonResource
                 ? $this->created_at->locale($locale)->translatedFormat('F Y')
                 : null,
             'ads_count' => (int) ($this->published_ads_count ?? 0),
-            // 'average_rating' => round((float) ($this->average_rating ?? 0), 1),
-            // 'total_reviews' => (int) ($this->total_reviews_count ?? 0),
-            // 'is_trusted_seller' => (bool) $this->is_trusted_seller,
+            // Restored: these three are part of the published mobile contract
+            // (profile header, seller badge, rating row) and were commented out
+            // during the parallel rewrite rather than intentionally dropped.
+            'average_rating' => round((float) ($this->average_rating ?? 0), 1),
+            'total_reviews' => (int) ($this->total_reviews_count ?? 0),
+            'is_trusted_seller' => (bool) $this->is_trusted_seller,
             'device_type' => $this->device_type,
             'city_id' => (int) $this->city_id,
             'city_name' => $this->city ? $this->city->$name : null,
@@ -60,6 +63,11 @@ class UserResource extends JsonResource
 
         if ($isOwnProfile) {
             $data['student_email'] = $this->student_email;
+            // Student re-verification lifecycle. The mobile app reads these to
+            // decide whether to show the "reconfirm your student status" prompt.
+            $data['student_verified_at'] = $this->student_verified_at?->toIso8601String();
+            $data['student_reverify_due_at'] = $this->student_reverify_due_at?->toIso8601String();
+            $data['needs_reverification'] = $this->needsReverification();
             // Private preferences: only ever returned to the account owner.
             $data['settings'] = [
                 'privacy' => [

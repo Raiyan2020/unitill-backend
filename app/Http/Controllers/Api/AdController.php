@@ -260,23 +260,67 @@ class AdController extends Controller
 
     protected function filterOptionsForCategory(int $categoryId, string $lang): array
     {
-        return CategoryAttributeDefinition::query()
+        $ar = $lang === 'ar';
+
+        $defs = CategoryAttributeDefinition::query()
             ->where('category_id', $categoryId)
             ->where('is_active', true)
             ->with('translations')
             ->orderBy('sort_order')
             ->get()
             ->map(function (CategoryAttributeDefinition $definition) use ($lang) {
+                $filterControl = $definition->resolvedFilterControl();
+
                 return [
                     'slug' => $definition->slug,
                     'label' => $definition->labelForLanguageCode($lang),
                     'input_type' => $definition->input_type,
+                    'filter_control' => $filterControl,
+                    'post_control' => $definition->resolvedPostControl(),
                     'options' => $definition->options ?? [],
+                    'config' => $definition->config ?? [],
                     'is_required' => (bool) $definition->is_required,
+                    'is_filterable' => (bool) $definition->is_filterable,
+                    'is_postable' => (bool) $definition->is_postable,
+                    'is_multi' => $filterControl === 'multiselect',
+                    'is_range' => $filterControl === 'range',
                 ];
             })
             ->values()
             ->all();
+
+        // Synthetic filter-only controls not backed by an attribute definition:
+        // price range (post-ad has a dedicated price field) and postcode+radius.
+        array_unshift($defs, [
+            'slug' => 'price',
+            'label' => $ar ? 'السعر' : 'Price',
+            'input_type' => 'number',
+            'filter_control' => 'range',
+            'post_control' => 'number',
+            'options' => [],
+            'config' => ['unit' => '£'],
+            'is_required' => false,
+            'is_filterable' => true,
+            'is_postable' => false,
+            'is_multi' => false,
+            'is_range' => true,
+        ]);
+        $defs[] = [
+            'slug' => 'location',
+            'label' => $ar ? 'المسافة (الرمز البريدي)' : 'Distance (postcode)',
+            'input_type' => 'string',
+            'filter_control' => 'radius',
+            'post_control' => 'none',
+            'options' => [],
+            'config' => ['radius_options' => [1, 3, 5, 10, 25, 50]],
+            'is_required' => false,
+            'is_filterable' => true,
+            'is_postable' => false,
+            'is_multi' => false,
+            'is_range' => false,
+        ];
+
+        return $defs;
     }
 
     public function store(StoreAdRequest $request)

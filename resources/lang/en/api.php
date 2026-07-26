@@ -193,7 +193,9 @@ return [
         'ad_not_found' => 'Ad not found',
     ],
     'session' => [
-        'login_success' => 'Login successful',
+        // Literal string from the published contract. The mobile client shows
+        // this verbatim, so it is not free to be reworded.
+        'login_success' => 'login success',
         'logout_success' => 'Logged out successfully',
         'not_authenticated' => 'Not authenticated',
         'auth_required' => 'Authentication required',

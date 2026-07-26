@@ -11,7 +11,11 @@ class LanguageController extends Controller
 {
     public function __invoke(Request $request)
     {
+        // Only active languages are offered to clients. Dropping this filter
+        // exposes languages an admin has deliberately switched off, and the
+        // mobile language picker renders whatever it is given.
         $languages = Language::query()
+            ->where('is_active', true)
             ->ordered()
             ->get();
 

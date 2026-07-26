@@ -14,7 +14,10 @@ class LegalAffairController extends Controller
      */
     public function index(Request $request)
     {
-        $code =  $request->header('lang', 'ar');
+        // English is the default when no lang header is sent. Defaulting to
+        // Arabic instead silently flips the policy text for every client that
+        // omits the header, including the web dashboard.
+        $code = $request->header('lang') === 'ar' ? 'ar' : 'en';
         $language = Language::where('code', $code)->first();
         $fallback = $code === 'en' ? null : Language::where('code', 'en')->first();
 

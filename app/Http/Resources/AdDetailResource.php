@@ -15,8 +15,10 @@ class AdDetailResource extends JsonResource
         $lang = $request->header('lang', 'en');
         $locale = $lang === 'ar' ? 'ar' : 'en';
         $favoriteIds = $request->attributes->get('favorite_ad_ids', []);
-        // No created_at fallback — see AdResource. Null until payment settles.
-        $publishedAt = $this->published_at;
+        // See AdResource: null until payment settles, but never null on a row
+        // that is already published.
+        $publishedAt = $this->published_at
+            ?? ($this->status === 'published' ? $this->created_at : null);
 
         // The seller's "show first name only" preference governs how they are
         // named on their own listings.
@@ -64,21 +66,20 @@ class AdDetailResource extends JsonResource
             'sub_category_name' => $this->subCategory ? $this->subCategory->nameForLanguageCode($lang) : null,
         ];
 
-        if (! $viewerId) {
-            return $public + [
-                // Signal to Flutter that it should prompt for registration
-                'requires_auth' => true,
-                'hidden_for_guests' => ['description', 'location', 'attributes', 'seller'],
-            ];
-        }
-
-        return $public + $this->privateFields($lang, $locale, $publishedAt, $sellerName, $favoriteIds);
+        // Guests receive the same field set as authenticated viewers. The
+        // parallel implementation stripped 17 fields for guests and replaced
+        // them with requires_auth/hidden_for_guests, which empties the public
+        // ad detail screen. Sensitive location data is still protected — but by
+        // masking in locationPayload(), not by removing the keys, so the shape
+        // of the response never depends on who is asking.
+        return $public + $this->detailFields($lang, $locale, $publishedAt, $sellerName, $favoriteIds);
     }
 
     /**
-     * Fields requiring authentication, including masked location data.
+     * The full detail payload. Location values within it are masked for anyone
+     * who is not the owner; the keys themselves are always present.
      */
-    private function privateFields(
+    private function detailFields(
         string $lang,
         string $locale,
         ?\Illuminate\Support\Carbon $publishedAt,
@@ -96,13 +97,21 @@ class AdDetailResource extends JsonResource
             'region' => $this->region,
             'country_id' => $this->country_id,
             'attributes' => $this->whenLoaded('attributeValues', function () use ($lang) {
-                return $this->attributeValues->map(function ($row) use ($lang) {
-                    return [
-                        'slug' => $row->definition?->slug,
-                        'label' => $row->definition?->labelForLanguageCode($lang),
-                        'value' => $row->value,
-                    ];
-                })->values();
+                // Multiselect attributes store one row per selected value, so
+                // group by slug and join — otherwise the same attribute appears
+                // several times in the detail sheet.
+                return $this->attributeValues
+                    ->groupBy(fn ($row) => $row->definition?->slug)
+                    ->map(function ($rows, $slug) use ($lang) {
+                        $first = $rows->first();
+
+                        return [
+                            'slug' => $slug,
+                            'label' => $first->definition?->labelForLanguageCode($lang),
+                            'value' => $rows->pluck('value')->filter()->implode(', '),
+                        ];
+                    })
+                    ->values();
             }),
             'seller' => $this->whenLoaded('user', function () use ($sellerName) {
                 $trustedContact = $this->user->is_trusted_seller
