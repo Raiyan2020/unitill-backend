@@ -106,6 +106,8 @@ return [
         'cannot_report_self' => 'No puedes denunciarte a ti mismo',
         'report_pending_exists' => 'Ya tienes una denuncia pendiente sobre esta conversación',
         'report_submitted' => 'Denuncia enviada',
+        'attachment_too_large' => 'El archivo es demasiado grande. El tamaño máximo es 10 MB.',
+        'attachment_type_not_allowed' => 'Este tipo de archivo no es compatible.',
     ],
     'sort' => [
         'newest_first' => 'Más recientes primero',

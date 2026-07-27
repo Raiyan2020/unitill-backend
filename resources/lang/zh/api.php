@@ -106,6 +106,8 @@ return [
         'cannot_report_self' => '不能举报自己',
         'report_pending_exists' => '您对该会话已有一条待处理的举报',
         'report_submitted' => '举报已提交',
+        'attachment_too_large' => '文件过大，最大为 10 MB。',
+        'attachment_type_not_allowed' => '不支持此文件类型。',
     ],
     'sort' => [
         'newest_first' => '最新优先',

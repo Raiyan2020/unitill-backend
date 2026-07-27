@@ -106,6 +106,8 @@ return [
         'cannot_report_self' => 'You cannot report yourself',
         'report_pending_exists' => 'You already have a pending report on this conversation',
         'report_submitted' => 'Report submitted',
+        'attachment_too_large' => 'File is too large. Maximum size is 10 MB.',
+        'attachment_type_not_allowed' => 'This file type is not supported.',
     ],
     'sort' => [
         'newest_first' => 'Newest First',

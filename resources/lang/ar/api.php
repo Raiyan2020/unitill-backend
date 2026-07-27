@@ -106,6 +106,8 @@ return [
         'cannot_report_self' => 'لا يمكنك الإبلاغ عن نفسك',
         'report_pending_exists' => 'لديك بلاغ قيد المراجعة على هذه المحادثة',
         'report_submitted' => 'تم إرسال البلاغ',
+        'attachment_too_large' => 'الملف كبير جدًا. الحد الأقصى 10 ميجابايت.',
+        'attachment_type_not_allowed' => 'نوع الملف غير مدعوم.',
     ],
     'sort' => [
         'newest_first' => 'الأحدث أولاً',

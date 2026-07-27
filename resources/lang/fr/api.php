@@ -106,6 +106,8 @@ return [
         'cannot_report_self' => 'Vous ne pouvez pas vous signaler vous-même',
         'report_pending_exists' => 'Vous avez déjà un signalement en cours sur cette conversation',
         'report_submitted' => 'Signalement envoyé',
+        'attachment_too_large' => 'Le fichier est trop volumineux. La taille maximale est de 10 Mo.',
+        'attachment_type_not_allowed' => 'Ce type de fichier n\x27est pas pris en charge.',
     ],
     'sort' => [
         'newest_first' => 'Plus récent d\'abord',
