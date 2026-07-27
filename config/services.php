@@ -1,5 +1,13 @@
 <?php
 
+// Same resolution as config/fcm.php: FIREBASE_CREDENTIALS may be absolute or
+// relative to the project root (the web server's CWD is public/).
+$firebaseCredentials = env('FIREBASE_CREDENTIALS', 'storage/app/firebase/firebase_credentials.json');
+
+if (is_string($firebaseCredentials) && $firebaseCredentials !== '' && ! preg_match('#^(/|[A-Za-z]:[\\\\/])#', $firebaseCredentials)) {
+    $firebaseCredentials = base_path($firebaseCredentials);
+}
+
 return [
 
     /*
@@ -46,7 +54,7 @@ return [
         'currency' => env('STRIPE_CURRENCY', 'gbp'),
     ],
     'firebase' => [
-        'credentials' => storage_path('firebase/firebase_credentials.json'),
+        'credentials' => $firebaseCredentials,
     ],
     'whatsapp' => [
         'token' => env('WHATSAPP_TOKEN'),
