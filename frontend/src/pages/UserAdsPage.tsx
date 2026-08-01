@@ -45,7 +45,7 @@ export function UserAdsPage() {
   const [total, setTotal] = useState(0);
   const [statusSavingId, setStatusSavingId] = useState<number | null>(null);
 
-  const backendOrigin = ((import.meta.env.VITE_BACKEND_ORIGIN as string | undefined) || 'http://127.0.0.1:8000').replace(/\/+$/, '');
+  const backendOrigin = ((import.meta.env.VITE_BACKEND_ORIGIN as string | undefined) || window.location.origin).replace(/\/+$/, '');
   const uid = Number(userId || 0);
 
   const resolveImage = (row: AdRow) => {
@@ -192,4 +192,3 @@ export function UserAdsPage() {
     </div>
   );
 }
-

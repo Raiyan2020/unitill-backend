@@ -156,7 +156,7 @@ export function CategoriesPage() {
   };
 
   const pagesCount = Math.max(1, Math.ceil(total / pageSize));
-  const backendOrigin = (import.meta.env.VITE_BACKEND_ORIGIN as string | undefined) || 'http://127.0.0.1:8000';
+  const backendOrigin = (import.meta.env.VITE_BACKEND_ORIGIN as string | undefined) || window.location.origin;
 
   return (
     <div className="space-y-4">

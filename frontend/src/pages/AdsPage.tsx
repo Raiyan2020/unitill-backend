@@ -59,7 +59,7 @@ export function AdsPage() {
   const [deleteReason, setDeleteReason] = useState('');
   const [statusSavingId, setStatusSavingId] = useState<number | null>(null);
 
-  const backendOrigin = ((import.meta.env.VITE_BACKEND_ORIGIN as string | undefined) || 'http://127.0.0.1:8000').replace(/\/+$/, '');
+  const backendOrigin = ((import.meta.env.VITE_BACKEND_ORIGIN as string | undefined) || window.location.origin).replace(/\/+$/, '');
 
   const resolveImage = (row: AdRow) => {
     if (row.cover_image_url) return row.cover_image_url;
