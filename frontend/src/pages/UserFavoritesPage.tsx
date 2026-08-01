@@ -36,7 +36,7 @@ export function UserFavoritesPage() {
   const [total, setTotal] = useState(0);
 
   const uid = Number(userId || 0);
-  const backendOrigin = ((import.meta.env.VITE_BACKEND_ORIGIN as string | undefined) || 'http://127.0.0.1:8000').replace(/\/+$/, '');
+  const backendOrigin = ((import.meta.env.VITE_BACKEND_ORIGIN as string | undefined) || window.location.origin).replace(/\/+$/, '');
 
   const resolveImage = (row: FavoriteAdRow) => {
     if (row.cover_image_url) return row.cover_image_url;
@@ -149,4 +149,3 @@ export function UserFavoritesPage() {
     </div>
   );
 }
-
