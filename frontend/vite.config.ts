@@ -4,7 +4,10 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: '/',
+  // The production dashboard is served by Laravel from public/dist.
+  // Keep asset URLs under /dist so Apache does not route /assets back to
+  // the SPA fallback and return HTML for JavaScript or CSS requests.
+  base: '/dist/',
   server: {
     port: 5173,
     proxy: {
