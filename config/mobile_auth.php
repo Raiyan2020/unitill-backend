@@ -35,10 +35,17 @@ return [
     |--------------------------------------------------------------------------
     | Login OTP fixed test code
     |--------------------------------------------------------------------------
-    | While testing, every login OTP is this code. Set the env var to an empty
-    | value in production so a random 6-digit code is generated instead.
+    | Pins every login OTP to one value so automated tests and manual QA do not
+    | need to read the mail queue.
+    |
+    | This defaulted to '123456', which meant that unless the environment
+    | explicitly set the variable to an empty string, that code authenticated
+    | as ANY account — a full authentication bypass shipping in the default
+    | configuration. The default is now null, and the V2 controller only honours
+    | the value in the testing environment, so setting it in production has no
+    | effect either.
     */
-    'login_otp_test_code' => env('MOBILE_LOGIN_OTP_TEST_CODE', '123456'),
+    'login_otp_test_code' => env('MOBILE_LOGIN_OTP_TEST_CODE'),
 
     /*
     |--------------------------------------------------------------------------

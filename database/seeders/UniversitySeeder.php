@@ -41,6 +41,22 @@ class UniversitySeeder extends Seeder
             ["Queen's University Belfast", 'Northern Ireland', 'Belfast', ['qub.ac.uk']],
             ['University of Reading', 'England', 'Reading', ['reading.ac.uk']],
             ['University of Sussex', 'England', 'Brighton', ['sussex.ac.uk']],
+
+            // Present in the Salman allowlist but absent here. Registration
+            // validates the student email against this table, so while these
+            // were missing every student at these eleven universities was
+            // rejected at sign-up.
+            ['University of Leicester', 'England', 'Leicester', ['leicester.ac.uk']],
+            ['Loughborough University', 'England', 'Loughborough', ['lboro.ac.uk']],
+            ['University of Surrey', 'England', 'Guildford', ['surrey.ac.uk']],
+            ['Aston University', 'England', 'Birmingham', ['aston.ac.uk']],
+            ['Coventry University', 'England', 'Coventry', ['coventry.ac.uk']],
+            ['Leeds Beckett University', 'England', 'Leeds', ['leedsbeckett.ac.uk']],
+            ['Manchester Metropolitan University', 'England', 'Manchester', ['mmu.ac.uk']],
+            ['Northumbria University', 'England', 'Newcastle upon Tyne', ['northumbria.ac.uk']],
+            ['University of Portsmouth', 'England', 'Portsmouth', ['port.ac.uk']],
+            ['University of Strathclyde', 'Scotland', 'Glasgow', ['strath.ac.uk']],
+            ['University of Dundee', 'Scotland', 'Dundee', ['dundee.ac.uk']],
         ];
 
         foreach ($universities as $index => [$name, $region, $city, $domains]) {

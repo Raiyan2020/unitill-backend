@@ -44,6 +44,9 @@ class User extends Authenticatable
         'notify_chat',
         'notify_ads',
         'student_email',
+        'student_verified_at',
+        'student_reverify_due_at',
+        'reverify_notified_at',
         'activation_code_expires_at',
         'activation_sent_at',
         'terms_accepted_at',
@@ -99,7 +102,23 @@ class User extends Authenticatable
         'reset_code_expire' => 'datetime',
         'login_otp_expires_at' => 'datetime',
         'login_otp_sent_at' => 'datetime',
+        'student_verified_at' => 'datetime',
+        'student_reverify_due_at' => 'datetime',
+        'reverify_notified_at' => 'datetime',
     ];
+
+    /**
+     * Whether the student must reconfirm their university status before they
+     * can keep using student-gated features (posting, messaging).
+     *
+     * A null due date means the account predates the lifecycle or has just
+     * reconfirmed, so it is never overdue.
+     */
+    public function needsReverification(): bool
+    {
+        return $this->student_reverify_due_at !== null
+            && now()->greaterThanOrEqualTo($this->student_reverify_due_at);
+    }
 
     protected static function booted(): void
     {

@@ -12,18 +12,38 @@ class CategoryAttributeDefinition extends Model
         'category_id',
         'slug',
         'input_type',
+        'filter_control',
+        'post_control',
         'options',
+        'config',
         'sort_order',
         'is_required',
+        'is_filterable',
+        'is_postable',
         'is_active',
     ];
 
     protected $casts = [
         'options' => 'array',
+        'config' => 'array',
         'sort_order' => 'integer',
         'is_required' => 'boolean',
+        'is_filterable' => 'boolean',
+        'is_postable' => 'boolean',
         'is_active' => 'boolean',
     ];
+
+    /** How this attribute renders in the filter panel (falls back to input_type). */
+    public function resolvedFilterControl(): string
+    {
+        return $this->filter_control ?: $this->input_type;
+    }
+
+    /** How this attribute renders in the post-ad form (falls back to input_type). */
+    public function resolvedPostControl(): string
+    {
+        return $this->post_control ?: $this->input_type;
+    }
 
     public function category(): BelongsTo
     {

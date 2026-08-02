@@ -50,6 +50,8 @@ return [
         'created' => 'Ad created successfully',
         'draft_saved' => 'Draft saved successfully',
         'published' => 'Ad published successfully',
+        'payment_required' => 'Ad saved. Payment is required before it can be published.',
+        'payment_pending' => 'Payment has not completed yet. The ad is still not published.',
         'image_uploaded' => 'Image uploaded',
         'image_required' => 'At least one image is required',
         'buyers_active_only' => 'Buyers are available for active ads only',
@@ -104,6 +106,8 @@ return [
         'cannot_report_self' => 'You cannot report yourself',
         'report_pending_exists' => 'You already have a pending report on this conversation',
         'report_submitted' => 'Report submitted',
+        'attachment_too_large' => 'File is too large. Maximum size is 10 MB.',
+        'attachment_type_not_allowed' => 'This file type is not supported.',
     ],
     'sort' => [
         'newest_first' => 'Newest First',
@@ -161,6 +165,7 @@ return [
         'status_expired' => 'EXPIRED',
         'status_sold' => 'SOLD',
         'status_pending' => 'PENDING',
+        'status_draft' => 'DRAFT',
         'auto_expired' => 'Auto-expired after 30 days',
         'manually_paused' => 'Manually paused by seller',
     ],
@@ -193,7 +198,9 @@ return [
         'ad_not_found' => 'Ad not found',
     ],
     'session' => [
-        'login_success' => 'Login successful',
+        // Literal string from the published contract. The mobile client shows
+        // this verbatim, so it is not free to be reworded.
+        'login_success' => 'login success',
         'logout_success' => 'Logged out successfully',
         'not_authenticated' => 'Not authenticated',
         'auth_required' => 'Authentication required',

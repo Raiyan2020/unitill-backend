@@ -405,6 +405,96 @@ class AuthController extends Controller
         ], __('api.auth.code_resent'));
     }
 
+    /**
+     * Start student status reconfirmation by emailing an OTP to the university
+     * address on file. Students must reconfirm each term (30 Sep / 31 Mar).
+     */
+    public function sendReverifyOtp(Request $request)
+    {
+        $user = $request->user();
+        $lang = $request->header('lang') === 'ar';
+
+        if (! $user->student_email) {
+            return sendError($lang ? 'لا يوجد بريد جامعي مسجّل' : 'No university email on file', [], 422);
+        }
+
+        if ($user->activation_sent_at) {
+            $nextAllowed = $user->activation_sent_at->copy()->addSeconds(60);
+            if (now()->lessThan($nextAllowed)) {
+                $seconds = max(0, $nextAllowed->getTimestamp() - now()->getTimestamp());
+
+                return sendError(
+                    $lang ? "يمكنك إعادة الإرسال بعد {$seconds} ثانية" : "You can resend in {$seconds} seconds",
+                    ['retry_after_seconds' => $seconds],
+                    429
+                );
+            }
+        }
+
+        // The Salman implementation pinned this to a literal 123456, which lets
+        // anyone holding a session reconfirm student status without access to
+        // the university inbox. Fixed codes are honoured under testing only.
+        $fixed = app()->environment('testing')
+            ? config('mobile_auth.login_otp_test_code')
+            : null;
+        $otp = (int) ($fixed ?: random_int(100000, 999999));
+
+        $user->activation_code = (string) $otp;
+        $user->activation_code_expires_at = now()->addMinutes(15);
+        $user->activation_sent_at = now();
+        $user->save();
+
+        try {
+            Mail::to($user->student_email)->send(new OtpMail($otp));
+        } catch (\Throwable $e) {
+            Log::error('Reverify OTP mail failed', ['error' => $e->getMessage()]);
+        }
+
+        return sendResponse([
+            'student_email_masked' => $this->maskEmail($user->student_email),
+            'activation_expires_at' => $user->activation_code_expires_at?->toIso8601String(),
+        ], $lang ? 'تم إرسال رمز التحقق إلى بريدك الجامعي' : 'Verification code sent to your student email');
+    }
+
+    /**
+     * Complete reconfirmation and push the due date to the next term deadline.
+     */
+    public function confirmReverify(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'activation_code' => 'required|digits:6',
+        ]);
+        if ($validator->fails()) {
+            return sendError($validator->errors()->first(), $validator->errors()->toArray(), 422);
+        }
+
+        $user = $request->user();
+        $lang = $request->header('lang') === 'ar';
+
+        if ($user->activation_code_expires_at && now()->greaterThan($user->activation_code_expires_at)) {
+            return sendError(
+                $lang ? 'انتهت صلاحية رمز التحقق. اطلب رمزاً جديداً' : 'Verification code expired. Request a new one.',
+                ['expired' => true],
+                400
+            );
+        }
+
+        if ((string) $user->activation_code !== (string) $request->input('activation_code')) {
+            return sendError($lang ? 'رمز التحقق غير صحيح' : 'Invalid verification code', [], 400);
+        }
+
+        $user->activation_code = null;
+        $user->activation_code_expires_at = null;
+        $user->student_verified_at = now();
+        $user->student_reverify_due_at = \App\Support\StudentTerm::nextDeadline();
+        $user->reverify_notified_at = null;
+        $user->save();
+
+        return sendResponse([
+            'user' => new UserResource($user->fresh()),
+        ], $lang ? 'تم تأكيد حالتك كطالب' : 'Student status reconfirmed');
+    }
+
     public function logout(Request $request)
     {
         $user = $request->user();

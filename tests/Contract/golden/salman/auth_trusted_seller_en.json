@@ -1,0 +1,83 @@
+{
+    "request": {
+        "method": "GET",
+        "uri": "/api/trusted-seller-application",
+        "headers": {
+            "lang": "en",
+            "Authorization": "Bearer 23|LsiZ6qmdhCNTqBVG6VBz6ElIwi0QbwkVYO92Ivyc204a5615"
+        }
+    },
+    "status": 200,
+    "body": {
+        "status": true,
+        "data": {
+            "is_trusted_seller": true,
+            "trusted_seller_verified_at": null,
+            "monthly_fee": {
+                "amount": 10,
+                "currency": "GBP",
+                "formatted": "£10",
+                "label": "UNI TILL TRUSTED SELLER PROGRAM FEE IS £10 PER MONTH FOR BUSINESS AND EXTERNAL INDIVIDUAL PROVIDERS EXCEPT CAMPUS ORGANISATIONS."
+            },
+            "form_options": {
+                "seller_types": [
+                    {
+                        "value": "business",
+                        "label": "Business"
+                    },
+                    {
+                        "value": "service_provider",
+                        "label": "Individual service provider"
+                    },
+                    {
+                        "value": "organization",
+                        "label": "Organization or institution"
+                    }
+                ],
+                "estimated_listings_counts": [
+                    {
+                        "value": "1_10",
+                        "label": "1-10"
+                    },
+                    {
+                        "value": "10_plus",
+                        "label": "10+"
+                    }
+                ],
+                "preferred_contact_methods": [
+                    {
+                        "value": "email",
+                        "label": "Email"
+                    },
+                    {
+                        "value": "phone",
+                        "label": "Phone"
+                    },
+                    {
+                        "value": "website",
+                        "label": "Website link"
+                    }
+                ],
+                "declarations": [
+                    {
+                        "key": "confirm_not_student",
+                        "label": "I confirm that I am not a student"
+                    },
+                    {
+                        "key": "ack_review",
+                        "label": "I acknowledge that UniTill will review my request and may request further proof"
+                    },
+                    {
+                        "key": "ack_removal_rights",
+                        "label": "I acknowledge that UniTill reserves the right to remove seller status"
+                    },
+                    {
+                        "key": "ack_terms",
+                        "label": "I accept the Privacy Policy & Terms of Service"
+                    }
+                ]
+            },
+            "application": null
+        }
+    }
+}

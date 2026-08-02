@@ -203,6 +203,16 @@ class AdAdminController extends Controller
         $oldStatus = $ad->status;
         $newStatus = $validator->validated()['status'];
 
+        if ($newStatus === 'published'
+            && $oldStatus !== 'published'
+            && ! in_array($ad->payment_status, ['paid', 'free', 'waived', 'coupon'], true)) {
+            return sendError(
+                'This ad cannot be published until its listing payment is settled.',
+                ['payment_status' => $ad->payment_status],
+                422
+            );
+        }
+
         $ad->status = $newStatus;
         $ad->save();
 
@@ -240,4 +250,3 @@ class AdAdminController extends Controller
         return sendResponse([], 'Ad deleted');
     }
 }
-

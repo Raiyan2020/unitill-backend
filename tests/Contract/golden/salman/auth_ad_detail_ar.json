@@ -1,0 +1,62 @@
+{
+    "request": {
+        "method": "GET",
+        "uri": "/api/ads/9001",
+        "headers": {
+            "lang": "ar",
+            "Authorization": "Bearer 23|LsiZ6qmdhCNTqBVG6VBz6ElIwi0QbwkVYO92Ivyc204a5615"
+        }
+    },
+    "status": 200,
+    "body": {
+        "status": true,
+        "data": {
+            "id": 9001,
+            "public_id": "FIX9001",
+            "title": "Fixture ad 9001",
+            "subtitle": "Subtitle 9001",
+            "description": "Deterministic fixture description for ad 9001.",
+            "status": "published",
+            "is_owner": true,
+            "price": 250,
+            "currency": "GBP",
+            "formatted_price": "£250",
+            "is_negotiable": true,
+            "is_verified": true,
+            "cover_image_url": null,
+            "images": [],
+            "category_path": [
+                "السكن",
+                "غرف للإيجار"
+            ],
+            "main_category_id": 1,
+            "main_category_name": "السكن",
+            "sub_category_id": 2,
+            "sub_category_name": "غرف للإيجار",
+            "city_id": 9001,
+            "city_name": "ليدز",
+            "location_name": "Leeds city centre",
+            "location_label": "Leeds city centre",
+            "postcode": "LS2 9JT",
+            "latitude": "53.8007554",
+            "longitude": "-1.5490774",
+            "country_id": 9001,
+            "attributes": [],
+            "seller": {
+                "id": 9001,
+                "name": "Ada Lovelace",
+                "image": null,
+                "is_trusted_seller": true,
+                "average_rating": 0,
+                "total_reviews": 0,
+                "contact_phone": null,
+                "contact_email": null,
+                "preferred_contact_method": null
+            },
+            "published_at": "2026-05-01T09:00:00+00:00",
+            "published_ago": "منذ شهرين",
+            "created_at": "<timestamp>",
+            "is_favorited": false
+        }
+    }
+}

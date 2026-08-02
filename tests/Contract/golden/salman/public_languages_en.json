@@ -1,0 +1,60 @@
+{
+    "request": {
+        "method": "GET",
+        "uri": "/api/languages",
+        "headers": {
+            "lang": "en"
+        }
+    },
+    "status": 200,
+    "body": {
+        "status": true,
+        "data": [
+            {
+                "id": 1,
+                "code": "en",
+                "name": "English",
+                "native_name": "English",
+                "direction": "ltr",
+                "is_active": true,
+                "is_default": true
+            },
+            {
+                "id": 2,
+                "code": "ar",
+                "name": "Arabic",
+                "native_name": "العربية",
+                "direction": "rtl",
+                "is_active": true,
+                "is_default": false
+            },
+            {
+                "id": 3,
+                "code": "fr",
+                "name": "French",
+                "native_name": "Français",
+                "direction": "ltr",
+                "is_active": true,
+                "is_default": false
+            },
+            {
+                "id": 4,
+                "code": "es",
+                "name": "Spanish",
+                "native_name": "Español",
+                "direction": "ltr",
+                "is_active": true,
+                "is_default": false
+            },
+            {
+                "id": 5,
+                "code": "zh",
+                "name": "Chinese",
+                "native_name": "中文",
+                "direction": "ltr",
+                "is_active": true,
+                "is_default": false
+            }
+        ]
+    }
+}

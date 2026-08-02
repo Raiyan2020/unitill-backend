@@ -1,0 +1,25 @@
+{
+    "request": {
+        "method": "POST",
+        "uri": "/api/coupons/validate",
+        "headers": {
+            "lang": "en",
+            "Authorization": "Bearer 23|LsiZ6qmdhCNTqBVG6VBz6ElIwi0QbwkVYO92Ivyc204a5615"
+        }
+    },
+    "status": 200,
+    "body": {
+        "status": true,
+        "data": {
+            "code": "FIXTURE10",
+            "type": "percent",
+            "value": 10,
+            "listing_fee": 100,
+            "discount": 10,
+            "total": 90,
+            "formatted_discount": "£10.00",
+            "formatted_total": "£90.00"
+        },
+        "message": "Discount code applied"
+    }
+}

@@ -260,23 +260,67 @@ class AdController extends Controller
 
     protected function filterOptionsForCategory(int $categoryId, string $lang): array
     {
-        return CategoryAttributeDefinition::query()
+        $ar = $lang === 'ar';
+
+        $defs = CategoryAttributeDefinition::query()
             ->where('category_id', $categoryId)
             ->where('is_active', true)
             ->with('translations')
             ->orderBy('sort_order')
             ->get()
             ->map(function (CategoryAttributeDefinition $definition) use ($lang) {
+                $filterControl = $definition->resolvedFilterControl();
+
                 return [
                     'slug' => $definition->slug,
                     'label' => $definition->labelForLanguageCode($lang),
                     'input_type' => $definition->input_type,
+                    'filter_control' => $filterControl,
+                    'post_control' => $definition->resolvedPostControl(),
                     'options' => $definition->options ?? [],
+                    'config' => $definition->config ?? [],
                     'is_required' => (bool) $definition->is_required,
+                    'is_filterable' => (bool) $definition->is_filterable,
+                    'is_postable' => (bool) $definition->is_postable,
+                    'is_multi' => $filterControl === 'multiselect',
+                    'is_range' => $filterControl === 'range',
                 ];
             })
             ->values()
             ->all();
+
+        // Synthetic filter-only controls not backed by an attribute definition:
+        // price range (post-ad has a dedicated price field) and postcode+radius.
+        array_unshift($defs, [
+            'slug' => 'price',
+            'label' => $ar ? 'السعر' : 'Price',
+            'input_type' => 'number',
+            'filter_control' => 'range',
+            'post_control' => 'number',
+            'options' => [],
+            'config' => ['unit' => '£'],
+            'is_required' => false,
+            'is_filterable' => true,
+            'is_postable' => false,
+            'is_multi' => false,
+            'is_range' => true,
+        ]);
+        $defs[] = [
+            'slug' => 'location',
+            'label' => $ar ? 'المسافة (الرمز البريدي)' : 'Distance (postcode)',
+            'input_type' => 'string',
+            'filter_control' => 'radius',
+            'post_control' => 'none',
+            'options' => [],
+            'config' => ['radius_options' => [1, 3, 5, 10, 25, 50]],
+            'is_required' => false,
+            'is_filterable' => true,
+            'is_postable' => false,
+            'is_multi' => false,
+            'is_range' => false,
+        ];
+
+        return $defs;
     }
 
     public function store(StoreAdRequest $request)
@@ -345,17 +389,7 @@ class AdController extends Controller
                 (int) ($data['sub_category_id'] ?? 0)
             );
 
-            foreach ($attributes as $slug => $value) {
-                if ($value === null || $value === '' || ! isset($definitions[$slug])) {
-                    continue;
-                }
-
-                AdAttributeValue::create([
-                    'ad_id' => $ad->id,
-                    'category_attribute_definition_id' => $definitions[$slug]->id,
-                    'value' => (string) $value,
-                ]);
-            }
+            $this->persistAttributeValues($ad, $attributes, $definitions);
 
             return $ad;
         });
@@ -392,7 +426,9 @@ class AdController extends Controller
             )
                 + ['publication' => $publication]
                 + ['ad' => new AdDetailResource($ad)],
-            __('api.ad.created')
+            $publication['published']
+                ? __('api.ad.published')
+                : __('api.ad.payment_required')
         );
     }
 
@@ -487,7 +523,20 @@ class AdController extends Controller
             'latitude' => 'nullable|numeric|between:-90,90',
             'longitude' => 'nullable|numeric|between:-180,180',
             'attributes' => 'nullable|array',
-            'attributes.*' => 'nullable|string|max:1000',
+            'attributes.*' => [
+                'nullable',
+                function (string $attribute, mixed $value, \Closure $fail): void {
+                    $values = is_array($value) ? $value : [$value];
+
+                    foreach ($values as $item) {
+                        if (! is_scalar($item) || mb_strlen((string) $item) > 1000) {
+                            $fail("The {$attribute} field must contain text values no longer than 1000 characters.");
+
+                            return;
+                        }
+                    }
+                },
+            ],
             // Optional on a draft — the user may not have chosen photos yet — but
             // stored when supplied. publishDraft() is what insists on at least one.
             'images' => 'nullable|array|max:10',
@@ -557,17 +606,7 @@ class AdController extends Controller
                 (int) ($validated['sub_category_id'] ?? 0)
             );
 
-            foreach ($attributes as $slug => $value) {
-                if ($value === null || $value === '' || ! isset($definitions[$slug])) {
-                    continue;
-                }
-
-                AdAttributeValue::create([
-                    'ad_id' => $ad->id,
-                    'category_attribute_definition_id' => $definitions[$slug]->id,
-                    'value' => (string) $value,
-                ]);
-            }
+            $this->persistAttributeValues($ad, $attributes, $definitions);
 
             return $ad;
         });
@@ -646,23 +685,94 @@ class AdController extends Controller
 
         return sendResponse(
             ['publication' => $publication, 'ad' => new AdDetailResource($ad)],
-            __('api.ad.published')
+            $publication['published']
+                ? __('api.ad.published')
+                : __('api.ad.payment_required')
         );
     }
 
     public function completeStripePayment(Request $request, string $id, ListingPaymentService $listings)
     {
+        $validated = $request->validate([
+            'payment_intent_id' => ['nullable', 'string', 'max:255'],
+        ]);
         $ad = Ad::query()->where('user_id', Auth::id())->where(fn ($query) => $query->where('id', $id)->orWhere('public_id', $id))->first();
         if (! $ad || ! $ad->stripe_payment_intent_id) {
             return sendError('Payment for this ad was not found.', [], 404);
         }
 
+        if (! empty($validated['payment_intent_id'])
+            && ! hash_equals($ad->stripe_payment_intent_id, $validated['payment_intent_id'])) {
+            return sendError('The payment does not belong to this ad.', [], 422);
+        }
+
+        if ($ad->status === 'published' && $ad->payment_status === 'paid') {
+            return sendResponse([
+                'publication' => $listings->publicationState($ad),
+                'ad' => new AdDetailResource($ad),
+            ], __('api.ad.published'));
+        }
+
         $intent = app(StripeService::class)->paymentIntent($ad->stripe_payment_intent_id);
         if (($intent['status'] ?? null) !== 'succeeded') {
-            return sendError('The Stripe payment has not succeeded yet.', [], 422);
+            return sendError(__('api.ad.payment_pending'), [
+                'publication' => $listings->publicationState($ad, $intent),
+                'ad' => new AdDetailResource($ad),
+            ], 422);
         }
 
         $ad = $listings->publishPaidListing($intent['id'], (int) $intent['amount_received'], (string) $intent['currency']);
-        return sendResponse(['ad' => new AdDetailResource($ad)], 'Payment verified and ad published successfully');
+
+        return sendResponse([
+            'publication' => $listings->publicationState($ad),
+            'ad' => new AdDetailResource($ad),
+        ], __('api.ad.published'));
+    }
+
+    public function paymentStatus(Request $request, string $id, ListingPaymentService $listings)
+    {
+        $ad = Ad::query()
+            ->where(fn ($query) => $query->where('id', $id)->orWhere('public_id', $id))
+            ->first();
+
+        if (! $ad) {
+            return sendError(__('api.ad.not_found'), [], 404);
+        }
+
+        if ((int) $ad->user_id !== (int) Auth::id()) {
+            return sendError('You are not allowed to view this payment.', [], 403);
+        }
+
+        $intent = null;
+        if ($ad->status !== 'published' && $ad->stripe_payment_intent_id) {
+            $intent = app(StripeService::class)->paymentIntent($ad->stripe_payment_intent_id);
+        }
+
+        return sendResponse([
+            'publication' => $listings->publicationState($ad, $intent),
+        ]);
+    }
+
+    private function persistAttributeValues(Ad $ad, array $attributes, $definitions): void
+    {
+        foreach ($attributes as $slug => $rawValue) {
+            if (! isset($definitions[$slug])) {
+                continue;
+            }
+
+            $values = is_array($rawValue) ? $rawValue : [$rawValue];
+            $values = array_values(array_unique(array_filter(
+                $values,
+                static fn ($value) => is_scalar($value) && (string) $value !== ''
+            )));
+
+            foreach ($values as $value) {
+                AdAttributeValue::create([
+                    'ad_id' => $ad->id,
+                    'category_attribute_definition_id' => $definitions[$slug]->id,
+                    'value' => (string) $value,
+                ]);
+            }
+        }
     }
 }

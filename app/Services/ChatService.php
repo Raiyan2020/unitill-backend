@@ -9,6 +9,7 @@ use App\Models\Ad;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
 class ChatService
@@ -79,8 +80,14 @@ class ChatService
         ]);
     }
 
-    public function sendMessage(Conversation $conversation, User $sender, ?string $body, ?string $attachmentPath = null, ?string $attachmentType = null): Message
-    {
+    public function sendMessage(
+        Conversation $conversation,
+        User $sender,
+        ?string $body,
+        ?string $attachmentPath = null,
+        ?string $attachmentType = null,
+        ?string $clientMessageId = null,
+    ): Message {
         if (! $conversation->isParticipant($sender->id)) {
             throw new \InvalidArgumentException('not_participant');
         }
@@ -101,42 +108,94 @@ class ChatService
             throw new \InvalidArgumentException('empty_message');
         }
 
-        return DB::transaction(function () use ($conversation, $sender, $body, $attachmentPath, $attachmentType) {
-            $message = Message::create([
-                'conversation_id' => $conversation->id,
-                'sender_id' => $sender->id,
-                'body' => $body,
-                'attachment_path' => $attachmentPath,
-                'attachment_type' => $attachmentType,
-                'type' => 'text',
-            ]);
+        // A replayed send must never write a second row: if the client already
+        // used this id here, hand back what the first attempt stored.
+        if ($clientMessageId !== null) {
+            $existing = $this->findByClientMessageId($conversation, $sender, $clientMessageId);
 
-            $previewText = $body !== '' ? $body : ($attachmentType === 'image' ? '📷 Image' : '📎 Attachment');
-            $preview = mb_strlen($previewText) > 120 ? mb_substr($previewText, 0, 117).'...' : $previewText;
+            if ($existing) {
+                return $existing;
+            }
+        }
 
-            $conversation->update([
-                'last_message_preview' => $preview,
-                'last_message_at' => $message->created_at,
-                'buyer_deleted_at' => null,
-                'seller_deleted_at' => null,
-            ]);
+        $previewText = $body !== '' ? $body : ($attachmentType === 'image' ? '📷 Image' : '📎 Attachment');
+        $preview = mb_strlen($previewText) > 120 ? mb_substr($previewText, 0, 117).'...' : $previewText;
 
-            $message->load('sender:id,first_name,last_name,name,image');
+        try {
+            $message = DB::transaction(function () use ($conversation, $sender, $body, $attachmentPath, $attachmentType, $clientMessageId, $preview) {
+                $message = Message::create([
+                    'conversation_id' => $conversation->id,
+                    'sender_id' => $sender->id,
+                    'body' => $body,
+                    'attachment_path' => $attachmentPath,
+                    'attachment_type' => $attachmentType,
+                    'type' => 'text',
+                    'client_message_id' => $clientMessageId,
+                ]);
 
-            broadcast(new MessageSent($message));
+                $conversation->update([
+                    'last_message_preview' => $preview,
+                    'last_message_at' => $message->created_at,
+                    'buyer_deleted_at' => null,
+                    'seller_deleted_at' => null,
+                ]);
 
-            $recipientId = $conversation->otherParticipantId($sender->id);
+                return $message->load('sender:id,first_name,last_name,name,image');
+            });
+        } catch (QueryException $e) {
+            // Two retries racing each other: the unique index rejects the loser,
+            // which then reads back the row the winner committed.
+            if ($clientMessageId !== null) {
+                $existing = $this->findByClientMessageId($conversation, $sender, $clientMessageId);
 
-            if ($recipientId) {
-                broadcast(new ConversationUpdated($conversation->fresh([
-                    'ad', 'buyer', 'seller',
-                ]), $recipientId));
-
-                $this->notifyRecipient($conversation, $sender, $recipientId, $preview);
+                if ($existing) {
+                    return $existing;
+                }
             }
 
-            return $message;
-        });
+            throw $e;
+        }
+
+        // Everything below runs after the commit and is best-effort. The row is
+        // already durable, so a Pusher outage or a dead FCM token must never
+        // surface to the caller as a failed send.
+        $this->broadcastQuietly(new MessageSent($message));
+
+        $recipientId = $conversation->otherParticipantId($sender->id);
+
+        if ($recipientId) {
+            $this->broadcastQuietly(new ConversationUpdated($conversation->fresh([
+                'ad', 'buyer', 'seller',
+            ]), $recipientId));
+
+            $this->notifyRecipient($conversation, $sender, $recipientId, $preview);
+        }
+
+        return $message;
+    }
+
+    protected function findByClientMessageId(Conversation $conversation, User $sender, string $clientMessageId): ?Message
+    {
+        return Message::query()
+            ->where('conversation_id', $conversation->id)
+            ->where('sender_id', $sender->id)
+            ->where('client_message_id', $clientMessageId)
+            ->with('sender:id,first_name,last_name,name,image')
+            ->first();
+    }
+
+    /**
+     * Deliver an event without letting a transport failure escape. Realtime is
+     * a side effect of a write that has already happened; it can be logged and
+     * dropped, but it must not be able to fail the request that caused it.
+     */
+    protected function broadcastQuietly(object $event): void
+    {
+        try {
+            broadcast($event);
+        } catch (\Throwable $e) {
+            report($e);
+        }
     }
 
     public function sendSystemMessage(Conversation $conversation, string $body): Message
@@ -154,6 +213,31 @@ class ChatService
         ]);
 
         return $message;
+    }
+
+    /**
+     * Hide the conversation for one participant only. The other side keeps the
+     * thread, so it is told to re-read the list rather than left showing stale
+     * counters.
+     */
+    public function deleteForUser(Conversation $conversation, User $user): void
+    {
+        if ($conversation->buyer_id === $user->id) {
+            $conversation->update(['buyer_deleted_at' => now()]);
+        } elseif ($conversation->seller_id === $user->id) {
+            $conversation->update(['seller_deleted_at' => now()]);
+        } else {
+            return;
+        }
+
+        $otherId = $conversation->otherParticipantId($user->id);
+
+        if ($otherId) {
+            $this->broadcastQuietly(new ConversationUpdated(
+                $conversation->fresh(['ad', 'buyer', 'seller']),
+                $otherId
+            ));
+        }
     }
 
     public function markAsRead(Conversation $conversation, User $user): int
@@ -185,10 +269,10 @@ class ChatService
 
         $this->sendSystemMessage($conversation, $systemMessage);
 
-        broadcast(new ConversationArchived($conversation->fresh(), $systemMessage));
+        $this->broadcastQuietly(new ConversationArchived($conversation->fresh(), $systemMessage));
 
         foreach ([$conversation->buyer_id, $conversation->seller_id] as $userId) {
-            broadcast(new ConversationUpdated($conversation->fresh(['ad', 'buyer', 'seller']), $userId));
+            $this->broadcastQuietly(new ConversationUpdated($conversation->fresh(['ad', 'buyer', 'seller']), $userId));
         }
     }
 
@@ -230,7 +314,7 @@ class ChatService
         $conversation = $conversation->fresh(['ad', 'buyer', 'seller']);
 
         foreach ([$conversation->buyer_id, $conversation->seller_id] as $userId) {
-            broadcast(new ConversationUpdated($conversation, $userId));
+            $this->broadcastQuietly(new ConversationUpdated($conversation, $userId));
         }
 
         return ['conversation' => $conversation];
@@ -250,18 +334,24 @@ class ChatService
 
         $senderName = trim($sender->first_name.' '.$sender->last_name) ?: $sender->name;
 
-        $this->firebase->sendNotificationToToken(
-            $recipient->device_token,
-            $senderName,
-            $preview,
-            [
-                // `type` + `related_data` drive the mobile tap-navigation, which
-                // opens the conversation by id. Extra keys kept for context.
-                'type' => 'chat',
-                'related_data' => (string) $conversation->id,
-                'conversation_id' => (string) $conversation->id,
-                'ad_id' => (string) $conversation->ad_id,
-            ]
-        );
+        try {
+            $this->firebase->sendNotificationToToken(
+                $recipient->device_token,
+                $senderName,
+                $preview,
+                [
+                    // `type` + `related_data` drive the mobile tap-navigation, which
+                    // opens the conversation by id. Extra keys kept for context.
+                    'type' => 'chat',
+                    'related_data' => (string) $conversation->id,
+                    'conversation_id' => (string) $conversation->id,
+                    'ad_id' => (string) $conversation->ad_id,
+                ]
+            );
+        } catch (\Throwable $e) {
+            // Same rule as broadcasting: an expired token or an FCM outage is
+            // logged, never allowed to fail the send that triggered it.
+            report($e);
+        }
     }
 }

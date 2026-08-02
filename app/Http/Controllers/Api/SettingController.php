@@ -55,6 +55,7 @@ class SettingController extends Controller
             'firebase' => [
                 'all_users_topic' => config('fcm.all_users_topic', 'unitill_all'),
             ],
+            'stripe_publishable_key' => config('services.stripe.key'),
         ];
 
         return sendResponse($data);

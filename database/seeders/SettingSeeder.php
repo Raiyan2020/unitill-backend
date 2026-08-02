@@ -19,7 +19,7 @@ class SettingSeeder extends Seeder
             'key_id' => 'post_price',
             'title_en'=>'Post Price',
             'title_ar'=>'سعر الاعلان',
-            'value' => '100',
+            'value' => '5.00',
             'set_group' => 'app',
             'is_object' => '1',
         ]);
@@ -28,7 +28,7 @@ class SettingSeeder extends Seeder
             'key_id' => 'free_ads_per_user',
             'title_en' => 'Free Ads Per User',
             'title_ar' => 'عدد الإعلانات المجانية لكل مستخدم',
-            'value' => '0',
+            'value' => '2',
             'set_group' => 'app',
             'is_object' => '0',
         ]);

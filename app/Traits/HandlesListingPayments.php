@@ -4,6 +4,7 @@ namespace App\Traits;
 
 use App\Models\Ad;
 use App\Models\User;
+use App\Services\ListingPaymentService;
 use App\Services\StripeService;
 use App\Services\CouponRedemptionService;
 use Illuminate\Support\Facades\DB;
@@ -84,7 +85,10 @@ trait HandlesListingPayments
         }
 
         if ($result['published']) {
-            return ['published' => true, 'payment_required' => false, 'coupon' => $result['coupon'] ?? null, 'free_ads_remaining' => $this->freeAdsRemaining($ad->user_id)];
+            return app(ListingPaymentService::class)->publicationState($result['ad']) + [
+                'coupon' => $result['coupon'] ?? null,
+                'free_ads_remaining' => $this->freeAdsRemaining($ad->user_id),
+            ];
         }
 
         $paymentAd = $result['ad'];
@@ -100,9 +104,11 @@ trait HandlesListingPayments
             throw $exception;
         }
 
-        return ['published' => false, 'payment_required' => true, 'amount' => (float) $paymentAd->listing_fee,
-            'currency' => strtoupper(config('services.stripe.currency', 'GBP')),
-            'payment_intent_id' => $intent['id'], 'client_secret' => $intent['client_secret'], 'coupon' => $result['coupon'] ?? null];
+        $paymentAd->stripe_payment_intent_id = $intent['id'];
+
+        return app(ListingPaymentService::class)->publicationState($paymentAd, $intent) + [
+            'coupon' => $result['coupon'] ?? null,
+        ];
     }
 
     protected function freeAdsRemaining(int $userId): int

@@ -1,0 +1,195 @@
+{
+    "request": {
+        "method": "GET",
+        "uri": "/api/home",
+        "headers": []
+    },
+    "status": 200,
+    "body": {
+        "status": true,
+        "data": {
+            "location": null,
+            "categories": [
+                {
+                    "id": 1,
+                    "name": "السكن",
+                    "status": "active",
+                    "image": null
+                },
+                {
+                    "id": 8,
+                    "name": "السيارات",
+                    "status": "active",
+                    "image": null
+                },
+                {
+                    "id": 12,
+                    "name": "الأثاث والمنزل",
+                    "status": "active",
+                    "image": null
+                },
+                {
+                    "id": 18,
+                    "name": "الإلكترونيات",
+                    "status": "active",
+                    "image": null
+                },
+                {
+                    "id": 24,
+                    "name": "الأجهزة المنزلية",
+                    "status": "active",
+                    "image": null
+                },
+                {
+                    "id": 30,
+                    "name": "الدراجات",
+                    "status": "active",
+                    "image": null
+                },
+                {
+                    "id": 36,
+                    "name": "الكتب والمواد الدراسية",
+                    "status": "active",
+                    "image": null
+                },
+                {
+                    "id": 41,
+                    "name": "الأزياء والأغراض الشخصية",
+                    "status": "active",
+                    "image": null
+                },
+                {
+                    "id": 46,
+                    "name": "الخدمات",
+                    "status": "active",
+                    "image": null
+                },
+                {
+                    "id": 53,
+                    "name": "أخرى",
+                    "status": "active",
+                    "image": null
+                }
+            ],
+            "recent_ads": {
+                "data": [
+                    {
+                        "id": 9001,
+                        "public_id": "FIX9001",
+                        "title": "Fixture ad 9001",
+                        "subtitle": "Subtitle 9001",
+                        "status": "published",
+                        "price": 250,
+                        "currency": "GBP",
+                        "formatted_price": "£250",
+                        "is_negotiable": true,
+                        "is_verified": true,
+                        "cover_image_url": null,
+                        "city_id": 9001,
+                        "city_name": "Leeds",
+                        "location_name": "Leeds city centre",
+                        "location_label": "Leeds city centre",
+                        "postcode": "LS2 9JT",
+                        "latitude": "53.8007554",
+                        "longitude": "-1.5490774",
+                        "category_id": 1,
+                        "category_name": "Accommodation",
+                        "sub_category_id": 2,
+                        "sub_category_name": "Rooms for rent",
+                        "published_at": "2026-05-01T09:00:00+00:00",
+                        "published_ago": "2 months ago",
+                        "favorited_at": null,
+                        "is_favorited": false
+                    },
+                    {
+                        "id": 9002,
+                        "public_id": "FIX9002",
+                        "title": "Fixture ad 9002",
+                        "subtitle": "Subtitle 9002",
+                        "status": "published",
+                        "price": 75.5,
+                        "currency": "GBP",
+                        "formatted_price": "£76",
+                        "is_negotiable": true,
+                        "is_verified": true,
+                        "cover_image_url": null,
+                        "city_id": 9001,
+                        "city_name": "Leeds",
+                        "location_name": "Leeds city centre",
+                        "location_label": "Leeds city centre",
+                        "postcode": "LS2 9JT",
+                        "latitude": "53.8007554",
+                        "longitude": "-1.5490774",
+                        "category_id": 1,
+                        "category_name": "Accommodation",
+                        "sub_category_id": 2,
+                        "sub_category_name": "Rooms for rent",
+                        "published_at": "2026-06-01T12:00:00+00:00",
+                        "published_ago": "1 month ago",
+                        "favorited_at": null,
+                        "is_favorited": false
+                    }
+                ],
+                "links": {
+                    "first": "<host>/api/home?page=1",
+                    "last": "<host>/api/home?page=1",
+                    "prev": null,
+                    "next": null
+                },
+                "meta": {
+                    "current_page": 1,
+                    "from": 1,
+                    "last_page": 1,
+                    "links": [
+                        {
+                            "url": null,
+                            "label": "&laquo; Previous",
+                            "active": false
+                        },
+                        {
+                            "url": "<host>/api/home?page=1",
+                            "label": "1",
+                            "active": true
+                        },
+                        {
+                            "url": null,
+                            "label": "Next &raquo;",
+                            "active": false
+                        }
+                    ],
+                    "path": "<host>/api/home",
+                    "per_page": 20,
+                    "to": 2,
+                    "total": 2
+                },
+                "sort_options": [
+                    {
+                        "value": "newest",
+                        "label": "Newest First"
+                    },
+                    {
+                        "value": "oldest",
+                        "label": "Oldest First"
+                    },
+                    {
+                        "value": "price_low_to_high",
+                        "label": "Price: Low to High"
+                    },
+                    {
+                        "value": "price_high_to_low",
+                        "label": "Price: High to Low"
+                    },
+                    {
+                        "value": "distance_nearest",
+                        "label": "Distance: Nearest"
+                    },
+                    {
+                        "value": "distance_farthest",
+                        "label": "Distance: Farthest"
+                    }
+                ],
+                "current_sort": "newest"
+            }
+        }
+    }
+}

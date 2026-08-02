@@ -14,10 +14,15 @@ class AdResource extends JsonResource
     {
         $lang = $request->header('lang', 'en');
         $favoriteIds = $request->attributes->get('favorite_ad_ids', []);
-        // No created_at fallback: an ad that has not been paid for has never been
-        // published, and reporting its creation time as "published 1 second ago"
-        // tells the buyer something untrue.
-        $publishedAt = $this->published_at;
+        // An ad that has not been paid for has never been published, so it must
+        // not report its creation time as "published 1 second ago".
+        //
+        // But a row whose status IS published must always carry a date: legacy
+        // rows created before published_at was populated would otherwise start
+        // returning null to clients that have always received a string. Fall
+        // back only in that case, which keeps both invariants true.
+        $publishedAt = $this->published_at
+            ?? ($this->status === 'published' ? $this->created_at : null);
 
         return [
             'id' => $this->id,

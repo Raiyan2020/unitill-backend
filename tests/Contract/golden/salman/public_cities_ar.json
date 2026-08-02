@@ -1,0 +1,20 @@
+{
+    "request": {
+        "method": "GET",
+        "uri": "/api/cities",
+        "headers": {
+            "lang": "ar"
+        }
+    },
+    "status": 200,
+    "body": {
+        "status": true,
+        "data": [
+            {
+                "id": 9001,
+                "name": "ليدز",
+                "status": "active"
+            }
+        ]
+    }
+}

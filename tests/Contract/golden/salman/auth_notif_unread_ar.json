@@ -1,0 +1,17 @@
+{
+    "request": {
+        "method": "GET",
+        "uri": "/api/notifications/unread-count",
+        "headers": {
+            "lang": "ar",
+            "Authorization": "Bearer 23|LsiZ6qmdhCNTqBVG6VBz6ElIwi0QbwkVYO92Ivyc204a5615"
+        }
+    },
+    "status": 200,
+    "body": {
+        "status": true,
+        "data": {
+            "unread_count": 0
+        }
+    }
+}

@@ -32,3 +32,11 @@ Schedule::command('ads:expire')
     ->hourly()
     ->withoutOverlapping()
     ->runInBackground();
+
+// Flags students past the term reconfirmation deadline (30 Sep / 31 Mar) and
+// notifies them. Without this registered the command exists but never runs, so
+// student_reverify_due_at is set and then nothing acts on it.
+Schedule::command('students:require-reverification')
+    ->dailyAt('06:00')
+    ->withoutOverlapping()
+    ->runInBackground();

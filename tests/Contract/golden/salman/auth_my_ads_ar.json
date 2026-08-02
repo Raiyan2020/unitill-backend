@@ -1,0 +1,20 @@
+{
+    "request": {
+        "method": "GET",
+        "uri": "/api/my-ads",
+        "headers": {
+            "lang": "ar",
+            "Authorization": "Bearer 23|LsiZ6qmdhCNTqBVG6VBz6ElIwi0QbwkVYO92Ivyc204a5615"
+        }
+    },
+    "status": 422,
+    "body": {
+        "status": false,
+        "message": "The status must be one of the following values: active, inactive, sold.",
+        "data": {
+            "status": [
+                "The status must be one of the following values: active, inactive, sold."
+            ]
+        }
+    }
+}

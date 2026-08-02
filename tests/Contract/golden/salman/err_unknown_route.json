@@ -1,0 +1,14 @@
+{
+    "request": {
+        "method": "GET",
+        "uri": "/api/definitely-not-a-route",
+        "headers": {
+            "lang": "en"
+        }
+    },
+    "status": 404,
+    "body": {
+        "status": false,
+        "message": "The route api/definitely-not-a-route could not be found."
+    }
+}

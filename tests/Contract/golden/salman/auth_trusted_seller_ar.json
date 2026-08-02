@@ -1,0 +1,83 @@
+{
+    "request": {
+        "method": "GET",
+        "uri": "/api/trusted-seller-application",
+        "headers": {
+            "lang": "ar",
+            "Authorization": "Bearer 23|LsiZ6qmdhCNTqBVG6VBz6ElIwi0QbwkVYO92Ivyc204a5615"
+        }
+    },
+    "status": 200,
+    "body": {
+        "status": true,
+        "data": {
+            "is_trusted_seller": true,
+            "trusted_seller_verified_at": null,
+            "monthly_fee": {
+                "amount": 10,
+                "currency": "GBP",
+                "formatted": "£10",
+                "label": "رسوم برنامج البائع الموثوق £10 شهرياً للأعمال ومقدمي الخدمات الخارجيين باستثناء منظمات الحرم"
+            },
+            "form_options": {
+                "seller_types": [
+                    {
+                        "value": "business",
+                        "label": "عمل تجاري"
+                    },
+                    {
+                        "value": "service_provider",
+                        "label": "مقدم خدمة فردي"
+                    },
+                    {
+                        "value": "organization",
+                        "label": "منظمة أو مؤسسة"
+                    }
+                ],
+                "estimated_listings_counts": [
+                    {
+                        "value": "1_10",
+                        "label": "1-10"
+                    },
+                    {
+                        "value": "10_plus",
+                        "label": "10+"
+                    }
+                ],
+                "preferred_contact_methods": [
+                    {
+                        "value": "email",
+                        "label": "البريد الإلكتروني"
+                    },
+                    {
+                        "value": "phone",
+                        "label": "الهاتف"
+                    },
+                    {
+                        "value": "website",
+                        "label": "رابط الموقع"
+                    }
+                ],
+                "declarations": [
+                    {
+                        "key": "confirm_not_student",
+                        "label": "أؤكد أنني لست طالباً"
+                    },
+                    {
+                        "key": "ack_review",
+                        "label": "أقر بأن UniTill ستراجع طلبي وقد تطلب إثباتات إضافية"
+                    },
+                    {
+                        "key": "ack_removal_rights",
+                        "label": "أقر بأن UniTill تحتفظ بحق إزالة حالة البائع الموثوق"
+                    },
+                    {
+                        "key": "ack_terms",
+                        "label": "أوافق على سياسة الخصوصية وشروط الخدمة"
+                    }
+                ]
+            },
+            "application": null
+        }
+    }
+}

@@ -1,5 +1,13 @@
 <?php
 
+// Same resolution as config/fcm.php: FIREBASE_CREDENTIALS may be absolute or
+// relative to the project root (the web server's CWD is public/).
+$firebaseCredentials = env('FIREBASE_CREDENTIALS', 'storage/app/firebase/firebase_credentials.json');
+
+if (is_string($firebaseCredentials) && $firebaseCredentials !== '' && ! preg_match('#^(/|[A-Za-z]:[\\\\/])#', $firebaseCredentials)) {
+    $firebaseCredentials = base_path($firebaseCredentials);
+}
+
 return [
 
     /*
@@ -31,26 +39,30 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    // Credentials come from the environment only. Two live tokens were
+    // previously inlined here as env() defaults; they are in the git history of
+    // both repositories and must be treated as compromised and rotated, not
+    // merely deleted.
     'myfatoorah' => [
-        'base_url' => env('MY_FATOORAH_BASE_URL','https://apitest.myfatoorah.com/v2'),
-        'token' => env('MY_FATOORAH_TOKEN','SK_KWT_vVZlnnAqu8jRByOWaRPNId4ShzEDNt256dvnjebuyzo52dXjAfRx2ixW5umjWSUx'),//test
-//        'token' => env('MY_FATOORAH_TOKEN','SK_KWT_O26a1e9k8cXBJfKn1yi78LJxYNVrfCD9E5mX7tXSxDbw1ZKz3izUcIirTW8Ri6tq'),
+        'base_url' => env('MY_FATOORAH_BASE_URL', 'https://apitest.myfatoorah.com/v2'),
+        'token' => env('MY_FATOORAH_TOKEN'),
     ],
     'stripe' => [
+        'key' => env('STRIPE_KEY'),
         'secret' => env('STRIPE_SECRET'),
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
         'currency' => env('STRIPE_CURRENCY', 'gbp'),
     ],
     'firebase' => [
-        'credentials' => storage_path('firebase/firebase_credentials.json'),
+        'credentials' => $firebaseCredentials,
     ],
     'whatsapp' => [
         'token' => env('WHATSAPP_TOKEN'),
         'instance' => env('WHATSAPP_INSTANCE'),
     ],
     'wawp' => [
-        'instance_id' => env('WAWP_INSTANCE', '11199681C9D2'),
-        'access_token' => env('WAWP_API_TOKEN','rhS3eDMYV7goCg'),
+        'instance_id' => env('WAWP_INSTANCE'),
+        'access_token' => env('WAWP_API_TOKEN'),
     ],
 
     'twilio' => [

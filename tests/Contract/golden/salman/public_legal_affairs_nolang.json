@@ -1,0 +1,53 @@
+{
+    "request": {
+        "method": "GET",
+        "uri": "/api/legal-affairs",
+        "headers": []
+    },
+    "status": 200,
+    "body": {
+        "status": true,
+        "data": [
+            {
+                "id": 1,
+                "key": "community_guidelines",
+                "section": "policies",
+                "title": "Community Guidelines",
+                "subtitle": "Expected behavior within the UniTill student community.",
+                "description": "[\"Respect: Treat every student with kindness and respect. Harassment, hate speech, or bullying will lead to a permanent ban.\",\"Honesty: Be truthful about item conditions. Do not use stock photos; always provide real pictures of the actual item.\",\"Fair Pricing: While we don't control prices, we encourage fair, student-friendly pricing to help the community.\",\"No Spam: Do not post duplicate ads or send unsolicited marketing messages to other users.\",\"Communication: Keep all business-related conversations professional and relevant to the listing.\",\"Safety First: Report any suspicious behavior or users asking for off-platform payments immediately.\"]"
+            },
+            {
+                "id": 2,
+                "key": "terms_of_service",
+                "section": "policies",
+                "title": "Terms of Service",
+                "subtitle": "Rules for using the UniTill marketplace platform.",
+                "description": "[\"Eligibility: You must be a verified student at a UK university to list items. Non-students can browse but may have restricted access.\",\"Prohibited Items: We strictly prohibit the sale of alcohol, tobacco, weapons, illegal substances, and hazardous materials.\",\"Fees: Posting fees are non-refundable once an ad goes live. We do not take a commission on student-to-student transactions.\",\"Safety: Meet buyers in well-lit, public campus areas. We recommend bringing a friend for high-value transactions.\",\"Accuracy: All listings must accurately represent the condition of the item. Misleading ads will be removed.\"]"
+            },
+            {
+                "id": 3,
+                "key": "privacy_policy",
+                "section": "policies",
+                "title": "Privacy Policy",
+                "subtitle": "How we collect and protect your student identity data.",
+                "description": "[\"Data Collection: We collect your name, university email, and phone number for verification purposes.\",\"Student Verification: We use your .ac.uk email to ensure a safe, student-only environment.\",\"Data Sharing: We never sell your personal data to third-party advertisers.\",\"Retention: Your data is kept while your account is active and for 12 months following deletion to comply with legal obligations.\",\"Security: All data is encrypted using industry-standard 256-bit AES encryption.\"]"
+            },
+            {
+                "id": 4,
+                "key": "refund_policy",
+                "section": "policies",
+                "title": "Refund Policy",
+                "subtitle": "Guidelines for ad posting fee refunds.",
+                "description": "[\"Ad Visibility: Once an ad is live on the marketplace, the posting fee is considered consumed and non-refundable.\",\"Technical Issues: If a technical error prevents your ad from appearing, you are eligible for a full refund or a free re-post credit.\",\"Sold Items: Marking an item as sold does not trigger a partial refund for the remaining ad duration.\",\"Removal: Ads removed for violating our community guidelines are not eligible for refunds.\"]"
+            },
+            {
+                "id": 5,
+                "key": "cookie_policy",
+                "section": "policies",
+                "title": "Cookie Policy",
+                "subtitle": "Information about local storage and preferences.",
+                "description": "[\"Purpose: We use local storage (cookies) to keep you logged in and remember your language and search preferences.\",\"Analytical Data: We collect anonymous usage data to improve the app's performance and fix bugs.\",\"Third Parties: We do not use third-party tracking cookies for targeted advertising.\",\"Management: You can clear your data at any time via your browser settings, which will log you out of UniTill.\"]"
+            }
+        ]
+    }
+}

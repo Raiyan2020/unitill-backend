@@ -1,11 +1,17 @@
 <?php
 
+// Allow FIREBASE_CREDENTIALS to be either an absolute path or one relative to
+// the project root; the web server's CWD is public/, so relative paths must be
+// resolved explicitly.
+$firebaseCredentials = env('FIREBASE_CREDENTIALS', 'storage/app/firebase/firebase_credentials.json');
+
+if (is_string($firebaseCredentials) && $firebaseCredentials !== '' && ! preg_match('#^(/|[A-Za-z]:[\\\\/])#', $firebaseCredentials)) {
+    $firebaseCredentials = base_path($firebaseCredentials);
+}
+
 return [
 
-    'credentials' => env(
-        'FIREBASE_CREDENTIALS',
-        storage_path('app/firebase/firebase_credentials.json')
-    ),
+    'credentials' => $firebaseCredentials,
 
     /*
     |--------------------------------------------------------------------------

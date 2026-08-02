@@ -1,0 +1,14 @@
+{
+    "request": {
+        "method": "DELETE",
+        "uri": "/api/settings",
+        "headers": {
+            "lang": "en"
+        }
+    },
+    "status": 405,
+    "body": {
+        "status": false,
+        "message": "The DELETE method is not supported for route api/settings. Supported methods: GET, HEAD."
+    }
+}

@@ -1,0 +1,181 @@
+{
+    "request": {
+        "method": "GET",
+        "uri": "/api/settings",
+        "headers": []
+    },
+    "status": 200,
+    "body": {
+        "status": true,
+        "data": {
+            "app": {
+                "name": "UniTill",
+                "slogan": "BUY, SELL, REPEAT!",
+                "logo": null
+            },
+            "default_language": "en",
+            "post_price": "100",
+            "post_duration": "30",
+            "terms_conditions": "الشروط والأحكام",
+            "policies": [
+                {
+                    "id": 1,
+                    "key": "community_guidelines",
+                    "title": "Community Guidelines",
+                    "subtitle": "Expected behavior within the UniTill student community.",
+                    "points": [
+                        {
+                            "number": 1,
+                            "text": "Respect: Treat every student with kindness and respect. Harassment, hate speech, or bullying will lead to a permanent ban."
+                        },
+                        {
+                            "number": 2,
+                            "text": "Honesty: Be truthful about item conditions. Do not use stock photos; always provide real pictures of the actual item."
+                        },
+                        {
+                            "number": 3,
+                            "text": "Fair Pricing: While we don't control prices, we encourage fair, student-friendly pricing to help the community."
+                        },
+                        {
+                            "number": 4,
+                            "text": "No Spam: Do not post duplicate ads or send unsolicited marketing messages to other users."
+                        },
+                        {
+                            "number": 5,
+                            "text": "Communication: Keep all business-related conversations professional and relevant to the listing."
+                        },
+                        {
+                            "number": 6,
+                            "text": "Safety First: Report any suspicious behavior or users asking for off-platform payments immediately."
+                        }
+                    ],
+                    "last_updated_at": "<timestamp>",
+                    "last_updated_label": "LAST UPDATED: JUL 2026"
+                },
+                {
+                    "id": 2,
+                    "key": "terms_of_service",
+                    "title": "Terms of Service",
+                    "subtitle": "Rules for using the UniTill marketplace platform.",
+                    "points": [
+                        {
+                            "number": 1,
+                            "text": "Eligibility: You must be a verified student at a UK university to list items. Non-students can browse but may have restricted access."
+                        },
+                        {
+                            "number": 2,
+                            "text": "Prohibited Items: We strictly prohibit the sale of alcohol, tobacco, weapons, illegal substances, and hazardous materials."
+                        },
+                        {
+                            "number": 3,
+                            "text": "Fees: Posting fees are non-refundable once an ad goes live. We do not take a commission on student-to-student transactions."
+                        },
+                        {
+                            "number": 4,
+                            "text": "Safety: Meet buyers in well-lit, public campus areas. We recommend bringing a friend for high-value transactions."
+                        },
+                        {
+                            "number": 5,
+                            "text": "Accuracy: All listings must accurately represent the condition of the item. Misleading ads will be removed."
+                        }
+                    ],
+                    "last_updated_at": "<timestamp>",
+                    "last_updated_label": "LAST UPDATED: JUL 2026"
+                },
+                {
+                    "id": 3,
+                    "key": "privacy_policy",
+                    "title": "Privacy Policy",
+                    "subtitle": "How we collect and protect your student identity data.",
+                    "points": [
+                        {
+                            "number": 1,
+                            "text": "Data Collection: We collect your name, university email, and phone number for verification purposes."
+                        },
+                        {
+                            "number": 2,
+                            "text": "Student Verification: We use your .ac.uk email to ensure a safe, student-only environment."
+                        },
+                        {
+                            "number": 3,
+                            "text": "Data Sharing: We never sell your personal data to third-party advertisers."
+                        },
+                        {
+                            "number": 4,
+                            "text": "Retention: Your data is kept while your account is active and for 12 months following deletion to comply with legal obligations."
+                        },
+                        {
+                            "number": 5,
+                            "text": "Security: All data is encrypted using industry-standard 256-bit AES encryption."
+                        }
+                    ],
+                    "last_updated_at": "<timestamp>",
+                    "last_updated_label": "LAST UPDATED: JUL 2026"
+                },
+                {
+                    "id": 4,
+                    "key": "refund_policy",
+                    "title": "Refund Policy",
+                    "subtitle": "Guidelines for ad posting fee refunds.",
+                    "points": [
+                        {
+                            "number": 1,
+                            "text": "Ad Visibility: Once an ad is live on the marketplace, the posting fee is considered consumed and non-refundable."
+                        },
+                        {
+                            "number": 2,
+                            "text": "Technical Issues: If a technical error prevents your ad from appearing, you are eligible for a full refund or a free re-post credit."
+                        },
+                        {
+                            "number": 3,
+                            "text": "Sold Items: Marking an item as sold does not trigger a partial refund for the remaining ad duration."
+                        },
+                        {
+                            "number": 4,
+                            "text": "Removal: Ads removed for violating our community guidelines are not eligible for refunds."
+                        }
+                    ],
+                    "last_updated_at": "<timestamp>",
+                    "last_updated_label": "LAST UPDATED: JUL 2026"
+                },
+                {
+                    "id": 5,
+                    "key": "cookie_policy",
+                    "title": "Cookie Policy",
+                    "subtitle": "Information about local storage and preferences.",
+                    "points": [
+                        {
+                            "number": 1,
+                            "text": "Purpose: We use local storage (cookies) to keep you logged in and remember your language and search preferences."
+                        },
+                        {
+                            "number": 2,
+                            "text": "Analytical Data: We collect anonymous usage data to improve the app's performance and fix bugs."
+                        },
+                        {
+                            "number": 3,
+                            "text": "Third Parties: We do not use third-party tracking cookies for targeted advertising."
+                        },
+                        {
+                            "number": 4,
+                            "text": "Management: You can clear your data at any time via your browser settings, which will log you out of UniTill."
+                        }
+                    ],
+                    "last_updated_at": "<timestamp>",
+                    "last_updated_label": "LAST UPDATED: JUL 2026"
+                }
+            ],
+            "contact_email": "example@mail.com",
+            "contact_phone": "00000000",
+            "popup_image": null,
+            "enable_popup_image": false,
+            "pusher": {
+                "key": "",
+                "cluster": "mt1"
+            },
+            "firebase": {
+                "all_users_topic": "unitill_all"
+            }
+        }
+    }
+}

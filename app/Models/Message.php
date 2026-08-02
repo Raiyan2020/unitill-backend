@@ -14,6 +14,7 @@ class Message extends Model
         'attachment_path',
         'attachment_type',
         'type',
+        'client_message_id',
         'read_at',
     ];
 

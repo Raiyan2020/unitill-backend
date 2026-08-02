@@ -75,17 +75,47 @@ class ConversationController extends Controller
             ->response()
             ->getData(true);
 
-        return sendResponse($response);
+        return sendResponse($this->withFlatPagination($response));
+    }
+
+    /**
+     * Copy the pagination counters up next to `data`. Laravel nests them under
+     * `meta`, the documented examples show them at the top level, and clients
+     * read them from there — both are kept so neither shape breaks.
+     */
+    protected function withFlatPagination(array $response): array
+    {
+        foreach (['current_page', 'last_page', 'per_page', 'total', 'from', 'to'] as $key) {
+            if (isset($response['meta'][$key])) {
+                $response[$key] = $response['meta'][$key];
+            }
+        }
+
+        return $response;
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
             'ad_id' => 'required',
+            'message' => 'nullable|string|max:5000',
+            'client_message_id' => 'nullable|string|max:64',
         ]);
 
         $lang = $request->header('lang') === 'ar';
         $user = Auth::user();
+
+        // Students past their term deadline cannot start new conversations
+        // until they reconfirm. Existing threads are never cut off mid-chat.
+        if ($user->needsReverification()) {
+            return sendError(
+                $lang
+                    ? 'يجب إعادة تأكيد حالتك كطالب قبل بدء محادثة'
+                    : 'Please re-verify your student status before messaging',
+                ['needs_reverify' => true],
+                403
+            );
+        }
 
         $ad = Ad::query()
             ->published()
@@ -131,6 +161,29 @@ class ConversationController extends Controller
                 [],
                 422
             );
+        }
+
+        // The opening message is optional. It is sent through the same path as
+        // any other message so it gets the same guards, broadcast and push.
+        $openingMessage = trim((string) ($validated['message'] ?? ''));
+
+        if ($openingMessage !== '') {
+            try {
+                $this->chatService->sendMessage(
+                    $conversation,
+                    $user,
+                    $openingMessage,
+                    null,
+                    null,
+                    $validated['client_message_id'] ?? null
+                );
+
+                $conversation->refresh();
+            } catch (\InvalidArgumentException $e) {
+                // The thread itself was created, so this is reported as a
+                // successful start with the message rejected, not a failure.
+                report($e);
+            }
         }
 
         return sendResponse(
@@ -193,17 +246,39 @@ class ConversationController extends Controller
 
         $response = MessageResource::collection($messages)->response()->getData(true);
 
-        return sendResponse($response);
+        return sendResponse($this->withFlatPagination($response));
     }
 
     public function sendMessage(Request $request, string $id)
     {
         $validated = $request->validate([
             'body' => 'nullable|string|max:5000',
-            'attachment' => 'nullable|file|max:10240',
+            // Whitelisted rather than open: an unrestricted upload is served
+            // back out of /storage, so anything executable stays out.
+            'attachment' => [
+                'nullable',
+                'file',
+                'max:10240',
+                'mimes:jpg,jpeg,png,gif,webp,heic,heif,pdf,doc,docx,xls,xlsx,txt',
+            ],
+            'client_message_id' => 'nullable|string|max:64',
+        ], [
+            'attachment.max' => __('api.chat.attachment_too_large'),
+            'attachment.mimes' => __('api.chat.attachment_type_not_allowed'),
         ]);
 
         $lang = $request->header('lang') === 'ar';
+
+        if (Auth::user()->needsReverification()) {
+            return sendError(
+                $lang
+                    ? 'يجب إعادة تأكيد حالتك كطالب قبل إرسال رسالة'
+                    : 'Please re-verify your student status before messaging',
+                ['needs_reverify' => true],
+                403
+            );
+        }
+
         $conversation = $this->findParticipantConversation($id);
 
         if (! $conversation) {
@@ -228,7 +303,8 @@ class ConversationController extends Controller
                 Auth::user(),
                 $validated['body'] ?? '',
                 $attachmentPath,
-                $attachmentType
+                $attachmentType,
+                $validated['client_message_id'] ?? null
             );
         } catch (\InvalidArgumentException $e) {
             return match ($e->getMessage()) {
@@ -342,13 +418,7 @@ class ConversationController extends Controller
             return sendError(__('api.chat.not_found'), [], 404);
         }
 
-        $userId = Auth::id();
-
-        if ($conversation->buyer_id === $userId) {
-            $conversation->update(['buyer_deleted_at' => now()]);
-        } elseif ($conversation->seller_id === $userId) {
-            $conversation->update(['seller_deleted_at' => now()]);
-        }
+        $this->chatService->deleteForUser($conversation, Auth::user());
 
         return sendResponse(
             ['conversation_id' => $conversation->id],

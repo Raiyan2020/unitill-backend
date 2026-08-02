@@ -1,0 +1,14 @@
+{
+    "request": {
+        "method": "GET",
+        "uri": "/api/ads/99999999",
+        "headers": {
+            "lang": "en"
+        }
+    },
+    "status": 404,
+    "body": {
+        "status": false,
+        "message": "Ad not found"
+    }
+}

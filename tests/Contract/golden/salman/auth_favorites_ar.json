@@ -1,0 +1,76 @@
+{
+    "request": {
+        "method": "GET",
+        "uri": "/api/favorites",
+        "headers": {
+            "lang": "ar",
+            "Authorization": "Bearer 23|LsiZ6qmdhCNTqBVG6VBz6ElIwi0QbwkVYO92Ivyc204a5615"
+        }
+    },
+    "status": 200,
+    "body": {
+        "status": true,
+        "data": {
+            "data": [],
+            "links": {
+                "first": "<host>/api/favorites?page=1",
+                "last": "<host>/api/favorites?page=1",
+                "prev": null,
+                "next": null
+            },
+            "meta": {
+                "current_page": 1,
+                "from": null,
+                "last_page": 1,
+                "links": [
+                    {
+                        "url": null,
+                        "label": "&laquo; Previous",
+                        "active": false
+                    },
+                    {
+                        "url": "<host>/api/favorites?page=1",
+                        "label": "1",
+                        "active": true
+                    },
+                    {
+                        "url": null,
+                        "label": "Next &raquo;",
+                        "active": false
+                    }
+                ],
+                "path": "<host>/api/favorites",
+                "per_page": 20,
+                "to": null,
+                "total": 0
+            },
+            "sort_options": [
+                {
+                    "value": "newest",
+                    "label": "الأحدث أولاً"
+                },
+                {
+                    "value": "oldest",
+                    "label": "الأقدم أولاً"
+                },
+                {
+                    "value": "price_low_to_high",
+                    "label": "السعر: من الأقل للأعلى"
+                },
+                {
+                    "value": "price_high_to_low",
+                    "label": "السعر: من الأعلى للأقل"
+                },
+                {
+                    "value": "distance_nearest",
+                    "label": "الأقرب أولاً"
+                },
+                {
+                    "value": "distance_farthest",
+                    "label": "الأبعد أولاً"
+                }
+            ],
+            "current_sort": "newest"
+        }
+    }
+}

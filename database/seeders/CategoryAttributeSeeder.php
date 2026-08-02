@@ -9,6 +9,12 @@ use App\Models\Language;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
 
+/**
+ * Seeds the per-category filter/attribute definitions (checklist pages 9 & 11 +
+ * the client Notes). Each definition declares how it renders in the filter panel
+ * (filter_control) and the post-ad form (post_control), plus config for ranges.
+ * Idempotent via the (category_id, slug) unique key.
+ */
 class CategoryAttributeSeeder extends Seeder
 {
     public function run(): void
@@ -18,8 +24,93 @@ class CategoryAttributeSeeder extends Seeder
             return;
         }
 
-        foreach ($this->map() as $categoryPath => $definitions) {
-            $categoryId = $this->resolveCategoryId($categoryPath);
+        // Condition now includes "Refurbished" (checklist requirement).
+        $condition = [
+            'slug' => 'condition',
+            'label' => ['en' => 'Condition', 'ar' => 'الحالة'],
+            'options' => ['New', 'Like new', 'Refurbished', 'Used'],
+        ];
+        $collection = [
+            'slug' => 'collection_delivery',
+            'label' => ['en' => 'Collection or delivery', 'ar' => 'الاستلام أو التوصيل'],
+            'options' => ['Collection', 'Delivery', 'Both'],
+        ];
+
+        $map = [
+            'Accommodation' => [
+                ['slug' => 'contract_type', 'label' => ['en' => 'Contract type', 'ar' => 'نوع العقد'], 'options' => ['Short-term', 'Long-term']],
+                ['slug' => 'property_type', 'label' => ['en' => 'Property type', 'ar' => 'نوع العقار'], 'options' => ['Flat', 'House', 'Studio', 'Student accommodation', 'Shared room', 'Other']],
+                ['slug' => 'bedrooms', 'label' => ['en' => 'Bedrooms', 'ar' => 'غرف النوم'], 'options' => ['1', '2', '3', '4+']],
+                ['slug' => 'bathrooms', 'label' => ['en' => 'Bathrooms', 'ar' => 'الحمامات'], 'options' => ['1', '2', '3+']],
+                ['slug' => 'payment_term', 'label' => ['en' => 'Payment term', 'ar' => 'مدة الدفع'], 'options' => ['Per week', 'Per month']],
+                ['slug' => 'furnishing', 'label' => ['en' => 'Furnishing', 'ar' => 'الفرش'], 'options' => ['Furnished', 'Unfurnished', 'Part-furnished']],
+                ['slug' => 'bills_included', 'label' => ['en' => 'Bills included', 'ar' => 'الفواتير مشمولة'], 'input_type' => 'boolean', 'filter_control' => 'toggle', 'post_control' => 'toggle'],
+                ['slug' => 'availability_from', 'label' => ['en' => 'Available from', 'ar' => 'متاح من'], 'input_type' => 'string', 'filter_control' => 'date', 'post_control' => 'date'],
+                ['slug' => 'features', 'label' => ['en' => 'Features', 'ar' => 'المميزات'], 'filter_control' => 'multiselect', 'post_control' => 'multiselect', 'options' => ['Parking', 'Garden', 'Balcony']],
+            ],
+            'Cars' => [
+                ['slug' => 'listing_type', 'label' => ['en' => 'Listing type', 'ar' => 'نوع الإعلان'], 'options' => ['Car', 'Parts']],
+                ['slug' => 'make', 'label' => ['en' => 'Make', 'ar' => 'الماركة'], 'options' => ['Toyota', 'BMW', 'Honda', 'Ford', 'Volkswagen', 'Audi', 'Mercedes', 'Nissan', 'Vauxhall', 'Other']],
+                ['slug' => 'model', 'label' => ['en' => 'Model', 'ar' => 'الموديل'], 'input_type' => 'string', 'post_control' => 'text', 'is_filterable' => false],
+                ['slug' => 'year', 'label' => ['en' => 'Year', 'ar' => 'السنة'], 'input_type' => 'number', 'filter_control' => 'range', 'post_control' => 'number', 'config' => ['min' => 1990, 'max' => 2026, 'step' => 1]],
+                ['slug' => 'mileage', 'label' => ['en' => 'Mileage', 'ar' => 'المسافة المقطوعة'], 'input_type' => 'number', 'filter_control' => 'range', 'post_control' => 'number', 'config' => ['min' => 0, 'max' => 300000, 'step' => 1000, 'unit' => 'mi']],
+                ['slug' => 'fuel_type', 'label' => ['en' => 'Fuel type', 'ar' => 'نوع الوقود'], 'filter_control' => 'multiselect', 'post_control' => 'select', 'options' => ['Petrol', 'Diesel', 'Hybrid', 'Electric', 'Other']],
+                ['slug' => 'transmission', 'label' => ['en' => 'Transmission', 'ar' => 'ناقل الحركة'], 'options' => ['Manual', 'Automatic', 'Other']],
+                ['slug' => 'body_type', 'label' => ['en' => 'Body type', 'ar' => 'نوع الهيكل'], 'options' => ['Hatchback', 'Saloon', 'SUV', 'Estate', 'Coupe', 'Convertible', 'Pickup', 'Other']],
+                ['slug' => 'engine_size', 'label' => ['en' => 'Engine size', 'ar' => 'سعة المحرك'], 'input_type' => 'number', 'filter_control' => 'range', 'post_control' => 'number', 'config' => ['min' => 0, 'max' => 8, 'step' => 0.1, 'unit' => 'L', 'decimals' => 1]],
+                ['slug' => 'seats', 'label' => ['en' => 'Seats', 'ar' => 'المقاعد'], 'options' => ['2', '4', '5', '7+']],
+                ['slug' => 'colour', 'label' => ['en' => 'Colour', 'ar' => 'اللون'], 'options' => ['Black', 'White', 'Silver', 'Grey', 'Blue', 'Red', 'Green', 'Other']],
+                ['slug' => 'condition', 'label' => ['en' => 'Condition', 'ar' => 'الحالة'], 'options' => ['Excellent', 'Very good', 'Good']],
+            ],
+            'Furniture & Home' => [
+                ['slug' => 'item_type', 'label' => ['en' => 'Item type', 'ar' => 'نوع القطعة'], 'options' => ['Beds & mattresses', 'Desks & chairs', 'Sofas & storage', 'Kitchen items', 'Other']],
+                $condition,
+                $collection,
+            ],
+            'Electronics' => [
+                ['slug' => 'item_type', 'label' => ['en' => 'Item type', 'ar' => 'النوع'], 'options' => ['Laptop', 'Mobile phone', 'Tablet', 'Accessories', 'Other']],
+                ['slug' => 'brand', 'label' => ['en' => 'Brand', 'ar' => 'العلامة التجارية'], 'options' => ['Apple', 'Samsung', 'Dell', 'HP', 'Lenovo', 'Huawei', 'Sony', 'Other']],
+                $condition,
+                ['slug' => 'storage', 'label' => ['en' => 'Storage', 'ar' => 'التخزين'], 'options' => ['64GB', '128GB', '256GB', '512GB', '1TB+']],
+                ['slug' => 'warranty', 'label' => ['en' => 'Warranty', 'ar' => 'الضمان'], 'input_type' => 'boolean', 'filter_control' => 'toggle', 'post_control' => 'toggle'],
+            ],
+            'Appliances' => [
+                ['slug' => 'appliance_type', 'label' => ['en' => 'Appliance type', 'ar' => 'نوع الجهاز'], 'options' => ['Fridge', 'Washing machine', 'Microwave', 'Heaters & fans', 'Other']],
+                ['slug' => 'brand', 'label' => ['en' => 'Brand', 'ar' => 'العلامة التجارية'], 'input_type' => 'string', 'post_control' => 'text', 'is_filterable' => false],
+                $condition,
+                $collection,
+            ],
+            'Bikes' => [
+                ['slug' => 'bike_type', 'label' => ['en' => 'Type', 'ar' => 'النوع'], 'options' => ['Bicycle', 'Electric bike', 'Motorbike', 'Scooter', 'Other']],
+                ['slug' => 'brand', 'label' => ['en' => 'Brand', 'ar' => 'العلامة التجارية'], 'input_type' => 'string', 'post_control' => 'text', 'is_filterable' => false],
+                $condition,
+                ['slug' => 'electric', 'label' => ['en' => 'Electric', 'ar' => 'كهربائية'], 'input_type' => 'boolean', 'filter_control' => 'toggle', 'post_control' => 'toggle'],
+            ],
+            'Books & Study Materials' => [
+                ['slug' => 'book_type', 'label' => ['en' => 'Type', 'ar' => 'النوع'], 'options' => ['Textbook', 'Notes & revision materials', 'Stationery', 'Other']],
+                ['slug' => 'subject', 'label' => ['en' => 'Subject or course', 'ar' => 'المادة أو المقرر'], 'input_type' => 'string', 'post_control' => 'text', 'is_filterable' => false],
+                $condition,
+                ['slug' => 'format', 'label' => ['en' => 'Format', 'ar' => 'الصيغة'], 'options' => ['Physical', 'Digital notes']],
+            ],
+            'Fashion & Personal Items' => [
+                ['slug' => 'item_type', 'label' => ['en' => 'Type', 'ar' => 'النوع'], 'options' => ['Clothing', 'Shoes', 'Bags & accessories', 'Other']],
+                ['slug' => 'gender', 'label' => ['en' => 'Gender', 'ar' => 'الفئة'], 'options' => ['Men', 'Women', 'Unisex']],
+                ['slug' => 'size', 'label' => ['en' => 'Size', 'ar' => 'المقاس'], 'input_type' => 'string', 'post_control' => 'text', 'is_filterable' => false],
+                $condition,
+            ],
+            'Services' => [
+                ['slug' => 'service_type', 'label' => ['en' => 'Service type', 'ar' => 'نوع الخدمة'], 'options' => ['Tutoring', 'Moving help', 'Cleaning', 'IT / tech help', 'Freelance', 'Other']],
+                ['slug' => 'delivery_mode', 'label' => ['en' => 'Delivery mode', 'ar' => 'طريقة التقديم'], 'options' => ['In-person', 'Online']],
+                ['slug' => 'price_type', 'label' => ['en' => 'Price type', 'ar' => 'نوع السعر'], 'options' => ['Fixed', 'Hourly']],
+                ['slug' => 'availability', 'label' => ['en' => 'Availability', 'ar' => 'التوفر'], 'filter_control' => 'multiselect', 'post_control' => 'multiselect', 'options' => ['Weekdays', 'Weekends', 'Evenings']],
+            ],
+            'Others' => [
+                $condition,
+            ],
+        ];
+
+        foreach ($map as $categoryName => $definitions) {
+            $categoryId = $this->mainCategoryIdByName($categoryName);
             if (! $categoryId) {
                 continue;
             }
@@ -29,181 +120,15 @@ class CategoryAttributeSeeder extends Seeder
                 $this->ensureDefinition($langs, $categoryId, $def, $sort);
                 $sort++;
             }
-
-            $this->pruneRemovedDefinitions($categoryId, array_column($definitions, 'slug'));
         }
     }
 
-    /**
-     * Condition options differ per category in the spec, so each passes its own list.
-     */
-    private function condition(array $options): array
+    private function mainCategoryIdByName(string $englishName): ?int
     {
-        return [
-            'slug' => 'condition',
-            'label' => ['en' => 'Condition', 'ar' => 'الحالة'],
-            'options' => $options,
-            'type' => 'select',
-        ];
-    }
-
-    private function map(): array
-    {
-        return [
-            // Price, postcode, description and photos are columns on `ads`, so they
-            // are deliberately absent here — seeding them as attributes too would
-            // store every listing's price twice, free to disagree.
-            'Accommodation' => [
-                ['slug' => 'property_type', 'label' => ['en' => 'Property type', 'ar' => 'نوع العقار'], 'options' => ['Flat', 'Semi-detached', 'Detached', 'Studio', 'Student Accommodation', 'Shared Room', 'Other'], 'type' => 'select'],
-                ['slug' => 'bedrooms', 'label' => ['en' => 'Bedrooms', 'ar' => 'غرف النوم'], 'options' => ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10+'], 'type' => 'select'],
-                ['slug' => 'bathrooms', 'label' => ['en' => 'Bathrooms', 'ar' => 'الحمامات'], 'options' => ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10+'], 'type' => 'select'],
-                ['slug' => 'furnishing', 'label' => ['en' => 'Furnished', 'ar' => 'الفرش'], 'options' => ['Furnished', 'Unfurnished', 'Part-furnished'], 'type' => 'select'],
-                ['slug' => 'payment_term', 'label' => ['en' => 'Payment term', 'ar' => 'مدة الدفع'], 'options' => ['Per Month', 'Per Week'], 'type' => 'select'],
-                ['slug' => 'available_from', 'label' => ['en' => 'Available from', 'ar' => 'متاح ابتداءً من'], 'options' => [], 'type' => 'date'],
-                ['slug' => 'available_until', 'label' => ['en' => 'Available until', 'ar' => 'متاح حتى'], 'options' => [], 'type' => 'date'],
-                // "Furnished" is omitted from this list on purpose: it is already the
-                // dedicated `furnishing` field above, and a toggle that can contradict
-                // a dropdown is a bug waiting to happen.
-                ['slug' => 'features', 'label' => ['en' => 'Additional features', 'ar' => 'مميزات إضافية'], 'options' => ['Parking', 'Garden', 'Balcony', 'Bills Included'], 'type' => 'multiselect'],
-            ],
-            'Cars' => [
-                // The registration number is the top-level `license_plate` column on
-                // `ads` (it drives the DVLA lookup and needs masking on public ads),
-                // so it is not duplicated as an attribute here.
-                ['slug' => 'make', 'label' => ['en' => 'Make', 'ar' => 'الماركة'], 'options' => ['Toyota', 'BMW', 'Honda', 'Ford', 'Volkswagen', 'Audi', 'Mercedes', 'Nissan', 'Other'], 'type' => 'select'],
-                ['slug' => 'model', 'label' => ['en' => 'Model', 'ar' => 'الموديل'], 'options' => [], 'type' => 'string'],
-                ['slug' => 'year', 'label' => ['en' => 'Year', 'ar' => 'سنة الصنع'], 'options' => [], 'type' => 'number'],
-                ['slug' => 'mileage', 'label' => ['en' => 'Mileage', 'ar' => 'المسافة المقطوعة'], 'options' => [], 'type' => 'number'],
-                ['slug' => 'transmission', 'label' => ['en' => 'Transmission', 'ar' => 'ناقل الحركة'], 'options' => ['Manual', 'Automatic'], 'type' => 'select'],
-                ['slug' => 'fuel_type', 'label' => ['en' => 'Fuel type', 'ar' => 'نوع الوقود'], 'options' => ['Petrol', 'Diesel', 'Hybrid', 'Electric', 'Other'], 'type' => 'select'],
-                $this->condition(['Excellent', 'Very Good', 'Good']),
-            ],
-            'Furniture & Home' => [
-                ['slug' => 'furniture_type', 'label' => ['en' => 'Furniture type', 'ar' => 'نوع الأثاث'], 'options' => ['Sofa', 'Bed', 'Wardrobe', 'Table', 'Chair', 'Desk', 'Dining Set', 'Other'], 'type' => 'select'],
-                $this->condition(['New', 'Like New', 'Used']),
-            ],
-            'Appliances' => [
-                ['slug' => 'appliance_type', 'label' => ['en' => 'Appliance type', 'ar' => 'نوع الجهاز'], 'options' => ['Refrigerator', 'Washing Machine', 'Dryer', 'Microwave', 'Vacuum', 'Iron', 'Air Conditioner', 'Heater', 'Other'], 'type' => 'select'],
-                ['slug' => 'brand', 'label' => ['en' => 'Brand', 'ar' => 'العلامة التجارية'], 'options' => [], 'type' => 'string'],
-                $this->condition(['New', 'Like New', 'Used']),
-            ],
-            // Electronics keeps a broad set of its own, used when a seller picks the
-            // main category or the Accessories / Others subcategories; the four
-            // subcategories below override it with their specific fields.
-            'Electronics' => [
-                ['slug' => 'item_type', 'label' => ['en' => 'Item type', 'ar' => 'النوع'], 'options' => ['Laptop', 'Mobile phone', 'Tablet', 'Computer', 'Home electronics', 'Accessories', 'Other'], 'type' => 'select'],
-                ['slug' => 'brand', 'label' => ['en' => 'Brand', 'ar' => 'العلامة التجارية'], 'options' => ['Apple', 'Samsung', 'Dell', 'HP', 'Lenovo', 'Huawei', 'Other'], 'type' => 'select'],
-                $this->condition(['New', 'Like New', 'Used']),
-            ],
-            'Electronics > Home Electronics' => [
-                ['slug' => 'product_type', 'label' => ['en' => 'Product type', 'ar' => 'نوع المنتج'], 'options' => ['TV', 'Audio System', 'Speaker', 'Projector', 'Home Theatre', 'Smart Device', 'Other'], 'type' => 'select'],
-                ['slug' => 'brand', 'label' => ['en' => 'Brand', 'ar' => 'العلامة التجارية'], 'options' => ['Samsung', 'LG', 'Sony', 'Philips', 'Panasonic', 'Hisense', 'Bose', 'JBL', 'Amazon', 'Apple', 'Other'], 'type' => 'select'],
-                ['slug' => 'model_name', 'label' => ['en' => 'Model name/number', 'ar' => 'اسم أو رقم الموديل'], 'options' => [], 'type' => 'string'],
-                ['slug' => 'screen_size', 'label' => ['en' => 'Screen size', 'ar' => 'حجم الشاشة'], 'options' => ['24"', '32"', '40"', '43"', '50"', '55"', '65"', '75"', '85"+'], 'type' => 'select'],
-                ['slug' => 'display_type', 'label' => ['en' => 'Display type', 'ar' => 'نوع الشاشة'], 'options' => ['LED', 'OLED', 'QLED', 'LCD', 'Other'], 'type' => 'select'],
-                ['slug' => 'resolution', 'label' => ['en' => 'Resolution', 'ar' => 'الدقة'], 'options' => ['HD', 'Full HD', '4K UHD', '8K UHD', 'Other'], 'type' => 'select'],
-                ['slug' => 'smart_functionality', 'label' => ['en' => 'Smart functionality', 'ar' => 'خاصية ذكية'], 'options' => ['Yes', 'No'], 'type' => 'select'],
-                $this->condition(['New', 'Like New', 'Used']),
-            ],
-            'Electronics > Laptops' => [
-                ['slug' => 'brand', 'label' => ['en' => 'Brand', 'ar' => 'العلامة التجارية'], 'options' => ['Apple', 'Dell', 'HP', 'Lenovo', 'ASUS', 'Acer', 'Microsoft', 'Other'], 'type' => 'select'],
-                ['slug' => 'processor', 'label' => ['en' => 'Processor', 'ar' => 'المعالج'], 'options' => ['Intel i3', 'Intel i5', 'Intel i7', 'Intel i9', 'AMD Ryzen', 'Apple M1', 'Apple M2', 'Other'], 'type' => 'select'],
-                ['slug' => 'ram', 'label' => ['en' => 'RAM', 'ar' => 'الذاكرة'], 'options' => ['4GB', '8GB', '16GB', '32GB+'], 'type' => 'select'],
-                ['slug' => 'storage', 'label' => ['en' => 'Storage', 'ar' => 'التخزين'], 'options' => ['128GB', '256GB', '512GB', '1TB+'], 'type' => 'select'],
-                $this->condition(['New', 'Like New', 'Used']),
-            ],
-            'Electronics > Tablets' => [
-                ['slug' => 'brand', 'label' => ['en' => 'Brand', 'ar' => 'العلامة التجارية'], 'options' => ['Apple', 'Samsung', 'Huawei', 'Lenovo', 'Amazon', 'Other'], 'type' => 'select'],
-                ['slug' => 'screen_size', 'label' => ['en' => 'Screen size', 'ar' => 'حجم الشاشة'], 'options' => ['7-8"', '9-10"', '11-12.9"', '13"+'], 'type' => 'select'],
-                ['slug' => 'storage', 'label' => ['en' => 'Storage capacity', 'ar' => 'سعة التخزين'], 'options' => ['32GB', '64GB', '128GB', '256GB', '512GB+'], 'type' => 'select'],
-                ['slug' => 'connectivity', 'label' => ['en' => 'Connectivity', 'ar' => 'الاتصال'], 'options' => ['Wi-Fi', 'Wi-Fi + Cellular'], 'type' => 'select'],
-                $this->condition(['New', 'Like New', 'Used']),
-            ],
-            'Electronics > Mobile phones' => [
-                ['slug' => 'brand', 'label' => ['en' => 'Brand', 'ar' => 'العلامة التجارية'], 'options' => ['Apple', 'Samsung', 'Huawei', 'Xiaomi', 'OnePlus', 'Oppo', 'Other'], 'type' => 'select'],
-                ['slug' => 'storage', 'label' => ['en' => 'Storage capacity', 'ar' => 'سعة التخزين'], 'options' => ['32GB', '64GB', '128GB', '256GB', '512GB', '1TB'], 'type' => 'select'],
-                ['slug' => 'lock_status', 'label' => ['en' => 'Unlocked/Locked', 'ar' => 'مفتوح أو مقفل'], 'options' => ['Unlocked', 'Locked'], 'type' => 'select'],
-                $this->condition(['New', 'Like New', 'Used']),
-            ],
-            'Electronics > Computers' => [
-                ['slug' => 'computer_type', 'label' => ['en' => 'Type', 'ar' => 'النوع'], 'options' => ['Desktop', 'Monitor', 'Accessories', 'Components', 'Other'], 'type' => 'select'],
-                ['slug' => 'brand', 'label' => ['en' => 'Brand', 'ar' => 'العلامة التجارية'], 'options' => [], 'type' => 'string'],
-                ['slug' => 'processor', 'label' => ['en' => 'Processor', 'ar' => 'المعالج'], 'options' => ['Intel', 'AMD', 'Apple'], 'type' => 'select'],
-                ['slug' => 'ram', 'label' => ['en' => 'RAM', 'ar' => 'الذاكرة'], 'options' => ['4GB', '8GB', '16GB', '32GB+'], 'type' => 'select'],
-                ['slug' => 'storage', 'label' => ['en' => 'Storage', 'ar' => 'التخزين'], 'options' => ['128GB', '256GB', '512GB', '1TB+'], 'type' => 'select'],
-                $this->condition(['New', 'Like New', 'Used']),
-            ],
-            'Bikes' => [
-                ['slug' => 'bike_type', 'label' => ['en' => 'Type', 'ar' => 'النوع'], 'options' => ['Road', 'Mountain', 'Hybrid', 'Electric', 'Folding', 'Kids', 'Other'], 'type' => 'select'],
-                ['slug' => 'brand', 'label' => ['en' => 'Brand', 'ar' => 'العلامة التجارية'], 'options' => [], 'type' => 'string'],
-                ['slug' => 'frame_size', 'label' => ['en' => 'Frame size', 'ar' => 'مقاس الهيكل'], 'options' => ['Small', 'Medium', 'Large'], 'type' => 'select'],
-                $this->condition(['New', 'Used']),
-            ],
-            'Books & Study Materials' => [
-                ['slug' => 'book_type', 'label' => ['en' => 'Book type', 'ar' => 'نوع الكتاب'], 'options' => ['Textbook', 'Novel', 'Academic Reference', 'Workbook', 'Other'], 'type' => 'select'],
-                ['slug' => 'subject_field', 'label' => ['en' => 'Subject/Field', 'ar' => 'المادة أو التخصص'], 'options' => ['Accounting', 'Engineering', 'Medicine', 'Law', 'Literature', 'Other'], 'type' => 'select'],
-                ['slug' => 'language', 'label' => ['en' => 'Language', 'ar' => 'اللغة'], 'options' => ['English', 'Arabic', 'Other'], 'type' => 'select'],
-                $this->condition(['New', 'Like New', 'Used']),
-            ],
-            'Fashion & Personal Items' => [
-                ['slug' => 'item_type', 'label' => ['en' => 'Type', 'ar' => 'النوع'], 'options' => ['Clothing', 'Shoes', 'Bags & accessories', 'Other'], 'type' => 'select'],
-                ['slug' => 'gender', 'label' => ['en' => 'Gender', 'ar' => 'الفئة'], 'options' => ['Men', 'Women', 'Unisex'], 'type' => 'select'],
-                ['slug' => 'size', 'label' => ['en' => 'Size', 'ar' => 'المقاس'], 'options' => [], 'type' => 'string'],
-                $this->condition(['New', 'Used']),
-            ],
-            'Services' => [
-                ['slug' => 'service_type', 'label' => ['en' => 'Service type', 'ar' => 'نوع الخدمة'], 'options' => ['Tutoring', 'Transport', 'Cleaning', 'Moving', 'Repair', 'IT Support', 'Event Services', 'Photography', 'Other'], 'type' => 'select'],
-                ['slug' => 'availability', 'label' => ['en' => 'Availability', 'ar' => 'التوفر'], 'options' => ['One-Time', 'Recurring'], 'type' => 'select'],
-                ['slug' => 'rate_basis', 'label' => ['en' => 'Rate basis', 'ar' => 'أساس التسعير'], 'options' => ['Per Hour', 'Per Day', 'Per Task'], 'type' => 'select'],
-            ],
-            'Others' => [
-                ['slug' => 'subcategory_type', 'label' => ['en' => 'Subcategory', 'ar' => 'التصنيف الفرعي'], 'options' => ['General Goods', 'Accessories', 'Tools', 'Collectibles', 'Miscellaneous'], 'type' => 'select'],
-                $this->condition(['New', 'Like New', 'Used']),
-            ],
-        ];
-    }
-
-    /**
-     * Resolves either a main category ("Cars") or a subcategory addressed by
-     * path ("Electronics > Laptops"). Subcategories carry their own attributes
-     * where the spec gives them distinct fields — laptop RAM has no business
-     * appearing on a mobile phone listing.
-     */
-    private function resolveCategoryId(string $path): ?int
-    {
-        $segments = array_map('trim', explode('>', $path));
-
-        $parentId = null;
-        $categoryId = null;
-
-        foreach ($segments as $name) {
-            $categoryId = CategoryTranslation::query()
-                ->where('name', $name)
-                ->whereHas('category', fn ($q) => $parentId === null
-                    ? $q->whereNull('parent_id')
-                    : $q->where('parent_id', $parentId))
-                ->value('category_id');
-
-            if (! $categoryId) {
-                return null;
-            }
-
-            $parentId = $categoryId;
-        }
-
-        return $categoryId ? (int) $categoryId : null;
-    }
-
-    /**
-     * Deletes only definitions no longer in the spec, instead of truncating the
-     * whole table, so values on existing ads survive.
-     */
-    private function pruneRemovedDefinitions(int $categoryId, array $keptSlugs): void
-    {
-        CategoryAttributeDefinition::query()
-            ->where('category_id', $categoryId)
-            ->whereNotIn('slug', $keptSlugs)
-            ->delete();
+        return CategoryTranslation::query()
+            ->where('name', $englishName)
+            ->whereHas('category', fn ($q) => $q->whereNull('parent_id'))
+            ->value('category_id');
     }
 
     private function ensureDefinition(
@@ -212,36 +137,37 @@ class CategoryAttributeSeeder extends Seeder
         array $def,
         int $sort
     ): void {
-        $type = $def['type'] ?? 'select';
-
-        $options = [];
-        if (in_array($type, ['select', 'multiselect'], true)) {
-            $options = array_map(
-                fn ($opt) => ['value' => $opt, 'label' => $opt],
-                $def['options'] ?? []
-            );
-        }
+        $inputType = $def['input_type'] ?? 'select';
+        $options = array_map(
+            fn ($opt) => ['value' => $opt, 'label' => $opt],
+            $def['options'] ?? []
+        );
 
         $definition = CategoryAttributeDefinition::updateOrCreate(
             ['category_id' => $categoryId, 'slug' => $def['slug']],
             [
-                'input_type' => $type,
+                'input_type' => $inputType,
+                'filter_control' => $def['filter_control'] ?? null,
+                'post_control' => $def['post_control'] ?? null,
                 'options' => $options,
+                'config' => $def['config'] ?? null,
                 'sort_order' => $sort,
-                'is_required' => false,
+                'is_required' => $def['is_required'] ?? false,
+                'is_filterable' => $def['is_filterable'] ?? true,
+                'is_postable' => $def['is_postable'] ?? true,
                 'is_active' => true,
             ]
         );
 
-        foreach (['en', 'ar'] as $code) {
+        foreach (['en' => $def['label']['en'], 'ar' => $def['label']['ar']] as $code => $label) {
             $lang = $langs->get($code);
-            if ($lang && isset($def['label'][$code])) {
+            if ($lang) {
                 CategoryAttributeDefinitionTranslation::updateOrCreate(
                     [
                         'category_attribute_definition_id' => $definition->id,
                         'language_id' => $lang->id,
                     ],
-                    ['label' => $def['label'][$code]]
+                    ['label' => $label]
                 );
             }
         }

@@ -25,6 +25,10 @@ class MyAdResource extends JsonResource
             'status_label' => $statusMeta['label'],
             'status_badge' => $statusMeta['badge'],
             'available_actions' => $statusMeta['actions'],
+            'payment_status' => $this->payment_status,
+            'listing_fee' => $this->listing_fee !== null ? (float) $this->listing_fee : null,
+            'payment_required' => $this->status === 'pending'
+                && $this->payment_status === 'requires_payment',
         ];
 
         if ($this->status === 'published') {
@@ -82,7 +86,12 @@ class MyAdResource extends JsonResource
             'pending' => [
                 'label' => __('api.my_ad.status_pending'),
                 'badge' => 'pending',
-                'actions' => ['see_details'],
+                'actions' => ['see_details', 'pay', 'delete'],
+            ],
+            'draft' => [
+                'label' => __('api.my_ad.status_draft'),
+                'badge' => 'draft',
+                'actions' => ['see_details', 'publish', 'delete'],
             ],
             default => [
                 'label' => strtoupper((string) $this->status),

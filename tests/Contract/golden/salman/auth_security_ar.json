@@ -1,0 +1,23 @@
+{
+    "request": {
+        "method": "GET",
+        "uri": "/api/account-security",
+        "headers": {
+            "lang": "ar",
+            "Authorization": "Bearer 23|LsiZ6qmdhCNTqBVG6VBz6ElIwi0QbwkVYO92Ivyc204a5615"
+        }
+    },
+    "status": 200,
+    "body": {
+        "status": true,
+        "data": {
+            "password": {
+                "last_updated_at": "<timestamp>",
+                "last_updated_ago": "<timestamp>"
+            },
+            "sessions": [
+                "<sessions:23>"
+            ]
+        }
+    }
+}

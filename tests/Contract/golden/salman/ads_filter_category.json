@@ -1,0 +1,401 @@
+{
+    "request": {
+        "method": "GET",
+        "uri": "/api/ads",
+        "headers": {
+            "lang": "en"
+        }
+    },
+    "status": 200,
+    "body": {
+        "status": true,
+        "data": {
+            "data": [
+                {
+                    "id": 9001,
+                    "public_id": "FIX9001",
+                    "title": "Fixture ad 9001",
+                    "subtitle": "Subtitle 9001",
+                    "status": "published",
+                    "price": 250,
+                    "currency": "GBP",
+                    "formatted_price": "£250",
+                    "is_negotiable": true,
+                    "is_verified": true,
+                    "cover_image_url": null,
+                    "city_id": 9001,
+                    "city_name": "Leeds",
+                    "location_name": "Leeds city centre",
+                    "location_label": "Leeds city centre",
+                    "postcode": "LS2 9JT",
+                    "latitude": "53.8007554",
+                    "longitude": "-1.5490774",
+                    "category_id": 1,
+                    "category_name": "Accommodation",
+                    "sub_category_id": 2,
+                    "sub_category_name": "Rooms for rent",
+                    "published_at": "2026-05-01T09:00:00+00:00",
+                    "published_ago": "2 months ago",
+                    "favorited_at": null,
+                    "is_favorited": false
+                },
+                {
+                    "id": 9002,
+                    "public_id": "FIX9002",
+                    "title": "Fixture ad 9002",
+                    "subtitle": "Subtitle 9002",
+                    "status": "published",
+                    "price": 75.5,
+                    "currency": "GBP",
+                    "formatted_price": "£76",
+                    "is_negotiable": true,
+                    "is_verified": true,
+                    "cover_image_url": null,
+                    "city_id": 9001,
+                    "city_name": "Leeds",
+                    "location_name": "Leeds city centre",
+                    "location_label": "Leeds city centre",
+                    "postcode": "LS2 9JT",
+                    "latitude": "53.8007554",
+                    "longitude": "-1.5490774",
+                    "category_id": 1,
+                    "category_name": "Accommodation",
+                    "sub_category_id": 2,
+                    "sub_category_name": "Rooms for rent",
+                    "published_at": "2026-06-01T12:00:00+00:00",
+                    "published_ago": "1 month ago",
+                    "favorited_at": null,
+                    "is_favorited": false
+                }
+            ],
+            "links": {
+                "first": "<host>/api/ads?page=1",
+                "last": "<host>/api/ads?page=1",
+                "prev": null,
+                "next": null
+            },
+            "meta": {
+                "current_page": 1,
+                "from": 1,
+                "last_page": 1,
+                "links": [
+                    {
+                        "url": null,
+                        "label": "&laquo; Previous",
+                        "active": false
+                    },
+                    {
+                        "url": "<host>/api/ads?page=1",
+                        "label": "1",
+                        "active": true
+                    },
+                    {
+                        "url": null,
+                        "label": "Next &raquo;",
+                        "active": false
+                    }
+                ],
+                "path": "<host>/api/ads",
+                "per_page": 20,
+                "to": 2,
+                "total": 2
+            },
+            "sort_options": [
+                {
+                    "value": "newest",
+                    "label": "Newest First"
+                },
+                {
+                    "value": "oldest",
+                    "label": "Oldest First"
+                },
+                {
+                    "value": "price_low_to_high",
+                    "label": "Price: Low to High"
+                },
+                {
+                    "value": "price_high_to_low",
+                    "label": "Price: High to Low"
+                },
+                {
+                    "value": "distance_nearest",
+                    "label": "Distance: Nearest"
+                },
+                {
+                    "value": "distance_farthest",
+                    "label": "Distance: Farthest"
+                }
+            ],
+            "current_sort": "newest",
+            "applied_filters": {
+                "main_category_id": 1
+            },
+            "filter_options": [
+                {
+                    "slug": "price",
+                    "label": "Price",
+                    "input_type": "number",
+                    "filter_control": "range",
+                    "post_control": "number",
+                    "options": [],
+                    "config": {
+                        "unit": "£"
+                    },
+                    "is_required": false,
+                    "is_filterable": true,
+                    "is_postable": false,
+                    "is_multi": false,
+                    "is_range": true
+                },
+                {
+                    "slug": "contract_type",
+                    "label": "Contract type",
+                    "input_type": "select",
+                    "filter_control": "select",
+                    "post_control": "select",
+                    "options": [
+                        {
+                            "value": "Short-term",
+                            "label": "Short-term"
+                        },
+                        {
+                            "value": "Long-term",
+                            "label": "Long-term"
+                        }
+                    ],
+                    "config": [],
+                    "is_required": false,
+                    "is_filterable": true,
+                    "is_postable": true,
+                    "is_multi": false,
+                    "is_range": false
+                },
+                {
+                    "slug": "property_type",
+                    "label": "Property type",
+                    "input_type": "select",
+                    "filter_control": "select",
+                    "post_control": "select",
+                    "options": [
+                        {
+                            "value": "Flat",
+                            "label": "Flat"
+                        },
+                        {
+                            "value": "House",
+                            "label": "House"
+                        },
+                        {
+                            "value": "Studio",
+                            "label": "Studio"
+                        },
+                        {
+                            "value": "Student accommodation",
+                            "label": "Student accommodation"
+                        },
+                        {
+                            "value": "Shared room",
+                            "label": "Shared room"
+                        },
+                        {
+                            "value": "Other",
+                            "label": "Other"
+                        }
+                    ],
+                    "config": [],
+                    "is_required": false,
+                    "is_filterable": true,
+                    "is_postable": true,
+                    "is_multi": false,
+                    "is_range": false
+                },
+                {
+                    "slug": "bedrooms",
+                    "label": "Bedrooms",
+                    "input_type": "select",
+                    "filter_control": "select",
+                    "post_control": "select",
+                    "options": [
+                        {
+                            "value": "1",
+                            "label": "1"
+                        },
+                        {
+                            "value": "2",
+                            "label": "2"
+                        },
+                        {
+                            "value": "3",
+                            "label": "3"
+                        },
+                        {
+                            "value": "4+",
+                            "label": "4+"
+                        }
+                    ],
+                    "config": [],
+                    "is_required": false,
+                    "is_filterable": true,
+                    "is_postable": true,
+                    "is_multi": false,
+                    "is_range": false
+                },
+                {
+                    "slug": "bathrooms",
+                    "label": "Bathrooms",
+                    "input_type": "select",
+                    "filter_control": "select",
+                    "post_control": "select",
+                    "options": [
+                        {
+                            "value": "1",
+                            "label": "1"
+                        },
+                        {
+                            "value": "2",
+                            "label": "2"
+                        },
+                        {
+                            "value": "3+",
+                            "label": "3+"
+                        }
+                    ],
+                    "config": [],
+                    "is_required": false,
+                    "is_filterable": true,
+                    "is_postable": true,
+                    "is_multi": false,
+                    "is_range": false
+                },
+                {
+                    "slug": "payment_term",
+                    "label": "Payment term",
+                    "input_type": "select",
+                    "filter_control": "select",
+                    "post_control": "select",
+                    "options": [
+                        {
+                            "value": "Per week",
+                            "label": "Per week"
+                        },
+                        {
+                            "value": "Per month",
+                            "label": "Per month"
+                        }
+                    ],
+                    "config": [],
+                    "is_required": false,
+                    "is_filterable": true,
+                    "is_postable": true,
+                    "is_multi": false,
+                    "is_range": false
+                },
+                {
+                    "slug": "furnishing",
+                    "label": "Furnishing",
+                    "input_type": "select",
+                    "filter_control": "select",
+                    "post_control": "select",
+                    "options": [
+                        {
+                            "value": "Furnished",
+                            "label": "Furnished"
+                        },
+                        {
+                            "value": "Unfurnished",
+                            "label": "Unfurnished"
+                        },
+                        {
+                            "value": "Part-furnished",
+                            "label": "Part-furnished"
+                        }
+                    ],
+                    "config": [],
+                    "is_required": false,
+                    "is_filterable": true,
+                    "is_postable": true,
+                    "is_multi": false,
+                    "is_range": false
+                },
+                {
+                    "slug": "bills_included",
+                    "label": "Bills included",
+                    "input_type": "boolean",
+                    "filter_control": "toggle",
+                    "post_control": "toggle",
+                    "options": [],
+                    "config": [],
+                    "is_required": false,
+                    "is_filterable": true,
+                    "is_postable": true,
+                    "is_multi": false,
+                    "is_range": false
+                },
+                {
+                    "slug": "availability_from",
+                    "label": "Available from",
+                    "input_type": "string",
+                    "filter_control": "date",
+                    "post_control": "date",
+                    "options": [],
+                    "config": [],
+                    "is_required": false,
+                    "is_filterable": true,
+                    "is_postable": true,
+                    "is_multi": false,
+                    "is_range": false
+                },
+                {
+                    "slug": "features",
+                    "label": "Features",
+                    "input_type": "select",
+                    "filter_control": "multiselect",
+                    "post_control": "multiselect",
+                    "options": [
+                        {
+                            "value": "Parking",
+                            "label": "Parking"
+                        },
+                        {
+                            "value": "Garden",
+                            "label": "Garden"
+                        },
+                        {
+                            "value": "Balcony",
+                            "label": "Balcony"
+                        }
+                    ],
+                    "config": [],
+                    "is_required": false,
+                    "is_filterable": true,
+                    "is_postable": true,
+                    "is_multi": true,
+                    "is_range": false
+                },
+                {
+                    "slug": "location",
+                    "label": "Distance (postcode)",
+                    "input_type": "string",
+                    "filter_control": "radius",
+                    "post_control": "none",
+                    "options": [],
+                    "config": {
+                        "radius_options": [
+                            1,
+                            3,
+                            5,
+                            10,
+                            25,
+                            50
+                        ]
+                    },
+                    "is_required": false,
+                    "is_filterable": true,
+                    "is_postable": false,
+                    "is_multi": false,
+                    "is_range": false
+                }
+            ]
+        }
+    }
+}
