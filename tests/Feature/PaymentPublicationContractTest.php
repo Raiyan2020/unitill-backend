@@ -30,15 +30,18 @@ class PaymentPublicationContractTest extends TestCase
                 'status' => 'requires_payment_method',
                 'amount_received' => 0,
                 'currency' => 'gbp',
+                'client_secret' => $ad->stripe_payment_intent_id.'_secret_test',
             ]),
         ]);
 
         $this->postJson("/api/ads/{$ad->id}/payment/complete")
-            ->assertOk()
-            ->assertJsonPath('status', true)
+            ->assertStatus(422)
+            ->assertJsonPath('status', false)
             ->assertJsonPath('data.publication.published', false)
             ->assertJsonPath('data.publication.payment_required', true)
-            ->assertJsonPath('data.publication.amount', 5);
+            ->assertJsonPath('data.publication.amount', 5)
+            ->assertJsonPath('data.publication.payment_status', 'requires_payment')
+            ->assertJsonPath('data.publication.client_secret', $ad->stripe_payment_intent_id.'_secret_test');
 
         $this->assertSame('pending', $ad->fresh()->status);
     }
@@ -82,11 +85,66 @@ class PaymentPublicationContractTest extends TestCase
         [$user, $ad] = $this->pendingPaidAd();
         Sanctum::actingAs($user);
 
+        Http::fake([
+            'api.stripe.com/*' => Http::response([
+                'id' => $ad->stripe_payment_intent_id,
+                'status' => 'requires_payment_method',
+                'client_secret' => $ad->stripe_payment_intent_id.'_secret_test',
+            ]),
+        ]);
+
         $this->getJson("/api/ads/{$ad->id}/payment/status")
             ->assertOk()
             ->assertJsonPath('data.publication.published', false)
             ->assertJsonPath('data.publication.payment_required', true)
-            ->assertJsonPath('data.publication.payment_status', 'requires_payment');
+            ->assertJsonPath('data.publication.payment_status', 'requires_payment')
+            ->assertJsonPath('data.publication.payment_intent_id', $ad->stripe_payment_intent_id)
+            ->assertJsonPath('data.publication.client_secret', $ad->stripe_payment_intent_id.'_secret_test');
+    }
+
+    public function test_payment_status_reports_paid_while_webhook_publication_is_pending(): void
+    {
+        [$user, $ad] = $this->pendingPaidAd();
+        Sanctum::actingAs($user);
+
+        Http::fake([
+            'api.stripe.com/*' => Http::response([
+                'id' => $ad->stripe_payment_intent_id,
+                'status' => 'succeeded',
+                'client_secret' => $ad->stripe_payment_intent_id.'_secret_test',
+            ]),
+        ]);
+
+        $this->getJson("/api/ads/{$ad->id}/payment/status")
+            ->assertOk()
+            ->assertJsonPath('data.publication.published', false)
+            ->assertJsonPath('data.publication.payment_required', false)
+            ->assertJsonPath('data.publication.payment_status', 'paid');
+
+        $this->assertSame('pending', $ad->fresh()->status);
+    }
+
+    public function test_payment_status_distinguishes_forbidden_from_missing_ads(): void
+    {
+        [, $ad] = $this->pendingPaidAd();
+        [$otherUser] = $this->pendingPaidAd();
+        Sanctum::actingAs($otherUser);
+
+        $this->getJson("/api/ads/{$ad->id}/payment/status")->assertForbidden();
+        $this->getJson('/api/ads/999999999/payment/status')->assertNotFound();
+        Http::assertNothingSent();
+    }
+
+    public function test_completion_rejects_an_intent_from_another_ad(): void
+    {
+        [$user, $ad] = $this->pendingPaidAd();
+        Sanctum::actingAs($user);
+
+        $this->postJson("/api/ads/{$ad->id}/payment/complete", [
+            'payment_intent_id' => 'pi_different',
+        ])->assertStatus(422);
+
+        Http::assertNothingSent();
     }
 
     public function test_pending_payment_ad_is_absent_from_public_endpoints(): void

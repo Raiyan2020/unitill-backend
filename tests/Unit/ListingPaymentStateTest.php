@@ -4,6 +4,8 @@ namespace Tests\Unit;
 
 use App\Models\Ad;
 use App\Services\ListingPaymentService;
+use App\Services\StripeService;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class ListingPaymentStateTest extends TestCase
@@ -50,5 +52,48 @@ class ListingPaymentStateTest extends TestCase
 
         $this->assertFalse($state['published']);
         $this->assertFalse($state['payment_required']);
+    }
+
+    public function test_succeeded_intent_reports_paid_while_publication_is_pending(): void
+    {
+        $ad = new Ad([
+            'status' => 'pending',
+            'payment_status' => 'requires_payment',
+            'listing_fee' => 5,
+            'stripe_payment_intent_id' => 'pi_test',
+        ]);
+
+        $state = app(ListingPaymentService::class)->publicationState($ad, [
+            'status' => 'succeeded',
+            'client_secret' => 'pi_test_secret_value',
+        ]);
+
+        $this->assertFalse($state['published']);
+        $this->assertFalse($state['payment_required']);
+        $this->assertSame('paid', $state['payment_status']);
+        $this->assertSame('pi_test', $state['payment_intent_id']);
+        $this->assertSame('pi_test_secret_value', $state['client_secret']);
+    }
+
+    public function test_payment_intent_creation_uses_an_ad_scoped_idempotency_key(): void
+    {
+        config(['services.stripe.secret' => 'sk_test_contract']);
+        Http::fake([
+            'api.stripe.com/*' => Http::response([
+                'id' => 'pi_test',
+                'client_secret' => 'pi_test_secret_value',
+            ]),
+        ]);
+
+        $ad = new Ad([
+            'public_id' => 'PUBLIC123',
+            'user_id' => 7,
+            'listing_fee' => 5,
+        ]);
+        $ad->id = 42;
+
+        app(StripeService::class)->createListingPaymentIntent($ad);
+
+        Http::assertSent(fn ($request) => $request->hasHeader('Idempotency-Key', 'listing-payment-42'));
     }
 }

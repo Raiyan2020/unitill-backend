@@ -693,9 +693,17 @@ class AdController extends Controller
 
     public function completeStripePayment(Request $request, string $id, ListingPaymentService $listings)
     {
+        $validated = $request->validate([
+            'payment_intent_id' => ['nullable', 'string', 'max:255'],
+        ]);
         $ad = Ad::query()->where('user_id', Auth::id())->where(fn ($query) => $query->where('id', $id)->orWhere('public_id', $id))->first();
         if (! $ad || ! $ad->stripe_payment_intent_id) {
             return sendError('Payment for this ad was not found.', [], 404);
+        }
+
+        if (! empty($validated['payment_intent_id'])
+            && ! hash_equals($ad->stripe_payment_intent_id, $validated['payment_intent_id'])) {
+            return sendError('The payment does not belong to this ad.', [], 422);
         }
 
         if ($ad->status === 'published' && $ad->payment_status === 'paid') {
@@ -707,10 +715,10 @@ class AdController extends Controller
 
         $intent = app(StripeService::class)->paymentIntent($ad->stripe_payment_intent_id);
         if (($intent['status'] ?? null) !== 'succeeded') {
-            return sendResponse([
-                'publication' => $listings->publicationState($ad),
+            return sendError(__('api.ad.payment_pending'), [
+                'publication' => $listings->publicationState($ad, $intent),
                 'ad' => new AdDetailResource($ad),
-            ], __('api.ad.payment_pending'));
+            ], 422);
         }
 
         $ad = $listings->publishPaidListing($intent['id'], (int) $intent['amount_received'], (string) $intent['currency']);
@@ -724,7 +732,6 @@ class AdController extends Controller
     public function paymentStatus(Request $request, string $id, ListingPaymentService $listings)
     {
         $ad = Ad::query()
-            ->where('user_id', Auth::id())
             ->where(fn ($query) => $query->where('id', $id)->orWhere('public_id', $id))
             ->first();
 
@@ -732,8 +739,17 @@ class AdController extends Controller
             return sendError(__('api.ad.not_found'), [], 404);
         }
 
+        if ((int) $ad->user_id !== (int) Auth::id()) {
+            return sendError('You are not allowed to view this payment.', [], 403);
+        }
+
+        $intent = null;
+        if ($ad->status !== 'published' && $ad->stripe_payment_intent_id) {
+            $intent = app(StripeService::class)->paymentIntent($ad->stripe_payment_intent_id);
+        }
+
         return sendResponse([
-            'publication' => $listings->publicationState($ad),
+            'publication' => $listings->publicationState($ad, $intent),
         ]);
     }
 

@@ -20,6 +20,7 @@ class StripeService
 
         $response = Http::asForm()
             ->withBasicAuth($secret, '')
+            ->withHeaders(['Idempotency-Key' => "listing-payment-{$ad->id}"])
             ->post('https://api.stripe.com/v1/payment_intents', [
                 'amount' => $amount,
                 'currency' => $currency,
