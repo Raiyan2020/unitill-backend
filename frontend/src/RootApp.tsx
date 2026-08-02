@@ -7,7 +7,10 @@ export default function RootApp() {
   return (
     <I18nProvider>
       <AntdApp>
-        <BrowserRouter>
+        {/* Laravel serves this SPA from /admin/*, so its routes ("/login", "/users")
+            are relative to that prefix. Without the basename every route misses and
+            the catch-all bounces to "/", which the backend 404s. */}
+        <BrowserRouter basename="/admin">
           <App />
         </BrowserRouter>
       </AntdApp>

@@ -146,6 +146,8 @@ Route::middleware('auth:sanctum')->prefix('admin')->controller(AdminController::
     Route::delete('admins/{id}', 'destroy')->middleware('permission:admins.delete');
     Route::get('profile', 'profile');
     Route::put('profile', 'updateProfile');
+    Route::post('profile/photo', 'updateProfilePhoto');
+    Route::delete('profile/photo', 'removeProfilePhoto');
     Route::put('profile/password', 'updatePassword');
 });
 

@@ -7,7 +7,6 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -18,10 +17,9 @@ return Application::configure(basePath: dirname(__DIR__))
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
-        then: function () {
-            Route::middleware('web')
-                ->group(base_path('routes/admin.php'));
-        },
+        // routes/admin.php (the old Blade panel) is deliberately not loaded: the
+        // React dashboard now owns /admin/* and is served by the SPA catch-all in
+        // routes/web.php. Loading it here would win those URLs back.
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->redirectGuestsTo(function (Request $request) {
@@ -29,7 +27,9 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
-            return route('admin.login.form');
+            // A plain URL, not a named route: /admin/login is a client-side React
+            // route with no server-side name to resolve.
+            return url('/admin/login');
         });
 
         $middleware->trustProxies(
@@ -108,7 +108,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     return sendError('Unauthenticated', [], 401);
                 }
 
-                return redirect()->route('admin.login.form');
+                return redirect()->to(url('/admin/login'));
             }
 
             if ($e instanceof ValidationException) {

@@ -26,6 +26,6 @@ class Authenticate extends Middleware
             return null;
         }
 
-        return route('admin.login.form');
+        return url('/admin/login');
     }
 }

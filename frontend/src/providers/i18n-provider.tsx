@@ -134,6 +134,18 @@ type Dictionary = {
   confirmNewPassword: string;
   messageBody: string;
   roleName: string;
+  account: string;
+  security: string;
+  uploadNewPhoto: string;
+  resetPhoto: string;
+  loading: string;
+  changePassword: string;
+  profileUpdated: string;
+  photoUpdated: string;
+  photoRemoved: string;
+  updateFailed: string;
+  superAdmin: string;
+  adminRole: string;
 };
 
 const dictionaries: Record<Locale, Dictionary> = {
@@ -266,6 +278,18 @@ const dictionaries: Record<Locale, Dictionary> = {
     confirmNewPassword: 'Confirm new password',
     messageBody: 'Message body',
     roleName: 'Role name',
+    account: 'Account',
+    security: 'Security',
+    uploadNewPhoto: 'Upload new photo',
+    resetPhoto: 'Reset',
+    loading: 'Loading...',
+    changePassword: 'Change password',
+    profileUpdated: 'Profile updated successfully.',
+    photoUpdated: 'Profile photo updated successfully.',
+    photoRemoved: 'Profile photo removed.',
+    updateFailed: 'Unable to save changes.',
+    superAdmin: 'Super administrator',
+    adminRole: 'Administrator',
   },
   ar: {
        appName: 'لوحة يونيتل',
@@ -396,6 +420,18 @@ const dictionaries: Record<Locale, Dictionary> = {
     confirmNewPassword: 'تأكيد كلمة المرور الجديدة',
     messageBody: 'نص الرسالة',
     roleName: 'اسم الدور',
+    account: 'الحساب',
+    security: 'الأمان',
+    uploadNewPhoto: 'رفع صورة جديدة',
+    resetPhoto: 'إزالة الصورة',
+    loading: 'جارٍ التحميل...',
+    changePassword: 'تغيير كلمة المرور',
+    profileUpdated: 'تم تحديث الملف الشخصي بنجاح.',
+    photoUpdated: 'تم تحديث صورة الملف الشخصي بنجاح.',
+    photoRemoved: 'تمت إزالة صورة الملف الشخصي.',
+    updateFailed: 'تعذر حفظ التغييرات.',
+    superAdmin: 'مدير النظام',
+    adminRole: 'مشرف',
   },
 };
 

@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
@@ -170,9 +171,58 @@ class AdminController extends Controller
             'id' => $admin->id,
             'name' => $admin->name,
             'email' => $admin->email,
+            'image' => $admin->image,
+            'image_url' => $admin->image ? asset('storage/'.ltrim($admin->image, '/')) : null,
             'roles' => $admin->getRoleNames()->values(),
             'permissions' => $admin->getAllPermissions()->pluck('name')->values(),
         ], 'Profile fetched');
+    }
+
+    public function updateProfilePhoto(Request $request)
+    {
+        /** @var Admin|null $admin */
+        $admin = $request->user();
+
+        if (! $admin) {
+            return sendError('Unauthorized', [], 401);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'image' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
+        ]);
+
+        if ($validator->fails()) {
+            return sendError($validator->errors()->first(), $validator->errors()->toArray(), 422);
+        }
+
+        if ($admin->image) {
+            Storage::disk('public')->delete(ltrim($admin->image, '/'));
+        }
+
+        $path = $request->file('image')->store('admins', 'public');
+        $admin->update(['image' => $path]);
+
+        return sendResponse([
+            'image' => $path,
+            'image_url' => asset('storage/'.$path),
+        ], 'Profile photo updated');
+    }
+
+    public function removeProfilePhoto(Request $request)
+    {
+        /** @var Admin|null $admin */
+        $admin = $request->user();
+
+        if (! $admin) {
+            return sendError('Unauthorized', [], 401);
+        }
+
+        if ($admin->image) {
+            Storage::disk('public')->delete(ltrim($admin->image, '/'));
+            $admin->update(['image' => null]);
+        }
+
+        return sendResponse([], 'Profile photo removed');
     }
 
     public function updateProfile(Request $request)

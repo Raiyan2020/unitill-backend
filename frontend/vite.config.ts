@@ -4,7 +4,9 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: '/',
+  // Built files are published to public/dist and served from /dist regardless of
+  // which /admin/* URL rendered the shell, so asset URLs must be absolute /dist/*.
+  base: '/dist/',
   server: {
     port: 5173,
     proxy: {

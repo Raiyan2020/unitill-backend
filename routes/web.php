@@ -29,6 +29,13 @@ Route::get('email', function () {
     }
 });
 
+// React admin dashboard. Every /admin/* URL returns the SPA shell and React Router
+// (mounted with basename="/admin") picks the page, so deep links and refreshes work.
+// Assets stay under /dist and are served straight off disk, not through this route.
+Route::get('/admin/{any?}', function () {
+    return response()->file(public_path('dist/index.html'));
+})->where('any', '.*')->name('admin.spa');
+
 // Fallback آمن للـ API والويب (يعيد 404 حقيقي بدلاً من إرجاع HTML بالخطأ)
 Route::fallback(function (Request $request) {
     if ($request->is('api/*')) {
