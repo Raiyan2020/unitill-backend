@@ -1,5 +1,9 @@
-const TOKEN_KEY = 'unitill_admin_token';
-const ADMIN_KEY = 'unitill_admin_info';
+const apiScope = String(import.meta.env.VITE_API_BASE_URL || '/api')
+  .replace(/[^a-z0-9]+/gi, '_')
+  .replace(/^_+|_+$/g, '')
+  .toLowerCase();
+const TOKEN_KEY = `unitill_admin_token:${apiScope}`;
+const ADMIN_KEY = `unitill_admin_info:${apiScope}`;
 
 export function setAuthToken(token: string) {
   localStorage.setItem(TOKEN_KEY, token);
