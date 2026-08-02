@@ -34,7 +34,10 @@ window.colors = {
   var $html = $('html');
   var $body = $('body');
   var $textcolor = '#4e5154';
-  var assetPath = '../../../app-assets/';
+  // Absolute, because these pages are served from Laravel routes (/admin/login,
+  // /admin/...) whose depth does not match the template's original folder layout.
+  // The old relative '../../../app-assets/' resolved to /app-assets/ and 404'd.
+  var assetPath = '/dashboard/app-assets/';
 
   if ($('body').attr('data-framework') === 'laravel') {
     assetPath = $('body').attr('data-asset-path');
