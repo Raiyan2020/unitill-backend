@@ -146,6 +146,12 @@ type Dictionary = {
   updateFailed: string;
   superAdmin: string;
   adminRole: string;
+  connected: string;
+  thanLastWeek: string;
+  adsRevenueLastTenDays: string;
+  dailyAdsAndRevenue: string;
+  adsLabel: string;
+  revenueLabel: string;
 };
 
 const dictionaries: Record<Locale, Dictionary> = {
@@ -290,6 +296,12 @@ const dictionaries: Record<Locale, Dictionary> = {
     updateFailed: 'Unable to save changes.',
     superAdmin: 'Super administrator',
     adminRole: 'Administrator',
+    connected: 'Connected',
+    thanLastWeek: 'than last week',
+    adsRevenueLastTenDays: 'Ads & Revenue (Last 10 Days)',
+    dailyAdsAndRevenue: 'Daily ads count (bars) and revenue (line)',
+    adsLabel: 'Ads',
+    revenueLabel: 'Revenue',
   },
   ar: {
        appName: 'لوحة يونيتل',
@@ -432,6 +444,12 @@ const dictionaries: Record<Locale, Dictionary> = {
     updateFailed: 'تعذر حفظ التغييرات.',
     superAdmin: 'مدير النظام',
     adminRole: 'مشرف',
+    connected: 'متصل',
+    thanLastWeek: 'مقارنة بالأسبوع الماضي',
+    adsRevenueLastTenDays: 'الإعلانات والأرباح خلال آخر 10 أيام',
+    dailyAdsAndRevenue: 'عدد الإعلانات اليومي (أعمدة) والأرباح (خط)',
+    adsLabel: 'الإعلانات',
+    revenueLabel: 'الأرباح',
   },
 };
 

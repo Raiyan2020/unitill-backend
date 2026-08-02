@@ -7,6 +7,10 @@ export default defineConfig({
   // Built files are published to public/dist and served from /dist regardless of
   // which /admin/* URL rendered the shell, so asset URLs must be absolute /dist/*.
   base: '/dist/',
+  build: {
+    outDir: '../public/dist',
+    emptyOutDir: true,
+  },
   server: {
     port: 5173,
     proxy: {

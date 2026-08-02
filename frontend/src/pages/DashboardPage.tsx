@@ -129,6 +129,8 @@ export function DashboardPage() {
             subtitle={card.subtitle}
             icon={card.icon}
             isMoney={card.isMoney}
+            locale={locale}
+            comparisonLabel={t.thanLastWeek}
             delayMs={index * 90}
           />
         ))}
@@ -146,6 +148,7 @@ function ChartCard({
   data: Array<{ date: string; label: string; ads_count: number; revenue: number }>;
   loading: boolean;
 }) {
+  const { t, locale } = useI18n();
   const normalized = data.map((d) => ({
     ...d,
     ads_count: Number.isFinite(Number(d.ads_count)) ? Number(d.ads_count) : 0,
@@ -182,8 +185,8 @@ function ChartCard({
       <CardContent className="p-4 md:p-5">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h3 className="text-lg font-semibold text-[#2f2b3d] dark:text-[#f4f5ff]">Ads & Revenue (Last 10 Days)</h3>
-            <p className="text-sm text-[#8a8da8] dark:text-[#9ea3c6]">Daily ads count (bars) and revenue (line)</p>
+            <h3 className="text-lg font-semibold text-[#2f2b3d] dark:text-[#f4f5ff]">{t.adsRevenueLastTenDays}</h3>
+            <p className="text-sm text-[#8a8da8] dark:text-[#9ea3c6]">{t.dailyAdsAndRevenue}</p>
           </div>
         </div>
 
@@ -246,7 +249,7 @@ function ChartCard({
           <div className="mt-3 grid grid-cols-10 gap-2 px-1">
             {normalized.map((d) => (
               <p key={`${d.date}-label`} className="truncate text-center text-[11px] text-[#8a8da8] dark:text-[#9ea3c6]">
-                {d.label}
+                {formatChartDate(d.date, d.label, locale)}
               </p>
             ))}
           </div>
@@ -255,11 +258,11 @@ function ChartCard({
         <div className="mt-4 flex flex-wrap items-center gap-4 text-sm">
           <span className="inline-flex items-center gap-2 text-[#5d5971] dark:text-[#c3c7e4]">
             <span className="h-2.5 w-2.5 rounded-full bg-[#ff9f43]" />
-            Ads
+            {t.adsLabel}
           </span>
           <span className="inline-flex items-center gap-2 text-[#5d5971] dark:text-[#c3c7e4]">
             <span className="h-2.5 w-2.5 rounded-full bg-[#7367f0]" />
-            Revenue
+            {t.revenueLabel}
           </span>
         </div>
       </CardContent>
@@ -276,6 +279,8 @@ function AnimatedMetricCard({
   subtitle,
   icon,
   isMoney,
+  locale,
+  comparisonLabel,
   delayMs,
 }: {
   title: string;
@@ -286,6 +291,8 @@ function AnimatedMetricCard({
   subtitle: string;
   icon: ReactNode;
   isMoney?: boolean;
+  locale: 'en' | 'ar';
+  comparisonLabel: string;
   delayMs?: number;
 }) {
   const [displayValue, setDisplayValue] = useState(0);
@@ -342,9 +349,14 @@ function AnimatedMetricCard({
               bg: 'bg-[#9da3c7]/10',
             };
 
+  const numberLocale = locale === 'ar' ? 'ar-EG' : 'en-GB';
   const formatted = isMoney
-    ? `$${Math.round(displayValue).toLocaleString()}`
-    : Math.round(displayValue).toLocaleString();
+    ? new Intl.NumberFormat(numberLocale, {
+        style: 'currency',
+        currency: 'GBP',
+        maximumFractionDigits: 0,
+      }).format(Math.round(displayValue))
+    : Math.round(displayValue).toLocaleString(numberLocale);
 
   return (
     <Card
@@ -366,7 +378,7 @@ function AnimatedMetricCard({
         <div className="mt-2 flex items-center gap-1">
           {trend.startsWith('-') ? <TrendingDown className={`h-3.5 w-3.5 ${toneStyles.trend}`} /> : <TrendingUp className={`h-3.5 w-3.5 ${toneStyles.trend}`} />}
           <p className={`text-xs font-medium ${toneStyles.trend}`}>{trend}</p>
-          <p className="text-xs text-[#a5a3b1] dark:text-[#8f95bc]">than last week</p>
+          <p className="text-xs text-[#a5a3b1] dark:text-[#8f95bc]">{comparisonLabel}</p>
         </div>
 
         {isMoney ? (
@@ -383,4 +395,14 @@ function AnimatedMetricCard({
       </CardContent>
     </Card>
   );
+}
+
+function formatChartDate(date: string, fallback: string, locale: 'en' | 'ar'): string {
+  const parsed = new Date(`${date}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) return fallback;
+
+  return new Intl.DateTimeFormat(locale === 'ar' ? 'ar-EG' : 'en-GB', {
+    day: 'numeric',
+    month: 'short',
+  }).format(parsed);
 }
