@@ -48,7 +48,7 @@ type AdDetails = {
  * read-back. Unknown types fall through to the raw value rather than rendering blank,
  * so a newly added input_type still shows something useful here.
  */
-function formatAttributeValue(attribute: AdAttribute) {
+function formatAttributeValue(attribute: AdAttribute, yes: string, no: string, locale: 'en' | 'ar') {
   const raw = (attribute.value ?? '').trim();
   if (!raw) return '-';
 
@@ -60,10 +60,10 @@ function formatAttributeValue(attribute: AdAttribute) {
         .filter(Boolean)
         .join(', ');
     case 'boolean':
-      return ['1', 'true', 'yes'].includes(raw.toLowerCase()) ? 'Yes' : 'No';
+      return ['1', 'true', 'yes'].includes(raw.toLowerCase()) ? yes : no;
     case 'date': {
       const parsed = new Date(raw);
-      return Number.isNaN(parsed.getTime()) ? raw : parsed.toLocaleDateString();
+      return Number.isNaN(parsed.getTime()) ? raw : parsed.toLocaleDateString(locale === 'ar' ? 'ar-EG' : 'en-GB');
     }
     default:
       return raw;
@@ -71,7 +71,7 @@ function formatAttributeValue(attribute: AdAttribute) {
 }
 
 export function AdDetailsPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const notify = useNotify();
   const { id } = useParams();
   const [loading, setLoading] = useState(false);
@@ -97,7 +97,7 @@ export function AdDetailsPage() {
   if (loading) {
     return (
       <Card>
-        <CardContent className="py-10 text-center text-sm text-[#8a8da8]">Loading...</CardContent>
+        <CardContent className="py-10 text-center text-sm text-[#8a8da8]">{t.loading}</CardContent>
       </Card>
     );
   }
@@ -105,7 +105,7 @@ export function AdDetailsPage() {
   if (!ad) {
     return (
       <Card>
-        <CardContent className="py-10 text-center text-sm text-[#8a8da8]">Ad not found.</CardContent>
+        <CardContent className="py-10 text-center text-sm text-[#8a8da8]">{t.adNotFound}</CardContent>
       </Card>
     );
   }
@@ -113,9 +113,9 @@ export function AdDetailsPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-2xl font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">Ad Details</h2>
+        <h2 className="text-2xl font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">{t.adDetails}</h2>
         <Link to="/ads">
-          <Button variant="secondary">{t.cancel}</Button>
+          <Button variant="secondary">{t.back}</Button>
         </Link>
       </div>
 
@@ -126,20 +126,22 @@ export function AdDetailsPage() {
         </CardHeader>
         <CardContent className="space-y-5 p-5">
           {ad.cover_image_url ? (
-            <img src={ad.cover_image_url} alt="" className="h-64 w-full rounded-xl object-cover ring-1 ring-[#ececf3] dark:ring-[#44485f]" />
+            <a href={ad.cover_image_url} target="_blank" rel="noreferrer" className="block">
+              <img src={ad.cover_image_url} alt={ad.title} className="h-64 w-full cursor-zoom-in rounded-xl object-cover ring-1 ring-[#ececf3] dark:ring-[#44485f]" />
+            </a>
           ) : null}
 
           <div className="grid gap-3 md:grid-cols-3">
             <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-              <p className="text-xs text-[#8a8da8]">Status</p>
-              <p className="mt-1 text-sm font-semibold capitalize">{ad.status}</p>
+              <p className="text-xs text-[#8a8da8]">{t.status}</p>
+              <p className="mt-1 text-sm font-semibold">{adStatusLabel(ad.status, t)}</p>
             </div>
             <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-              <p className="text-xs text-[#8a8da8]">Price</p>
+              <p className="text-xs text-[#8a8da8]">{t.price}</p>
               <p className="mt-1 text-sm font-semibold">{ad.price ? `${ad.price} ${ad.currency || ''}`.trim() : '-'}</p>
             </div>
             <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-              <p className="text-xs text-[#8a8da8]">User</p>
+              <p className="text-xs text-[#8a8da8]">{t.user}</p>
               {ad.user?.id ? (
                 <Link to={`/ads/user/${ad.user.id}`} className="mt-1 inline-block text-sm font-semibold text-[#7367f0] hover:underline">
                   {ad.user.name}
@@ -152,39 +154,39 @@ export function AdDetailsPage() {
 
           <div className="grid gap-3 md:grid-cols-2">
             <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-              <p className="text-xs text-[#8a8da8]">Subtitle</p>
+              <p className="text-xs text-[#8a8da8]">{t.subtitle}</p>
               <p className="mt-1 text-sm">{ad.subtitle || '-'}</p>
             </div>
             <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-              <p className="text-xs text-[#8a8da8]">Slug</p>
+              <p className="text-xs text-[#8a8da8]">{t.slug}</p>
               <p className="mt-1 text-sm break-all">{ad.slug || '-'}</p>
             </div>
             <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-              <p className="text-xs text-[#8a8da8]">Country / City</p>
+              <p className="text-xs text-[#8a8da8]">{t.countryAndCity}</p>
               <p className="mt-1 text-sm">
                 {(ad.country?.country_code || '-')}/{ad.city?.code || '-'}
               </p>
             </div>
             <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-              <p className="text-xs text-[#8a8da8]">Created At</p>
-              <p className="mt-1 text-sm">{ad.created_at || '-'}</p>
+              <p className="text-xs text-[#8a8da8]">{t.createdAt}</p>
+              <p className="mt-1 text-sm">{formatDateTime(ad.created_at, locale)}</p>
             </div>
             <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-              <p className="text-xs text-[#8a8da8]">Category</p>
+              <p className="text-xs text-[#8a8da8]">{t.category}</p>
               <p className="mt-1 text-sm">
                 {ad.main_category_name || '-'}
-                {ad.sub_category_name ? ` › ${ad.sub_category_name}` : ''}
+                {ad.sub_category_name ? ` / ${ad.sub_category_name}` : ''}
               </p>
             </div>
           </div>
 
           <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-            <p className="text-xs text-[#8a8da8]">Description</p>
+            <p className="text-xs text-[#8a8da8]">{t.description}</p>
             <p className="mt-1 whitespace-pre-wrap text-sm">{ad.description || '-'}</p>
           </div>
 
           <div>
-            <p className="mb-2 text-sm font-semibold">Specifications</p>
+            <p className="mb-2 text-sm font-semibold">{t.specifications}</p>
             {ad.attributes?.length ? (
               <div className="grid gap-3 md:grid-cols-3">
                 {ad.attributes.map((attribute) => (
@@ -193,23 +195,25 @@ export function AdDetailsPage() {
                     className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]"
                   >
                     <p className="text-xs text-[#8a8da8]">{attribute.label}</p>
-                    <p className="mt-1 text-sm font-semibold">{formatAttributeValue(attribute)}</p>
+                    <p className="mt-1 text-sm font-semibold">{formatAttributeValue(attribute, t.yes, t.no, locale)}</p>
                   </div>
                 ))}
               </div>
             ) : (
               <div className="rounded-xl border border-dashed border-[#ececf3] p-3 text-sm text-[#8a8da8] dark:border-[#44485f]">
-                No specifications submitted for this ad.
+                {t.noSpecifications}
               </div>
             )}
           </div>
 
           {ad.images?.length ? (
             <div>
-              <p className="mb-2 text-sm font-semibold">Gallery</p>
+              <p className="mb-2 text-sm font-semibold">{t.gallery}</p>
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                 {ad.images.map((img) => (
-                  <img key={img.id} src={img.url} alt="" className="h-28 w-full rounded-lg object-cover ring-1 ring-[#ececf3] dark:ring-[#44485f]" />
+                  <a key={img.id} href={img.url} target="_blank" rel="noreferrer">
+                    <img src={img.url} alt={ad.title} className="h-28 w-full cursor-zoom-in rounded-lg object-cover ring-1 ring-[#ececf3] dark:ring-[#44485f]" />
+                  </a>
                 ))}
               </div>
             </div>
@@ -220,3 +224,24 @@ export function AdDetailsPage() {
   );
 }
 
+function adStatusLabel(status: AdStatus, t: ReturnType<typeof useI18n>['t']): string {
+  return {
+    draft: t.draft,
+    pending: t.pending,
+    published: t.published,
+    rejected: t.rejected,
+    sold: t.sold,
+    expired: t.expired,
+  }[status];
+}
+
+function formatDateTime(value: string | null, locale: 'en' | 'ar'): string {
+  if (!value) return '-';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '-';
+
+  return new Intl.DateTimeFormat(locale === 'ar' ? 'ar-EG' : 'en-GB', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(date);
+}

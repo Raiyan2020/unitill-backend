@@ -28,14 +28,14 @@ export function UserFavoritesPage() {
   const { t } = useI18n();
   const notify = useNotify();
   const navigate = useNavigate();
-  const { userId } = useParams();
+  const { id } = useParams();
   const [rows, setRows] = useState<FavoriteAdRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
 
-  const uid = Number(userId || 0);
+  const uid = Number(id || 0);
   const backendOrigin = ((import.meta.env.VITE_BACKEND_ORIGIN as string | undefined) || 'http://127.0.0.1:8000').replace(/\/+$/, '');
 
   const resolveImage = (row: FavoriteAdRow) => {
@@ -69,7 +69,7 @@ export function UserFavoritesPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-2xl font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">User Favorite Ads</h2>
+        <h2 className="text-2xl font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">{t.userFavoriteAds}</h2>
         <div className="flex items-center gap-2">
           <select
             value={pageSize}
@@ -84,7 +84,7 @@ export function UserFavoritesPage() {
             ))}
           </select>
           <Link to="/users">
-            <Button variant="secondary">Back</Button>
+            <Button variant="secondary">{t.back}</Button>
           </Link>
         </div>
       </div>
@@ -108,7 +108,7 @@ export function UserFavoritesPage() {
                 {loading ? (
                   <TableLoadingRow colSpan={7} />
                 ) : rows.length === 0 ? (
-                  <tr><td className="px-4 py-6 text-center text-sm text-[#8a8da8]" colSpan={7}>No favorite ads found.</td></tr>
+                  <tr><td className="px-4 py-10 text-center text-sm text-[#8a8da8]" colSpan={7}>{t.noDataFound}</td></tr>
                 ) : (
                   rows.map((row) => (
                     <tr key={row.id} className="border-t border-[#ececf3] dark:border-[#44485f]">
@@ -122,10 +122,10 @@ export function UserFavoritesPage() {
                       <td className="px-4 py-3">{row.public_id || row.id}</td>
                       <td className="px-4 py-3">{row.title || '-'}</td>
                       <td className="px-4 py-3">{row.owner_name || '-'}</td>
-                      <td className="px-4 py-3 capitalize">{row.status || '-'}</td>
+                      <td className="px-4 py-3">{favoriteStatusLabel(row.status, t)}</td>
                       <td className="px-4 py-3">{row.price ? `${row.price} ${row.currency || ''}`.trim() : '-'}</td>
                       <td className="px-4 py-3">
-                        <Button size="icon" variant="secondary" title="Details" onClick={() => navigate(`/ads/${row.id}`)}>
+                        <Button size="icon" variant="secondary" title={t.details} onClick={() => navigate(`/ads/${row.id}`)}>
                           <Eye className="h-4 w-4" />
                         </Button>
                       </td>
@@ -150,3 +150,16 @@ export function UserFavoritesPage() {
   );
 }
 
+function favoriteStatusLabel(status: string, t: ReturnType<typeof useI18n>['t']): string {
+  const labels: Record<string, string> = {
+    draft: t.draft,
+    pending: t.pending,
+    published: t.published,
+    rejected: t.rejected,
+    sold: t.sold,
+    expired: t.expired,
+    inactive: t.inactive,
+  };
+
+  return labels[status] || status || '-';
+}

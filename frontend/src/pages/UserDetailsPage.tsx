@@ -22,7 +22,7 @@ type UserDetails = {
 
 export function UserDetailsPage() {
   const { id } = useParams();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<UserDetails | null>(null);
 
@@ -58,9 +58,9 @@ export function UserDetailsPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-sm text-slate-500">Loading...</p>
+            <p className="text-sm text-slate-500">{t.loading}</p>
           ) : !user ? (
-            <p className="text-sm text-slate-500">User not found.</p>
+            <p className="text-sm text-slate-500">{t.userNotFound}</p>
           ) : (
             <div className="grid gap-3 md:grid-cols-2">
               <Item label={t.id} value={String(user.id)} />
@@ -74,13 +74,25 @@ export function UserDetailsPage() {
                 <p className="mb-1 text-xs text-slate-500">{t.status}</p>
                 <Badge variant={statusVariant}>{statusText}</Badge>
               </div>
-              <Item label={t.createdAt} value={user.created_at || '-'} />
+              <Item label={t.createdAt} value={formatDateTime(user.created_at, locale)} />
             </div>
           )}
         </CardContent>
       </Card>
     </div>
   );
+}
+
+function formatDateTime(value: string, locale: 'en' | 'ar'): string {
+  if (!value) return '-';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '-';
+
+  return new Intl.DateTimeFormat(locale === 'ar' ? 'ar-EG' : 'en-GB', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(date);
 }
 
 function Item({ label, value }: { label: string; value: string }) {

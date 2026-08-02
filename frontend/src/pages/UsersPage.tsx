@@ -1,11 +1,12 @@
-import { BadgeCheck, Edit, Eye, Heart, Smartphone, Trash2, X } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { BadgeCheck, Edit, Eye, Heart, Plus, Smartphone, Trash2, X } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
-import { TableLoadingRow } from '../components/table/TableHelpers';
+import { TableFooter, TableLoadingRow } from '../components/table/TableHelpers';
 import { api } from '../lib/api';
+import { useNotify } from '../lib/notify';
 import { useI18n } from '../providers/i18n-provider';
 
 type UserStatus = '1' | '2' | '3';
@@ -44,6 +45,7 @@ const statusSelectClass = (status: UserStatus) => {
 export function UsersPage() {
   const navigate = useNavigate();
   const { t } = useI18n();
+  const notify = useNotify();
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<UserRow[]>([]);
   const [search, setSearch] = useState('');
@@ -53,7 +55,9 @@ export function UsersPage() {
 
   const [editingUser, setEditingUser] = useState<UserRow | null>(null);
   const [deletingUser, setDeletingUser] = useState<UserRow | null>(null);
+  const [creatingUser, setCreatingUser] = useState(false);
   const [formData, setFormData] = useState<Record<string, string>>({});
+  const [createData, setCreateData] = useState<Record<string, string>>({ status: '1' });
   const [saving, setSaving] = useState(false);
   const didInitSearch = useRef(false);
 
@@ -103,6 +107,26 @@ export function UsersPage() {
     });
   };
 
+  const openCreate = () => {
+    setCreateData({ status: '1' });
+    setCreatingUser(true);
+  };
+
+  const submitCreate = async () => {
+    setSaving(true);
+    try {
+      await api.post('/admin/users', createData);
+      setCreatingUser(false);
+      setPage(1);
+      await fetchUsers();
+      notify.success(t.userCreatedSuccessfully);
+    } catch (error) {
+      notify.errorFrom(error, t.updateFailed);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const submitEdit = async () => {
     if (!editingUser) return;
 
@@ -111,6 +135,9 @@ export function UsersPage() {
       await api.put(`/admin/users/${editingUser.id}`, formData);
       setEditingUser(null);
       await fetchUsers();
+      notify.success(t.userUpdatedSuccessfully);
+    } catch (error) {
+      notify.errorFrom(error, t.updateFailed);
     } finally {
       setSaving(false);
     }
@@ -124,19 +151,26 @@ export function UsersPage() {
       await api.delete(`/admin/users/${deletingUser.id}`);
       setDeletingUser(null);
       await fetchUsers();
+      notify.success(t.userDeletedSuccessfully);
+    } catch (error) {
+      notify.errorFrom(error, t.updateFailed);
     } finally {
       setSaving(false);
     }
   };
 
   const updateStatus = async (user: UserRow, status: UserStatus) => {
-    await api.put(`/admin/users/${user.id}`, { status });
-    await fetchUsers();
+    try {
+      await api.put(`/admin/users/${user.id}`, { status });
+      await fetchUsers();
+      notify.success(t.userUpdatedSuccessfully);
+    } catch (error) {
+      notify.errorFrom(error, t.updateFailed);
+      await fetchUsers();
+    }
   };
 
   const pagesCount = Math.max(1, Math.ceil(total / pageSize));
-  const start = total === 0 ? 0 : (page - 1) * pageSize + 1;
-  const end = Math.min(page * pageSize, total);
 
   const statusLabel = useMemo(
     () => ({
@@ -152,10 +186,14 @@ export function UsersPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-2xl font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">{t.users}</h2>
-          <p className="text-sm text-[#8a8da8] dark:text-[#a2a5be]">Manage users and basic profile data</p>
+          <p className="text-sm text-[#8a8da8] dark:text-[#a2a5be]">{t.manageUsersSubtitle}</p>
         </div>
 
         <div className="ms-auto flex w-full max-w-[520px] items-center justify-end gap-2">
+          <Button size="sm" onClick={openCreate}>
+            <Plus className="h-4 w-4" />
+            {t.createUser}
+          </Button>
           <select
             value={pageSize}
             onChange={(e) => {
@@ -194,8 +232,8 @@ export function UsersPage() {
                   <TableLoadingRow colSpan={7} />
                 ) : rows.length === 0 ? (
                   <tr>
-                    <td className="px-4 py-5 text-[#8a8da8]" colSpan={7}>
-                      No users found.
+                    <td className="px-4 py-10 text-center text-sm text-[#8a8da8]" colSpan={7}>
+                      {t.noDataFound}
                     </td>
                   </tr>
                 ) : (
@@ -219,7 +257,11 @@ export function UsersPage() {
                       </td>
                       <td className="px-4 py-3">{row.last_name || '-'}</td>
                       <td className="px-4 py-3">{row.email || '-'}</td>
-                      <td className="px-4 py-3">{`${row.country_code || ''} ${row.phone || ''}`.trim() || '-'}</td>
+                      <td className="px-4 py-3">
+                        <span dir="ltr" className="inline-block">
+                          {`${row.country_code || ''} ${row.phone || ''}`.trim() || '-'}
+                        </span>
+                      </td>
                       <td className="px-4 py-3">
                         <select
                           value={row.status}
@@ -263,22 +305,71 @@ export function UsersPage() {
             </table>
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#ececf3] px-4 py-3 text-xs text-[#8a8da8] dark:border-[#44485f] dark:text-[#a2a5be]">
-            <p>
-              Showing {start} to {end} of {total} entries
-            </p>
-            <div className="flex gap-2">
-              <Button variant="secondary" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
-                Prev
-              </Button>
-              <span className="inline-flex items-center px-2 text-sm">{page}</span>
-              <Button variant="secondary" size="sm" disabled={page >= pagesCount} onClick={() => setPage((p) => p + 1)}>
-                Next
-              </Button>
-            </div>
-          </div>
+          <TableFooter
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            onPrev={() => setPage((p) => p - 1)}
+            onNext={() => setPage((p) => p + 1)}
+            prevDisabled={page <= 1}
+            nextDisabled={page >= pagesCount}
+          />
         </CardContent>
       </Card>
+
+      {creatingUser ? (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4 backdrop-blur-[1px] animate-in fade-in duration-200">
+          <Card className="w-full max-w-2xl shadow-2xl animate-in zoom-in-95 duration-200">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+              <CardTitle>{t.createUser}</CardTitle>
+              <Button variant="ghost" size="icon" onClick={() => setCreatingUser(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3 md:grid-cols-2">
+                <Field label={t.firstName}>
+                  <Input value={createData.first_name || ''} onChange={(e) => setCreateData((s) => ({ ...s, first_name: e.target.value }))} />
+                </Field>
+                <Field label={t.lastName}>
+                  <Input value={createData.last_name || ''} onChange={(e) => setCreateData((s) => ({ ...s, last_name: e.target.value }))} />
+                </Field>
+                <Field label={t.email}>
+                  <Input type="email" value={createData.email || ''} onChange={(e) => setCreateData((s) => ({ ...s, email: e.target.value }))} />
+                </Field>
+                <Field label={t.phone}>
+                  <Input value={createData.phone || ''} onChange={(e) => setCreateData((s) => ({ ...s, phone: e.target.value }))} />
+                </Field>
+                <Field label={t.countryCode}>
+                  <Input value={createData.country_code || ''} onChange={(e) => setCreateData((s) => ({ ...s, country_code: e.target.value }))} />
+                </Field>
+                <Field label={t.status}>
+                  <select
+                    value={createData.status || '1'}
+                    onChange={(e) => setCreateData((s) => ({ ...s, status: e.target.value }))}
+                    className="h-10 w-full rounded-xl border border-[#dbdbe8] bg-white px-3 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]"
+                  >
+                    <option value="1">{t.active}</option>
+                    <option value="2">{t.pending}</option>
+                    <option value="3">{t.disabled}</option>
+                  </select>
+                </Field>
+                <Field label={t.password}>
+                  <Input type="password" value={createData.password || ''} onChange={(e) => setCreateData((s) => ({ ...s, password: e.target.value }))} />
+                </Field>
+                <Field label={t.confirmPassword}>
+                  <Input type="password" value={createData.password_confirmation || ''} onChange={(e) => setCreateData((s) => ({ ...s, password_confirmation: e.target.value }))} />
+                </Field>
+              </div>
+
+              <div className="mt-5 flex items-center gap-2">
+                <Button onClick={submitCreate} disabled={saving}>{t.save}</Button>
+                <Button variant="secondary" onClick={() => setCreatingUser(false)}>{t.cancel}</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      ) : null}
 
       {editingUser ? (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30 p-4 backdrop-blur-[1px] animate-in fade-in duration-200">
@@ -346,11 +437,11 @@ export function UsersPage() {
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4 backdrop-blur-[1px] animate-in fade-in duration-200">
           <Card className="w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
             <CardHeader>
-              <CardTitle>Confirm deletion</CardTitle>
+              <CardTitle>{t.confirmDeletion}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="mb-4 text-sm text-[#6f6b7d] dark:text-[#b6b8cc]">
-                Are you sure you want to delete user #{deletingUser.id}? This action cannot be undone.
+                {t.deleteUserConfirmation.replace('{name}', userDisplayName(deletingUser))}
               </p>
               <div className="flex justify-end gap-2">
                 <Button variant="secondary" onClick={() => setDeletingUser(null)}>
@@ -366,4 +457,17 @@ export function UsersPage() {
       ) : null}
     </div>
   );
+}
+
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <label className="space-y-1.5 text-sm">
+      <span className="font-medium text-[#5d596c] dark:text-[#d7d8ea]">{label}</span>
+      {children}
+    </label>
+  );
+}
+
+function userDisplayName(user: UserRow): string {
+  return [user.first_name, user.last_name].filter(Boolean).join(' ') || user.name || user.email || `#${user.id}`;
 }

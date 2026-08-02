@@ -4,12 +4,15 @@ namespace App\Http\Controllers\Api\Dashboard;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\MobileAuthTokenService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
 class AdminUserController extends Controller
 {
+    public function __construct(protected MobileAuthTokenService $tokens) {}
+
     public function index(Request $request)
     {
         $perPage = max(1, min((int) $request->input('per_page', 10), 100));
@@ -39,6 +42,29 @@ class AdminUserController extends Controller
         }
 
         return sendResponse($user, 'User details');
+    }
+
+    public function store(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
+            'phone' => ['nullable', 'string', 'max:30', Rule::unique('users', 'phone')],
+            'country_code' => 'nullable|string|max:20',
+            'password' => 'required|string|min:8|confirmed',
+            'status' => ['nullable', Rule::in(['1', '2', '3'])],
+        ]);
+
+        if ($validator->fails()) {
+            return sendError($validator->errors()->first(), $validator->errors()->toArray(), 422);
+        }
+
+        $data = $validator->validated();
+        $data['name'] = trim($data['first_name'].' '.$data['last_name']);
+        $data['status'] = $data['status'] ?? '1';
+
+        return sendResponse(User::create($data), 'User created');
     }
 
     public function update(Request $request, int $id)
@@ -73,6 +99,10 @@ class AdminUserController extends Controller
 
         $user->update($data);
 
+        if (($data['status'] ?? null) !== null && $data['status'] !== '1') {
+            $this->tokens->revokeAllForUser($user);
+        }
+
         return sendResponse($user->fresh(), 'User updated');
     }
 
@@ -84,6 +114,7 @@ class AdminUserController extends Controller
             return sendError('User not found', [], 404);
         }
 
+        $this->tokens->revokeAllForUser($user);
         $user->delete();
 
         return sendResponse([], 'User deleted');

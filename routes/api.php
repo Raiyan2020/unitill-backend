@@ -106,6 +106,7 @@ Route::middleware('auth:sanctum')->prefix('admin')->controller(AdminUserControll
     Route::get('users/{id}', 'show')->middleware('permission:users.view');
     Route::get('users/{id}/devices', 'devices')->middleware('permission:users.view');
     Route::get('users/{id}/favorites', 'favorites')->middleware('permission:users.view');
+    Route::post('users', 'store')->middleware('permission:users.update');
     Route::put('users/{id}', 'update')->middleware('permission:users.update');
     Route::delete('users/{id}', 'destroy')->middleware('permission:users.delete');
 });

@@ -155,6 +155,21 @@ class MobileAuthTokenService
             ->update(['revoked_at' => now()]);
     }
 
+    public function revokeAllForUser(User $user): void
+    {
+        $user->tokens()->delete();
+
+        $user->refreshTokens()
+            ->whereNull('revoked_at')
+            ->update(['revoked_at' => now()]);
+
+        $user->biometricTokens()
+            ->whereNull('revoked_at')
+            ->update(['revoked_at' => now()]);
+
+        $user->userDevices()->update(['is_active' => false]);
+    }
+
     protected function createRefreshToken(User $user, ?string $deviceId): array
     {
         $plain = Str::random(80);

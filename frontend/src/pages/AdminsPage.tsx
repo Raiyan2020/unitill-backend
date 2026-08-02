@@ -219,6 +219,12 @@ export function AdminsPage() {
               <tbody>
                 {loading ? (
                   <TableLoadingRow colSpan={5} />
+                ) : rows.length === 0 ? (
+                  <tr>
+                    <td className="px-4 py-10 text-center text-sm text-[#8a8da8]" colSpan={5}>
+                      {t.noDataFound}
+                    </td>
+                  </tr>
                 ) : rows.map((row) => (
                   <tr key={row.id} className="border-t border-[#ececf3] dark:border-[#44485f]">
                     <td className="px-4 py-3">{row.id}</td>

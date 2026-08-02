@@ -152,6 +152,35 @@ type Dictionary = {
   dailyAdsAndRevenue: string;
   adsLabel: string;
   revenueLabel: string;
+  manageUsersSubtitle: string;
+  userNotFound: string;
+  previous: string;
+  next: string;
+  userUpdatedSuccessfully: string;
+  userCreatedSuccessfully: string;
+  userDeletedSuccessfully: string;
+  createUser: string;
+  confirmPassword: string;
+  confirmDeletion: string;
+  deleteUserConfirmation: string;
+  back: string;
+  yes: string;
+  no: string;
+  userDeviceSessions: string;
+  userFavoriteAds: string;
+  adDetails: string;
+  adNotFound: string;
+  subtitle: string;
+  countryAndCity: string;
+  category: string;
+  description: string;
+  specifications: string;
+  gallery: string;
+  noSpecifications: string;
+  draft: string;
+  published: string;
+  rejected: string;
+  sold: string;
 };
 
 const dictionaries: Record<Locale, Dictionary> = {
@@ -302,6 +331,35 @@ const dictionaries: Record<Locale, Dictionary> = {
     dailyAdsAndRevenue: 'Daily ads count (bars) and revenue (line)',
     adsLabel: 'Ads',
     revenueLabel: 'Revenue',
+    manageUsersSubtitle: 'Manage users and basic profile data',
+    userNotFound: 'User not found.',
+    previous: 'Prev',
+    next: 'Next',
+    userUpdatedSuccessfully: 'User updated successfully.',
+    userCreatedSuccessfully: 'User created successfully.',
+    userDeletedSuccessfully: 'User deleted successfully.',
+    createUser: 'Add user',
+    confirmPassword: 'Confirm password',
+    confirmDeletion: 'Confirm deletion',
+    deleteUserConfirmation: 'Are you sure you want to delete {name}? This action cannot be undone.',
+    back: 'Back',
+    yes: 'Yes',
+    no: 'No',
+    userDeviceSessions: 'User device sessions',
+    userFavoriteAds: 'User favorite ads',
+    adDetails: 'Ad details',
+    adNotFound: 'Ad not found.',
+    subtitle: 'Subtitle',
+    countryAndCity: 'Country / City',
+    category: 'Category',
+    description: 'Description',
+    specifications: 'Specifications',
+    gallery: 'Gallery',
+    noSpecifications: 'No specifications submitted for this ad.',
+    draft: 'Draft',
+    published: 'Published',
+    rejected: 'Rejected',
+    sold: 'Sold',
   },
   ar: {
        appName: 'لوحة يونيتل',
@@ -450,6 +508,35 @@ const dictionaries: Record<Locale, Dictionary> = {
     dailyAdsAndRevenue: 'عدد الإعلانات اليومي (أعمدة) والأرباح (خط)',
     adsLabel: 'الإعلانات',
     revenueLabel: 'الأرباح',
+    manageUsersSubtitle: 'إدارة المستخدمين وبيانات الملف الشخصي الأساسية',
+    userNotFound: 'لم يتم العثور على المستخدم.',
+    previous: 'السابق',
+    next: 'التالي',
+    userUpdatedSuccessfully: 'تم تعديل المستخدم بنجاح.',
+    userCreatedSuccessfully: 'تمت إضافة المستخدم بنجاح.',
+    userDeletedSuccessfully: 'تم حذف المستخدم بنجاح.',
+    createUser: 'إضافة مستخدم',
+    confirmPassword: 'تأكيد كلمة المرور',
+    confirmDeletion: 'تأكيد الحذف',
+    deleteUserConfirmation: 'هل أنت متأكد من حذف {name}؟ لا يمكن التراجع عن هذا الإجراء.',
+    back: 'رجوع',
+    yes: 'نعم',
+    no: 'لا',
+    userDeviceSessions: 'جلسات أجهزة المستخدم',
+    userFavoriteAds: 'الإعلانات المفضلة للمستخدم',
+    adDetails: 'تفاصيل الإعلان',
+    adNotFound: 'لم يتم العثور على الإعلان.',
+    subtitle: 'العنوان الفرعي',
+    countryAndCity: 'الدولة / المدينة',
+    category: 'القسم',
+    description: 'الوصف',
+    specifications: 'المواصفات',
+    gallery: 'معرض الصور',
+    noSpecifications: 'لم تتم إضافة مواصفات لهذا الإعلان.',
+    draft: 'مسودة',
+    published: 'منشور',
+    rejected: 'مرفوض',
+    sold: 'مباع',
   },
 };
 

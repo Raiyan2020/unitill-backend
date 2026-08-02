@@ -21,16 +21,16 @@ type DeviceRow = {
 type PaginatedResponse<T> = { data: T[]; total: number };
 
 export function UserDevicesPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const notify = useNotify();
-  const { userId } = useParams();
+  const { id } = useParams();
   const [rows, setRows] = useState<DeviceRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
 
-  const uid = Number(userId || 0);
+  const uid = Number(id || 0);
 
   const fetchRows = async () => {
     if (!uid) return;
@@ -57,7 +57,7 @@ export function UserDevicesPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-2xl font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">User Device Sessions</h2>
+        <h2 className="text-2xl font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">{t.userDeviceSessions}</h2>
         <div className="flex items-center gap-2">
           <select
             value={pageSize}
@@ -72,7 +72,7 @@ export function UserDevicesPage() {
             ))}
           </select>
           <Link to="/users">
-            <Button variant="secondary">Back</Button>
+            <Button variant="secondary">{t.back}</Button>
           </Link>
         </div>
       </div>
@@ -95,7 +95,7 @@ export function UserDevicesPage() {
                 {loading ? (
                   <TableLoadingRow colSpan={6} />
                 ) : rows.length === 0 ? (
-                  <tr><td className="px-4 py-6 text-center text-sm text-[#8a8da8]" colSpan={6}>No sessions found.</td></tr>
+                  <tr><td className="px-4 py-10 text-center text-sm text-[#8a8da8]" colSpan={6}>{t.noDataFound}</td></tr>
                 ) : (
                   rows.map((row) => (
                     <tr key={row.id} className="border-t border-[#ececf3] dark:border-[#44485f]">
@@ -103,8 +103,8 @@ export function UserDevicesPage() {
                       <td className="px-4 py-3">{row.device_name || '-'}</td>
                       <td className="px-4 py-3">{row.device_identifier || '-'}</td>
                       <td className="px-4 py-3">{row.country_code || '-'}</td>
-                      <td className="px-4 py-3">{row.last_seen_at || '-'}</td>
-                      <td className="px-4 py-3">{row.is_active ? 'Yes' : 'No'}</td>
+                      <td className="px-4 py-3">{formatDateTime(row.last_seen_at, locale)}</td>
+                      <td className="px-4 py-3">{row.is_active ? t.yes : t.no}</td>
                     </tr>
                   ))
                 )}
@@ -124,4 +124,15 @@ export function UserDevicesPage() {
       </Card>
     </div>
   );
+}
+
+function formatDateTime(value: string | null, locale: 'en' | 'ar'): string {
+  if (!value) return '-';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '-';
+
+  return new Intl.DateTimeFormat(locale === 'ar' ? 'ar-EG' : 'en-GB', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(date);
 }
