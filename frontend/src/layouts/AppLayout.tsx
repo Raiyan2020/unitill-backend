@@ -77,8 +77,11 @@ export function AppLayout() {
           });
           setAdminPermissions(permissions);
         }
-      } catch {
-        // ignore — sidebar still works with cached permissions
+      } catch (error: any) {
+        if (error?.response?.status === 401) {
+          clearAuthToken();
+          navigate('/login', { replace: true });
+        }
       }
     };
 
@@ -90,7 +93,7 @@ export function AppLayout() {
 
     window.addEventListener('trusted-verifications-changed', onVerificationChanged);
     return () => window.removeEventListener('trusted-verifications-changed', onVerificationChanged);
-  }, [loadPendingCount]);
+  }, [loadPendingCount, navigate]);
 
   return (
     <div className="min-h-screen bg-[#f5f5f9] text-[#2f2b3d] dark:bg-[#25293c] dark:text-[#d7d8ea]">
