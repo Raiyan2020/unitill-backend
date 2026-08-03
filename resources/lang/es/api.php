@@ -33,6 +33,8 @@ return [
         'no_email_on_file' => 'No hay ningún correo electrónico registrado al que enviar el código',
         'no_code_requested' => 'No se ha solicitado ningún código de verificación. Inicia sesión de nuevo.',
         'resend_cooldown' => 'Podrás reenviar en :seconds segundos',
+        'no_student_email' => 'No hay ningún correo universitario registrado',
+        'reverify_code_sent' => 'Código de verificación enviado a tu correo universitario',
     ],
     'register' => [
         'personal_email_required' => 'El correo electrónico personal es obligatorio',
@@ -68,6 +70,7 @@ return [
         'sold_cannot_delete' => 'Un anuncio vendido no se puede eliminar',
         'deleted' => 'Anuncio eliminado correctamente',
         'coupon_failed' => 'No se ha podido aplicar el código de descuento.',
+        'cannot_publish_in_status' => 'Este anuncio no se puede publicar en su estado actual.',
     ],
     'ad_form' => [
         'invalid_main_category' => 'Categoría principal no válida',
@@ -108,6 +111,13 @@ return [
         'report_submitted' => 'Denuncia enviada',
         'attachment_too_large' => 'El archivo es demasiado grande. El tamaño máximo es 10 MB.',
         'attachment_type_not_allowed' => 'Este tipo de archivo no es compatible.',
+    ],
+    'contact_us' => [
+        'sent' => 'Tu mensaje se envió correctamente',
+    ],
+    'filter' => [
+        'price' => 'Precio',
+        'distance_postcode' => 'Distancia (código postal)',
     ],
     'sort' => [
         'newest_first' => 'Más recientes primero',

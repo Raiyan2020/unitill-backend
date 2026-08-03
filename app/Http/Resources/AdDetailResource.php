@@ -104,11 +104,20 @@ class AdDetailResource extends JsonResource
                     ->groupBy(fn ($row) => $row->definition?->slug)
                     ->map(function ($rows, $slug) use ($lang) {
                         $first = $rows->first();
+                        $definition = $first->definition;
+                        $values = $rows->pluck('value')->filter()->values();
 
                         return [
                             'slug' => $slug,
-                            'label' => $first->definition?->labelForLanguageCode($lang),
-                            'value' => $rows->pluck('value')->filter()->implode(', '),
+                            'label' => $definition?->labelForLanguageCode($lang),
+                            // `value` stays the raw stored option the app filters
+                            // with; `value_label` is the localized display text.
+                            'value' => $values->implode(', '),
+                            'value_label' => $values
+                                ->map(fn ($value) => $definition
+                                    ? $definition->optionLabelForLanguageCode($lang, (string) $value)
+                                    : (string) $value)
+                                ->implode(', '),
                         ];
                     })
                     ->values();

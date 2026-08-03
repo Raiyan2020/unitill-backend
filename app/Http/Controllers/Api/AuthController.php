@@ -408,14 +408,17 @@ class AuthController extends Controller
     /**
      * Start student status reconfirmation by emailing an OTP to the university
      * address on file. Students must reconfirm each term (30 Sep / 31 Mar).
+     *
+     * An already-verified student whose re-check is not due yet is accepted:
+     * confirmReverify just pushes the due date to the next deadline. The only
+     * refusals are a missing university email (422) and the resend cooldown (429).
      */
     public function sendReverifyOtp(Request $request)
     {
         $user = $request->user();
-        $lang = $request->header('lang') === 'ar';
 
         if (! $user->student_email) {
-            return sendError($lang ? 'لا يوجد بريد جامعي مسجّل' : 'No university email on file', [], 422);
+            return sendError(__('api.auth.no_student_email'), [], 422);
         }
 
         if ($user->activation_sent_at) {
@@ -424,7 +427,7 @@ class AuthController extends Controller
                 $seconds = max(0, $nextAllowed->getTimestamp() - now()->getTimestamp());
 
                 return sendError(
-                    $lang ? "يمكنك إعادة الإرسال بعد {$seconds} ثانية" : "You can resend in {$seconds} seconds",
+                    __('api.auth.resend_cooldown', ['seconds' => $seconds]),
                     ['retry_after_seconds' => $seconds],
                     429
                 );
@@ -453,7 +456,9 @@ class AuthController extends Controller
         return sendResponse([
             'student_email_masked' => $this->maskEmail($user->student_email),
             'activation_expires_at' => $user->activation_code_expires_at?->toIso8601String(),
-        ], $lang ? 'تم إرسال رمز التحقق إلى بريدك الجامعي' : 'Verification code sent to your student email');
+            'needs_reverification' => $user->needsReverification(),
+            'student_reverify_due_at' => $user->student_reverify_due_at?->toIso8601String(),
+        ], __('api.auth.reverify_code_sent'));
     }
 
     /**

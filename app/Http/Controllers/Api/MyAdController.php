@@ -10,6 +10,7 @@ use App\Models\AdImage;
 use App\Models\Conversation;
 use App\Models\User;
 use App\Services\ChatService;
+use App\Services\ListingPaymentService;
 use App\Traits\HandlesListingPayments;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -213,10 +214,29 @@ class MyAdController extends Controller
             );
         }
 
-        // Reactivating starts a new 30-day listing period, so it is charged like
-        // any other. The previous intent must be cleared first — startPublication
-        // treats an existing one as "payment already in progress" and would skip
-        // creating a new one, letting the ad go live without paying again.
+        // A pause does not consume the paid posting period: inside it,
+        // reactivating simply resumes the ad with no second fee.
+        if ($this->hasUnexpiredPaidPeriod($ad)) {
+            $ad->update([
+                'status' => 'published',
+                'paused_at' => null,
+                'inactive_reason' => null,
+            ]);
+
+            $resumed = $ad->fresh();
+
+            return sendResponse(
+                [
+                    'ad' => new MyAdResource($resumed),
+                    'publication' => app(ListingPaymentService::class)->publicationState($resumed),
+                ],
+                __('api.ad.activated')
+            );
+        }
+
+        // Otherwise the period is over, so this starts a new paid one. The old
+        // intent must be cleared first — startPublication treats an existing one
+        // as "payment in progress" and would let the ad go live without paying.
         $ad->update([
             'paused_at' => null,
             'inactive_reason' => null,
@@ -242,6 +262,19 @@ class MyAdController extends Controller
             ],
             __('api.ad.activated')
         );
+    }
+
+    /**
+     * True when the posting period was settled (paid, free quota, coupon or
+     * waiver) and has not run out — the case where reactivating must be free.
+     */
+    protected function hasUnexpiredPaidPeriod(Ad $ad): bool
+    {
+        $settled = in_array($ad->payment_status, ['paid', 'free', 'waived', 'coupon'], true);
+
+        return $settled
+            && $ad->expires_at !== null
+            && $ad->expires_at->isFuture();
     }
 
     /**

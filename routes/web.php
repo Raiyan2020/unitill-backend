@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PublicAdController;
 use App\Mail\OtpMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -28,6 +29,13 @@ Route::get('email', function () {
         ], 500);
     }
 });
+
+// Public landing page for a shared ad link. The mobile share sheet builds
+// {app.url}/ads/{public_id}, so this route is the recipient's entry point —
+// it renders the listing and carries the Open Graph tags for link previews.
+Route::get('/ads/{publicId}', [PublicAdController::class, 'show'])
+    ->where('publicId', '[A-Za-z0-9_-]+')
+    ->name('ads.public');
 
 // React admin dashboard. Every /admin/* URL returns the SPA shell and React Router
 // (mounted with basename="/admin") picks the page, so deep links and refreshes work.

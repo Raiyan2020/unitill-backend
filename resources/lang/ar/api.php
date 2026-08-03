@@ -33,6 +33,8 @@ return [
         'no_email_on_file' => 'لا يوجد بريد لإرسال رمز التحقق',
         'no_code_requested' => 'لم يتم طلب رمز تحقق. سجّل الدخول مجدداً',
         'resend_cooldown' => 'يمكنك إعادة الإرسال بعد :seconds ثانية',
+        'no_student_email' => 'لا يوجد بريد جامعي مسجّل',
+        'reverify_code_sent' => 'تم إرسال رمز التحقق إلى بريدك الجامعي',
     ],
     'register' => [
         'personal_email_required' => 'البريد الشخصي مطلوب',
@@ -68,6 +70,7 @@ return [
         'sold_cannot_delete' => 'لا يمكن حذف إعلان مباع',
         'deleted' => 'تم حذف الإعلان',
         'coupon_failed' => 'تعذّر تطبيق كود الخصم',
+        'cannot_publish_in_status' => 'لا يمكن نشر هذا الإعلان في حالته الحالية.',
     ],
     'ad_form' => [
         'invalid_main_category' => 'القسم الرئيسي غير صالح',
@@ -108,6 +111,13 @@ return [
         'report_submitted' => 'تم إرسال البلاغ',
         'attachment_too_large' => 'الملف كبير جدًا. الحد الأقصى 10 ميجابايت.',
         'attachment_type_not_allowed' => 'نوع الملف غير مدعوم.',
+    ],
+    'contact_us' => [
+        'sent' => 'تم إرسال رسالتك بنجاح',
+    ],
+    'filter' => [
+        'price' => 'السعر',
+        'distance_postcode' => 'المسافة (الرمز البريدي)',
     ],
     'sort' => [
         'newest_first' => 'الأحدث أولاً',

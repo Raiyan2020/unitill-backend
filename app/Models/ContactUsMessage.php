@@ -13,6 +13,12 @@ class ContactUsMessage extends Model
         'message',
     ];
 
+    protected $casts = [
+        // Set when the support-inbox notification actually left the server;
+        // null with a mail_error means the row was stored but never mailed.
+        'mail_sent_at' => 'datetime',
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

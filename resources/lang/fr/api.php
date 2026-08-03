@@ -33,6 +33,8 @@ return [
         'no_email_on_file' => 'Aucune adresse e-mail enregistrée pour envoyer le code',
         'no_code_requested' => 'Aucun code de vérification demandé. Veuillez vous reconnecter.',
         'resend_cooldown' => 'Vous pourrez renvoyer dans :seconds secondes',
+        'no_student_email' => 'Aucune adresse e-mail universitaire enregistrée',
+        'reverify_code_sent' => 'Code de vérification envoyé à votre e-mail universitaire',
     ],
     'register' => [
         'personal_email_required' => 'L\'e-mail personnel est obligatoire',
@@ -68,6 +70,7 @@ return [
         'sold_cannot_delete' => 'Une annonce vendue ne peut pas être supprimée',
         'deleted' => 'Annonce supprimée avec succès',
         'coupon_failed' => 'Le code promo n\'a pas pu être appliqué.',
+        'cannot_publish_in_status' => 'Cette annonce ne peut pas être publiée dans son état actuel.',
     ],
     'ad_form' => [
         'invalid_main_category' => 'Catégorie principale invalide',
@@ -107,7 +110,14 @@ return [
         'report_pending_exists' => 'Vous avez déjà un signalement en cours sur cette conversation',
         'report_submitted' => 'Signalement envoyé',
         'attachment_too_large' => 'Le fichier est trop volumineux. La taille maximale est de 10 Mo.',
-        'attachment_type_not_allowed' => 'Ce type de fichier n\x27est pas pris en charge.',
+        'attachment_type_not_allowed' => 'Ce type de fichier n\'est pas pris en charge.',
+    ],
+    'contact_us' => [
+        'sent' => 'Votre message a bien été envoyé',
+    ],
+    'filter' => [
+        'price' => 'Prix',
+        'distance_postcode' => 'Distance (code postal)',
     ],
     'sort' => [
         'newest_first' => 'Plus récent d\'abord',

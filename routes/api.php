@@ -36,6 +36,7 @@ use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\LanguageController as AppLanguageController;
 use App\Http\Controllers\Api\FavoritedController;
 use App\Http\Controllers\Api\MyAdController;
+use App\Http\Controllers\Api\SellerController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\TrustedSellerApplicationController;
 use App\Http\Controllers\Api\UserRatingController;
@@ -77,6 +78,12 @@ Route::get('ads/{id}', [AdController::class, 'show']);
 Route::get('ad-report-reasons', [AdReportController::class, 'reasons']);
 Route::get('chat-report-reasons', [ConversationController::class, 'reportReasons']);
 Route::get('legal-affairs', [\App\Http\Controllers\Api\LegalAffairController::class, 'index']);
+
+// Public-safe seller profile. GET /show-profile/{id} returns the owner-facing
+// shape and must not be used to look at other people; these two carry only what
+// a buyer may see — no email, no phone.
+Route::get('sellers/{id}', [SellerController::class, 'show'])->whereNumber('id');
+Route::get('sellers/{id}/ads', [SellerController::class, 'ads'])->whereNumber('id');
 
 Route::controller(AuthController::class)->group(function () {
     Route::post('register', 'register');

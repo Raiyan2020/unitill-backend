@@ -33,6 +33,8 @@ return [
         'no_email_on_file' => '没有可发送验证码的邮箱地址',
         'no_code_requested' => '未申请验证码，请重新登录。',
         'resend_cooldown' => '请在 :seconds 秒后重新发送',
+        'no_student_email' => '未登记学校邮箱',
+        'reverify_code_sent' => '验证码已发送至你的学校邮箱',
     ],
     'register' => [
         'personal_email_required' => '请填写个人邮箱',
@@ -68,6 +70,7 @@ return [
         'sold_cannot_delete' => '已售出的广告无法删除',
         'deleted' => '广告已删除',
         'coupon_failed' => '优惠码无法使用。',
+        'cannot_publish_in_status' => '该广告在当前状态下无法发布。',
     ],
     'ad_form' => [
         'invalid_main_category' => '主分类无效',
@@ -108,6 +111,13 @@ return [
         'report_submitted' => '举报已提交',
         'attachment_too_large' => '文件过大，最大为 10 MB。',
         'attachment_type_not_allowed' => '不支持此文件类型。',
+    ],
+    'contact_us' => [
+        'sent' => '你的消息已成功发送',
+    ],
+    'filter' => [
+        'price' => '价格',
+        'distance_postcode' => '距离（邮编）',
     ],
     'sort' => [
         'newest_first' => '最新优先',

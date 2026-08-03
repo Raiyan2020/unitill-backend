@@ -41,12 +41,14 @@ class UserResource extends JsonResource
             'first_name' => $this->first_name,
             'last_name' => $showLastName ? $this->last_name : null,
             'image' => $this->image ? getimg($this->image) : null,
-            'phone' => $this->phone,
-            'email' => $this->email,
             'member_since' => $this->created_at
                 ? $this->created_at->locale($locale)->translatedFormat('F Y')
                 : null,
+            // Raw join timestamp so the app can format it in its own locale;
+            // `member_since` above stays for older builds.
+            'created_at' => $this->created_at?->toIso8601String(),
             'ads_count' => (int) ($this->published_ads_count ?? 0),
+            'active_ads_count' => (int) ($this->published_ads_count ?? 0),
             // Restored: these three are part of the published mobile contract
             // (profile header, seller badge, rating row) and were commented out
             // during the parallel rewrite rather than intentionally dropped.
@@ -62,6 +64,11 @@ class UserResource extends JsonResource
         ];
 
         if ($isOwnProfile) {
+            // Contact details are the account owner's alone. They used to be in
+            // the shared block, which handed any authenticated caller another
+            // user's personal email and phone number via GET /show-profile/{id}.
+            $data['phone'] = $this->phone;
+            $data['email'] = $this->email;
             $data['student_email'] = $this->student_email;
             // Student re-verification lifecycle. The mobile app reads these to
             // decide whether to show the "reconfirm your student status" prompt.

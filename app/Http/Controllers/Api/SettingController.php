@@ -46,6 +46,7 @@ class SettingController extends Controller
             'policies' => LegalAffairResource::collection($policies),
             'contact_email' => setting('contact_email'),
             'contact_phone' => setting('contact_phone'),
+            'social_links' => $this->socialLinks(),
             'popup_image' => $popupImage ? asset($popupImage) : null,
             'enable_popup_image' => setting('enable_login_popup_image') !== '0',
             'pusher' => [
@@ -59,5 +60,24 @@ class SettingController extends Controller
         ];
 
         return sendResponse($data);
+    }
+
+    /**
+     * Only platforms with a URL are returned, so an unset setting hides that
+     * icon. Returned as an object so the key is `{}` rather than `[]` when empty.
+     */
+    protected function socialLinks(): object
+    {
+        $platforms = ['facebook', 'instagram', 'x', 'linkedin', 'tiktok', 'youtube'];
+
+        $links = [];
+        foreach ($platforms as $platform) {
+            $url = trim((string) setting('social_'.$platform, ''));
+            if ($url !== '') {
+                $links[$platform] = $url;
+            }
+        }
+
+        return (object) $links;
     }
 }

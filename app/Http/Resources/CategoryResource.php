@@ -38,7 +38,9 @@ class CategoryResource extends JsonResource
                         'slug' => $definition->slug,
                         'label' => $definition->labelForLanguageCode($lang),
                         'input_type' => $definition->input_type,
-                        'options' => $definition->options ?? [],
+                        // Labels follow the `lang` header; `value` stays the raw
+                        // key the app submits and filters with.
+                        'options' => $definition->optionsForLanguageCode($lang),
                         'is_required' => (bool) $definition->is_required,
                     ])
                     ->values()

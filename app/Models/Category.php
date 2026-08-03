@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ResolvesTranslations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Category extends Model
 {
     use HasFactory;
+    use ResolvesTranslations;
 
     protected $fillable = [
         'parent_id',
@@ -50,23 +52,7 @@ class Category extends Model
 
     public function nameForLanguageCode(string $code): string
     {
-        $language = Language::where('code', $code)->first();
-        if ($language) {
-            $translation = $this->relationLoaded('translations')
-                ? $this->translations->firstWhere('language_id', $language->id)
-                : $this->translations()->where('language_id', $language->id)->first();
-            if ($translation) {
-                return $translation->name;
-            }
-        }
-
-        // Fallback: the requested language has no translation — return any
-        // available translation so the category name is never blank.
-        $fallback = $this->relationLoaded('translations')
-            ? $this->translations->first()
-            : $this->translations()->first();
-
-        return $fallback?->name ?? '';
+        return (string) $this->translatedValue($code, 'name', '');
     }
 
     public function getNameArAttribute(): string

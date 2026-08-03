@@ -33,6 +33,8 @@ return [
         'no_email_on_file' => 'No email on file to send the code to',
         'no_code_requested' => 'No verification code requested. Please sign in again.',
         'resend_cooldown' => 'You can resend in :seconds seconds',
+        'no_student_email' => 'No university email on file',
+        'reverify_code_sent' => 'Verification code sent to your student email',
     ],
     'register' => [
         'personal_email_required' => 'Personal email is required',
@@ -68,6 +70,7 @@ return [
         'sold_cannot_delete' => 'A sold ad cannot be deleted',
         'deleted' => 'Ad deleted successfully',
         'coupon_failed' => 'The coupon code could not be applied.',
+        'cannot_publish_in_status' => 'This listing cannot be published in its current state.',
     ],
     'ad_form' => [
         'invalid_main_category' => 'Invalid main category',
@@ -108,6 +111,13 @@ return [
         'report_submitted' => 'Report submitted',
         'attachment_too_large' => 'File is too large. Maximum size is 10 MB.',
         'attachment_type_not_allowed' => 'This file type is not supported.',
+    ],
+    'contact_us' => [
+        'sent' => 'Your message was sent successfully',
+    ],
+    'filter' => [
+        'price' => 'Price',
+        'distance_postcode' => 'Distance (postcode)',
     ],
     'sort' => [
         'newest_first' => 'Newest First',

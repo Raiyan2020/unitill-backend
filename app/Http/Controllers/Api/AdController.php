@@ -260,8 +260,6 @@ class AdController extends Controller
 
     protected function filterOptionsForCategory(int $categoryId, string $lang): array
     {
-        $ar = $lang === 'ar';
-
         $defs = CategoryAttributeDefinition::query()
             ->where('category_id', $categoryId)
             ->where('is_active', true)
@@ -277,7 +275,8 @@ class AdController extends Controller
                     'input_type' => $definition->input_type,
                     'filter_control' => $filterControl,
                     'post_control' => $definition->resolvedPostControl(),
-                    'options' => $definition->options ?? [],
+                    // Label localized, value stays the raw filter key.
+                    'options' => $definition->optionsForLanguageCode($lang),
                     'config' => $definition->config ?? [],
                     'is_required' => (bool) $definition->is_required,
                     'is_filterable' => (bool) $definition->is_filterable,
@@ -293,7 +292,7 @@ class AdController extends Controller
         // price range (post-ad has a dedicated price field) and postcode+radius.
         array_unshift($defs, [
             'slug' => 'price',
-            'label' => $ar ? 'السعر' : 'Price',
+            'label' => __('api.filter.price'),
             'input_type' => 'number',
             'filter_control' => 'range',
             'post_control' => 'number',
@@ -307,7 +306,7 @@ class AdController extends Controller
         ]);
         $defs[] = [
             'slug' => 'location',
-            'label' => $ar ? 'المسافة (الرمز البريدي)' : 'Distance (postcode)',
+            'label' => __('api.filter.distance_postcode'),
             'input_type' => 'string',
             'filter_control' => 'radius',
             'post_control' => 'none',
@@ -664,6 +663,12 @@ class AdController extends Controller
         $ad = Ad::where('id', $id)->orWhere('public_id', $id)->first();
         if (!$ad || $ad->user_id !== $user->id) {
             return sendError(__('api.ad.not_found'), [], 404);
+        }
+
+        // The only way to settle an outstanding fee, so it must accept every
+        // state that can owe one — not just drafts.
+        if (! in_array($ad->status, ['draft', 'pending', 'paused', 'expired', 'published'], true)) {
+            return sendError(__('api.ad.cannot_publish_in_status'), ['status' => $ad->status], 422);
         }
 
         if ($ad->images()->count() === 0) {

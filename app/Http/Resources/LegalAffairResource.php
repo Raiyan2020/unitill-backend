@@ -9,9 +9,11 @@ class LegalAffairResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $lang = $request->header('lang', 'en') === 'ar' ? 'ar' : 'en';
+        // The full language code is honoured here: collapsing it to en/ar was
+        // why fr/es/zh always rendered the English policies.
+        $lang = (string) $request->header('lang', 'en');
         $locale = $lang === 'ar' ? 'ar' : 'en';
-        $translation = $this->translationFor($lang);
+        $translation = $this->resource->translationRowFor($lang);
 
         return [
             'id' => $this->id,
@@ -26,16 +28,6 @@ class LegalAffairResource extends JsonResource
                     : 'LAST UPDATED: '.strtoupper($this->updated_at->format('M Y')))
                 : null,
         ];
-    }
-
-    protected function translationFor(string $lang)
-    {
-        if (! $this->relationLoaded('translations')) {
-            return $this->translations()->whereHas('language', fn ($q) => $q->where('code', $lang))->first();
-        }
-
-        return $this->translations->first(fn ($row) => $row->language?->code === $lang)
-            ?? $this->translations->first();
     }
 
     protected function parsePoints(?string $description): array

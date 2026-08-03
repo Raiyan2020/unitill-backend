@@ -7,6 +7,11 @@ use App\Models\ContactReasonTranslation;
 use App\Models\Language;
 use Illuminate\Database\Seeder;
 
+/**
+ * Idempotent and non-destructive: reasons are matched on sort_order and
+ * existing translations are never overwritten. The previous version used
+ * create() and produced four extra reasons on every run.
+ */
 class ContactReasonSeeder extends Seeder
 {
     public function run(): void
@@ -52,19 +57,21 @@ class ContactReasonSeeder extends Seeder
         ];
 
         foreach ($definitions as $def) {
-            $reason = ContactReason::create([
-                'sort_order' => $def['sort_order'],
-                'is_active' => true,
-            ]);
+            $reason = ContactReason::firstOrCreate(
+                ['sort_order' => $def['sort_order']],
+                ['is_active' => true]
+            );
+
             foreach ($def['names'] as $code => $name) {
                 $lang = $languages->get($code);
-                if ($lang) {
-                    ContactReasonTranslation::create([
-                        'contact_reason_id' => $reason->id,
-                        'language_id' => $lang->id,
-                        'name' => $name,
-                    ]);
+                if (! $lang) {
+                    continue;
                 }
+
+                ContactReasonTranslation::firstOrCreate(
+                    ['contact_reason_id' => $reason->id, 'language_id' => $lang->id],
+                    ['name' => $name]
+                );
             }
         }
     }

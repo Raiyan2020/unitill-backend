@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ResolvesTranslations;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class LegalAffair extends Model
 {
+    use ResolvesTranslations;
+
     protected $fillable = [
         'key',
         'section',
@@ -26,16 +29,18 @@ class LegalAffair extends Model
 
     public function titleForLanguageCode(string $code): string
     {
-        $language = Language::where('code', $code)->first();
-        if ($language) {
-            $translation = $this->relationLoaded('translations')
-                ? $this->translations->firstWhere('language_id', $language->id)
-                : $this->translations()->where('language_id', $language->id)->first();
-            if ($translation) {
-                return $translation->title;
-            }
-        }
+        return (string) $this->translatedValue($code, 'title', '');
+    }
 
-        return '';
+    /**
+     * The best translation row for a language code, used by LegalAffairResource
+     * so title/subtitle/description all come from one consistent row.
+     */
+    public function translationRowFor(string $code): ?LegalAffairTranslation
+    {
+        return $this->translationForLanguageCode(
+            $code,
+            static fn ($row) => trim((string) ($row->title ?? '')) !== ''
+        );
     }
 }

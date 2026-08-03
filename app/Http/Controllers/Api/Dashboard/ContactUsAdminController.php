@@ -40,6 +40,9 @@ class ContactUsAdminController extends Controller
                     ?: $row->contactReason?->nameForLanguageCode('ar')
                     ?: '-',
                 'message' => $row->message,
+                'mail_sent' => $row->mail_sent_at !== null,
+                'mail_sent_at' => $row->mail_sent_at?->toDateTimeString(),
+                'mail_error' => $row->mail_error,
                 'created_at' => $row->created_at?->toDateTimeString(),
             ];
         });

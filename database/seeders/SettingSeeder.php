@@ -131,7 +131,26 @@ class SettingSeeder extends Seeder
             'is_object' => '0',
         ]);
 
+        // Social profile URLs — served as `social_links` by GET /api/settings.
+        // Left blank on purpose: the app hides the icon row until they are set.
+        $socials = [
+            'social_facebook' => ['Facebook URL', 'رابط فيسبوك'],
+            'social_instagram' => ['Instagram URL', 'رابط إنستغرام'],
+            'social_x' => ['X (Twitter) URL', 'رابط إكس (تويتر)'],
+            'social_linkedin' => ['LinkedIn URL', 'رابط لينكدإن'],
+            'social_tiktok' => ['TikTok URL', 'رابط تيك توك'],
+            'social_youtube' => ['YouTube URL', 'رابط يوتيوب'],
+        ];
 
-
+        foreach ($socials as $key => [$titleEn, $titleAr]) {
+            Setting::create([
+                'key_id' => $key,
+                'title_en' => $titleEn,
+                'title_ar' => $titleAr,
+                'value' => '',
+                'set_group' => 'social',
+                'is_object' => '0',
+            ]);
+        }
     }
 }
