@@ -65,6 +65,7 @@ class AdAdminController extends Controller
                 'subtitle' => $ad->subtitle,
                 'description' => $ad->description,
                 'status' => $ad->status,
+                'payment_status' => $ad->payment_status,
                 'price' => $ad->price,
                 'currency' => $ad->currency,
                 'is_negotiable' => (bool) $ad->is_negotiable,
@@ -96,7 +97,7 @@ class AdAdminController extends Controller
         ])->find($id);
 
         if (! $ad) {
-            return sendError('Ad not found', [], 404);
+            return sendError(__('api.ad.not_found'), [], 404);
         }
 
         $cover = $ad->cover_image ? ltrim((string) $ad->cover_image, '/') : null;
@@ -189,7 +190,7 @@ class AdAdminController extends Controller
         $ad = Ad::with('user')->find($id);
 
         if (! $ad) {
-            return sendError('Ad not found', [], 404);
+            return sendError(__('api.ad.not_found'), [], 404);
         }
 
         $validator = Validator::make($request->all(), [
@@ -207,7 +208,7 @@ class AdAdminController extends Controller
             && $oldStatus !== 'published'
             && ! in_array($ad->payment_status, ['paid', 'free', 'waived', 'coupon'], true)) {
             return sendError(
-                'This ad cannot be published until its listing payment is settled.',
+                __('api.ad.payment_unsettled'),
                 ['payment_status' => $ad->payment_status],
                 422
             );
@@ -234,7 +235,7 @@ class AdAdminController extends Controller
             );
         }
 
-        return sendResponse($ad->fresh(), 'Ad status updated');
+        return sendResponse($ad->fresh(), __('api.ad.status_updated'));
     }
 
     public function destroy(int $id)
@@ -242,11 +243,11 @@ class AdAdminController extends Controller
         $ad = Ad::find($id);
 
         if (! $ad) {
-            return sendError('Ad not found', [], 404);
+            return sendError(__('api.ad.not_found'), [], 404);
         }
 
         $ad->delete();
 
-        return sendResponse([], 'Ad deleted');
+        return sendResponse([], __('api.ad.deleted'));
     }
 }

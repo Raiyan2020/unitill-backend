@@ -71,6 +71,8 @@ return [
         'deleted' => 'Annonce supprimée avec succès',
         'coupon_failed' => 'Le code promo n\'a pas pu être appliqué.',
         'cannot_publish_in_status' => 'Cette annonce ne peut pas être publiée dans son état actuel.',
+        'payment_unsettled' => 'Cette annonce ne peut pas être publiée tant que les frais de publication ne sont pas réglés. Vous pouvez toutefois la passer en rejetée, brouillon ou expirée.',
+        'status_updated' => 'Statut de l\'annonce mis à jour',
     ],
     'ad_form' => [
         'invalid_main_category' => 'Catégorie principale invalide',

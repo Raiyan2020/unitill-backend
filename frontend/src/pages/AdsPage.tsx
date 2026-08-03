@@ -17,6 +17,7 @@ type AdRow = {
   public_id: string;
   title: string;
   status: AdStatus;
+  payment_status: string | null;
   cover_image: string | null;
   cover_image_url: string | null;
   user_id: number;
@@ -27,6 +28,14 @@ type AdRow = {
 type PaginatedResponse<T> = { data: T[]; total: number };
 
 const statusValues: AdStatus[] = ['draft', 'pending', 'published', 'rejected', 'sold', 'expired'];
+
+/** Payment states the API accepts as "settled" before an ad may go live. */
+const SETTLED_PAYMENTS = ['paid', 'free', 'waived', 'coupon'];
+
+/** The API refuses to publish an ad whose listing fee is still outstanding. */
+function canPublish(row: AdRow): boolean {
+  return row.status === 'published' || SETTLED_PAYMENTS.includes(row.payment_status ?? '');
+}
 
 function statusSelectClass(status: AdStatus) {
   if (status === 'published') return 'border-emerald-300/70 bg-emerald-500/15 text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/20 dark:text-emerald-300';
@@ -196,8 +205,9 @@ export function AdsPage() {
                           className={`h-9 min-w-[130px] rounded-full border px-3 text-xs font-semibold shadow-sm outline-none transition-all focus:ring-2 focus:ring-[#7367f0]/30 ${statusSelectClass(row.status)}`}
                         >
                           {statusValues.map((s) => (
-                            <option key={s} value={s}>
+                            <option key={s} value={s} disabled={s === 'published' && !canPublish(row)}>
                               {t[s]}
+                              {s === 'published' && !canPublish(row) ? ` — ${t.paymentUnsettledShort}` : ''}
                             </option>
                           ))}
                         </select>

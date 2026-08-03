@@ -314,6 +314,7 @@ export type Dictionary = {
   nameRequired: string;
   emailRequired: string;
   emailInvalid: string;
+  paymentUnsettledShort: string;
   menu: string;
 };
 
@@ -625,6 +626,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     nameRequired: "The name is required.",
     emailRequired: "The email address is required.",
     emailInvalid: "Enter a valid email address, for example name@example.com",
+    paymentUnsettledShort: "fee unpaid",
     menu: "Menu",
   },
   ar: {
@@ -934,6 +936,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     nameRequired: "الاسم مطلوب.",
     emailRequired: "البريد الإلكتروني مطلوب.",
     emailInvalid: "أدخل بريداً إلكترونياً صحيحاً، مثال: name@example.com",
+    paymentUnsettledShort: "الرسوم غير مدفوعة",
     menu: "القائمة",
   },
 };

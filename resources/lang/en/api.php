@@ -71,6 +71,8 @@ return [
         'deleted' => 'Ad deleted successfully',
         'coupon_failed' => 'The coupon code could not be applied.',
         'cannot_publish_in_status' => 'This listing cannot be published in its current state.',
+        'payment_unsettled' => 'This ad cannot be published until its listing fee is paid. You can still set it to rejected, draft or expired.',
+        'status_updated' => 'Ad status updated',
     ],
     'ad_form' => [
         'invalid_main_category' => 'Invalid main category',

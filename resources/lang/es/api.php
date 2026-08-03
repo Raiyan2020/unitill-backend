@@ -71,6 +71,8 @@ return [
         'deleted' => 'Anuncio eliminado correctamente',
         'coupon_failed' => 'No se ha podido aplicar el código de descuento.',
         'cannot_publish_in_status' => 'Este anuncio no se puede publicar en su estado actual.',
+        'payment_unsettled' => 'Este anuncio no se puede publicar hasta que se abone la tarifa de publicación. Aun así puedes marcarlo como rechazado, borrador o caducado.',
+        'status_updated' => 'Estado del anuncio actualizado',
     ],
     'ad_form' => [
         'invalid_main_category' => 'Categoría principal no válida',

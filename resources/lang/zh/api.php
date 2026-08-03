@@ -71,6 +71,8 @@ return [
         'deleted' => '广告已删除',
         'coupon_failed' => '优惠码无法使用。',
         'cannot_publish_in_status' => '该广告在当前状态下无法发布。',
+        'payment_unsettled' => '该广告在发布费用结清前无法上线。你仍可将其设为已拒绝、草稿或已过期。',
+        'status_updated' => '广告状态已更新',
     ],
     'ad_form' => [
         'invalid_main_category' => '主分类无效',
