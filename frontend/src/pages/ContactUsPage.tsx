@@ -33,11 +33,11 @@ export function ContactUsPage() {
     setLoading(true);
     try {
       const res = await api.get('/admin/contact-us', { params: { page, per_page: pageSize, search: search || undefined } });
-      const payload = ensureApiSuccess<PaginatedResponse<Row>>(res, 'Failed to load contact us messages');
+      const payload = ensureApiSuccess<PaginatedResponse<Row>>(res, t.actionFailed);
       setRows(payload?.data || []);
       setTotal(payload?.total || 0);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to load contact us messages.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setLoading(false);
     }

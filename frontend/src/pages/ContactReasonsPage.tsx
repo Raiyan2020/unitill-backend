@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Input } from '../components/ui/input';
 import { api } from '../lib/api';
 import { ensureApiSuccess } from '../lib/api-response';
+import { digitsOnly, toInteger } from '../lib/form';
 import { useNotify } from '../lib/notify';
 import { useI18n } from '../providers/i18n-provider';
 
@@ -34,11 +35,11 @@ export function ContactReasonsPage() {
     setLoading(true);
     try {
       const res = await api.get('/admin/contact-reasons', { params: { page, per_page: pageSize, search: search || undefined } });
-      const payload = ensureApiSuccess<PaginatedResponse<Row>>(res, 'Failed to load contact reasons');
+      const payload = ensureApiSuccess<PaginatedResponse<Row>>(res, t.actionFailed);
       setRows(payload?.data || []);
       setTotal(payload?.total || 0);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to load contact reasons.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setLoading(false);
     }
@@ -46,7 +47,7 @@ export function ContactReasonsPage() {
 
   const fetchLanguages = async () => {
     const res = await api.get('/admin/languages', { params: { per_page: 100 } });
-    const payload = ensureApiSuccess<PaginatedResponse<LanguageRow>>(res, 'Failed to load languages');
+    const payload = ensureApiSuccess<PaginatedResponse<LanguageRow>>(res, t.actionFailed);
     setLanguages(payload?.data || []);
   };
 
@@ -88,21 +89,26 @@ export function ContactReasonsPage() {
   };
 
   const save = async () => {
+    if (!Object.values(form.translations).some((value) => String(value || '').trim())) {
+      notify.error(t.nameRequiredAnyLanguage);
+      return;
+    }
+
     setSaving(true);
     try {
-      const payload = { is_active: form.is_active, sort_order: Number(form.sort_order || 0), translations: form.translations };
+      const payload = { is_active: form.is_active, sort_order: toInteger(form.sort_order), translations: form.translations };
       if (editing) {
         const res = await api.put(`/admin/contact-reasons/${editing.id}`, payload);
-        ensureApiSuccess(res, 'Failed to update contact reason');
+        ensureApiSuccess(res, t.actionFailed);
       } else {
         const res = await api.post('/admin/contact-reasons', payload);
-        ensureApiSuccess(res, 'Failed to create contact reason');
+        ensureApiSuccess(res, t.actionFailed);
       }
       setFormOpen(false);
       await fetchRows();
-      notify.success(editing ? 'Contact reason updated successfully.' : 'Contact reason created successfully.');
+      notify.success(editing ? t.updatedSuccessfully : t.createdSuccessfully);
     } catch (error) {
-      notify.errorFrom(error, editing ? 'Failed to update contact reason.' : 'Failed to create contact reason.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setSaving(false);
     }
@@ -113,12 +119,12 @@ export function ContactReasonsPage() {
     setSaving(true);
     try {
       const res = await api.delete(`/admin/contact-reasons/${deleting.id}`);
-      ensureApiSuccess(res, 'Failed to delete contact reason');
+      ensureApiSuccess(res, t.actionFailed);
       setDeleting(null);
       await fetchRows();
-      notify.success('Contact reason deleted successfully.');
+      notify.success(t.deletedSuccessfully);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to delete contact reason.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setSaving(false);
     }
@@ -135,7 +141,7 @@ export function ContactReasonsPage() {
             {[10, 25, 50, 100].map((size) => <option key={size} value={size}>{size}</option>)}
           </select>
           <Input className="h-9 w-[220px]" placeholder={t.search} value={search} onChange={(e) => setSearch(e.target.value)} />
-          <Button size="sm" onClick={openCreate}>+ Add Contact Reason</Button>
+          <Button size="sm" onClick={openCreate}>+ {t.add} {t.contactReason}</Button>
         </div>
       </div>
 
@@ -183,13 +189,13 @@ export function ContactReasonsPage() {
           <div className="flex min-h-full items-start justify-center py-4 md:items-center md:py-8">
             <Card className="w-full max-w-2xl overflow-hidden rounded-2xl">
             <CardHeader className="sticky top-0 z-10 flex flex-row items-center justify-between space-y-0 border-b border-[#ececf3] bg-white/95 backdrop-blur dark:border-[#44485f] dark:bg-[#2f3349]/95">
-              <CardTitle>{editing ? `Edit #${editing.id}` : 'Create Contact Reason'}</CardTitle>
+              <CardTitle>{editing ? `${t.edit} ${t.contactReason}` : `${t.add} ${t.contactReason}`}</CardTitle>
               <Button variant="ghost" size="icon" onClick={() => setFormOpen(false)}><X className="h-4 w-4" /></Button>
             </CardHeader>
             <CardContent className="max-h-[72vh] space-y-5 overflow-y-auto p-4 md:max-h-[78vh] md:p-6">
               <div className="grid gap-4 md:grid-cols-2">
-                <Input placeholder={t.sort} value={form.sort_order} onChange={(e) => setForm((s) => ({ ...s, sort_order: e.target.value }))} />
-                <label className="flex items-center gap-2 rounded-xl border border-[#dbdbe8] px-3 text-sm dark:border-[#4a4f68]"><input type="checkbox" checked={form.is_active} onChange={(e) => setForm((s) => ({ ...s, is_active: e.target.checked }))} /> Active</label>
+                <Input placeholder={t.sort} inputMode="numeric" value={form.sort_order} onChange={(e) => setForm((s) => ({ ...s, sort_order: digitsOnly(e.target.value) }))} />
+                <label className="flex items-center gap-2 rounded-xl border border-[#dbdbe8] px-3 text-sm dark:border-[#4a4f68]"><input type="checkbox" checked={form.is_active} onChange={(e) => setForm((s) => ({ ...s, is_active: e.target.checked }))} /> {t.active}</label>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 {languages.map((language) => (
@@ -219,9 +225,9 @@ export function ContactReasonsPage() {
       {deleting && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
           <Card className="w-full max-w-md">
-            <CardHeader><CardTitle>Confirm deletion</CardTitle></CardHeader>
+            <CardHeader><CardTitle>{t.confirmDeletion}</CardTitle></CardHeader>
             <CardContent>
-              <p className="mb-4 text-sm">Delete contact reason #{deleting.id}?</p>
+              <p className="mb-4 text-sm">{t.deleteConfirmation}</p>
               <div className="flex justify-end gap-2">
                 <Button variant="secondary" onClick={() => setDeleting(null)}>{t.cancel}</Button>
                 <Button variant="destructive" onClick={confirmDelete} disabled={saving}>{t.delete}</Button>

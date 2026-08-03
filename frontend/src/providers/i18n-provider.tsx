@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 type Locale = 'en' | 'ar';
 type Theme = 'light' | 'dark';
 
-type Dictionary = {
+export type Dictionary = {
   appName: string;
   dashboard: string;
   users: string;
@@ -181,6 +181,137 @@ type Dictionary = {
   published: string;
   rejected: string;
   sold: string;
+
+  // Added August 2026: strings that were hardcoded in the page components.
+  add: string;
+  admin: string;
+  permission: string;
+  role: string;
+  subCategory: string;
+  university: string;
+  legalAffair: string;
+  contactReason: string;
+  paymentMethod: string;
+  coupon: string;
+  total: string;
+  reviewed: string;
+  dismissed: string;
+  approved: string;
+  usedUp: string;
+  default: string;
+  deletedSuccessfully: string;
+  savedSuccessfully: string;
+  statusUpdatedSuccessfully: string;
+  adDeleted: string;
+  adOwner: string;
+  reporterExplanation: string;
+  reportedAd: string;
+  relatedAd: string;
+  openAd: string;
+  noMessagesInConversation: string;
+  welcomeToDashboard: string;
+  rememberMe: string;
+  forgotPassword: string;
+  profit: string;
+  order: string;
+  topic: string;
+  estimatedAudience: string;
+  firebase: string;
+  userId: string;
+  linkOptional: string;
+  history: string;
+  titleAndBodyRequired: string;
+  userIdRequiredForSingle: string;
+  newCoupon: string;
+  maxDiscountOptional: string;
+  minSpendOptional: string;
+  totalUsesHint: string;
+  startsAtOptional: string;
+  expiresAtOptional: string;
+  redemptions: string;
+  couponNotUsedYet: string;
+  managePlatformSettings: string;
+  loadingSettings: string;
+  noChangesToSave: string;
+  settingsUpdated: string;
+  noDomainsAdded: string;
+  stateHint: string;
+  domainHint: string;
+  universityNameRequired: string;
+  atLeastOneTranslation: string;
+  passwordRequired: string;
+  passwordConfirmationMismatch: string;
+  permissionNameRequired: string;
+  userVerificationDetails: string;
+  allRequests: string;
+  latestVerificationRequest: string;
+  noVerificationRequest: string;
+  allUserVerificationRequests: string;
+  operationsCity: string;
+  preferredContact: string;
+  offersSummary: string;
+  viewVerificationDetails: string;
+  deviceSessions: string;
+  favoriteAds: string;
+  userAds: string;
+  dashboards: string;
+  editCoupon: string;
+  couponOncePerUserNote: string;
+  deleteConfirmation: string;
+  deleteUniversityConfirmation: string;
+  actionFailed: string;
+  newPasswordOptional: string;
+  deleteAdConfirmation: string;
+  verificationRequest: string;
+  business: string;
+  service_provider: string;
+  organization_type: string;
+  website: string;
+  updatedSuccessfully: string;
+  createdSuccessfully: string;
+  passwordTooShort: string;
+  passwordConfirmationRequired: string;
+  roleRequired: string;
+  deleteAdminConfirmation: string;
+  view: string;
+  create: string;
+  update: string;
+  page: string;
+  rolePermissions: string;
+  noPermissionsAssigned: string;
+  roleNameRequired: string;
+  rolePermissionsRequired: string;
+  deleteRoleConfirmation: string;
+  permissionsSelected: string;
+  countryCodeRequired: string;
+  countryCodeLength: string;
+  nameRequiredAnyLanguage: string;
+  countryRequired: string;
+  cityCodeLength: string;
+  nameInLanguage: string;
+  currentImage: string;
+  noImage: string;
+  changeImage: string;
+  languageCodeRequired: string;
+  languageCodeLength: string;
+  titleRequired: string;
+  isActiveQuestion: string;
+  loginFailed: string;
+  nameArRequired: string;
+  nameEnRequired: string;
+  slugRequired: string;
+  imageRequired: string;
+  viewImage: string;
+  allUsers: string;
+  singleUser: string;
+  selectUser: string;
+  deletePaymentMethodConfirmation: string;
+  sending: string;
+  notificationSent: string;
+  firebaseNotConfigured: string;
+  searchUser: string;
+  noUsersFound: string;
+  menu: string;
 };
 
 const dictionaries: Record<Locale, Dictionary> = {
@@ -210,7 +341,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     contactUs: 'Contact Us',
     pushNotifications: 'Push Notifications',
     sendNotification: 'Send Notification',
-    sendToAll: 'All users (topic)',
+    sendToAll: 'All users',
     sendToUser: 'Single user',
     audience: 'Audience',
     notificationTitle: 'Title',
@@ -360,17 +491,146 @@ const dictionaries: Record<Locale, Dictionary> = {
     published: 'Published',
     rejected: 'Rejected',
     sold: 'Sold',
+    add: "Add",
+    admin: "Admin",
+    permission: "Permission",
+    role: "Role",
+    subCategory: "Sub Category",
+    university: "University",
+    legalAffair: "Legal Affair",
+    contactReason: "Contact Reason",
+    paymentMethod: "Payment Method",
+    coupon: "Coupon",
+    total: "Total",
+    reviewed: "Reviewed",
+    dismissed: "Dismissed",
+    approved: "Approved",
+    usedUp: "Used up",
+    default: "Default",
+    deletedSuccessfully: "Deleted successfully.",
+    savedSuccessfully: "Saved successfully.",
+    statusUpdatedSuccessfully: "Status updated successfully.",
+    adDeleted: "Ad deleted",
+    adOwner: "Ad owner",
+    reporterExplanation: "Reporter's explanation",
+    reportedAd: "Reported ad",
+    relatedAd: "Related ad",
+    openAd: "Open ad",
+    noMessagesInConversation: "No messages in this conversation.",
+    welcomeToDashboard: "Welcome to Dashboard!",
+    rememberMe: "Remember Me",
+    forgotPassword: "Forgot Password?",
+    profit: "Profit",
+    order: "Order",
+    topic: "Topic",
+    estimatedAudience: "Estimated audience",
+    firebase: "Firebase",
+    userId: "User ID",
+    linkOptional: "Link (optional)",
+    history: "History",
+    titleAndBodyRequired: "Title and body are required.",
+    userIdRequiredForSingle: "User ID is required for single-user notifications.",
+    newCoupon: "New coupon",
+    maxDiscountOptional: "Max discount £ (optional)",
+    minSpendOptional: "Min spend £ (optional)",
+    totalUsesHint: "Total uses (blank = unlimited)",
+    startsAtOptional: "Starts at (optional)",
+    expiresAtOptional: "Expires at (optional)",
+    redemptions: "Redemptions",
+    couponNotUsedYet: "This coupon has not been used yet.",
+    managePlatformSettings: "Manage platform settings and contact info.",
+    loadingSettings: "Loading settings...",
+    noChangesToSave: "No changes to save.",
+    settingsUpdated: "Settings updated successfully.",
+    noDomainsAdded: "No domains added yet.",
+    stateHint: "State (e.g. CA)",
+    domainHint: "e.g. harvard.edu",
+    universityNameRequired: "University name is required.",
+    atLeastOneTranslation: "At least one translation is required.",
+    passwordRequired: "Password is required.",
+    passwordConfirmationMismatch: "Password confirmation does not match.",
+    permissionNameRequired: "Permission name is required.",
+    userVerificationDetails: "User Verification Details",
+    allRequests: "All Requests",
+    latestVerificationRequest: "Latest Verification Request",
+    noVerificationRequest: "No verification request found for this user.",
+    allUserVerificationRequests: "All User Verification Requests",
+    operationsCity: "Operations City",
+    preferredContact: "Preferred Contact",
+    offersSummary: "Offers Summary",
+    viewVerificationDetails: "View verification details",
+    deviceSessions: "Device sessions",
+    favoriteAds: "Favorite ads",
+    userAds: "User Ads",
+    dashboards: "Dashboards",
+    editCoupon: "Edit coupon",
+    couponOncePerUserNote: "Every coupon can be used only once per user — that limit is enforced automatically.",
+    deleteConfirmation: "This item will be permanently deleted. Continue?",
+    deleteUniversityConfirmation: "This university and its domains will be permanently deleted. Continue?",
+    actionFailed: "The action could not be completed.",
+    newPasswordOptional: "New password (optional)",
+    deleteAdConfirmation: "This ad will be permanently deleted. Continue?",
+    verificationRequest: "Verification Request",
+    business: "Business",
+    service_provider: "Service provider",
+    organization_type: "Organization",
+    website: "Website",
+    updatedSuccessfully: "Updated successfully.",
+    createdSuccessfully: "Created successfully.",
+    passwordTooShort: "Password must be at least {min} characters.",
+    passwordConfirmationRequired: "Please confirm the password.",
+    roleRequired: "Please select a role for this admin.",
+    deleteAdminConfirmation: "This admin will be permanently deleted. Continue?",
+    view: "View",
+    create: "Create",
+    update: "Update",
+    page: "Page",
+    rolePermissions: "Role permissions",
+    noPermissionsAssigned: "No permissions assigned.",
+    roleNameRequired: "Please enter the role name.",
+    rolePermissionsRequired: "Please select at least one permission.",
+    deleteRoleConfirmation: "This role will be permanently deleted. Continue?",
+    permissionsSelected: "selected",
+    countryCodeRequired: "Country code is required.",
+    countryCodeLength: "Country code must be exactly 2 letters.",
+    nameRequiredAnyLanguage: "Enter the name in at least one language.",
+    countryRequired: "Please select a country.",
+    cityCodeLength: "City code must not exceed 50 characters.",
+    nameInLanguage: "Name",
+    currentImage: "Current image",
+    noImage: "No image",
+    changeImage: "Change image",
+    languageCodeRequired: "Language code is required.",
+    languageCodeLength: "Language code must not exceed {max} characters.",
+    titleRequired: "Title is required.",
+    isActiveQuestion: "Activation status",
+    loginFailed: "Login failed",
+    nameArRequired: "The Arabic name is required.",
+    nameEnRequired: "The English name is required.",
+    slugRequired: "The slug is required.",
+    imageRequired: "An image is required.",
+    viewImage: "View image",
+    allUsers: "All users",
+    singleUser: "A single user",
+    selectUser: "Select a user",
+    deletePaymentMethodConfirmation: "This payment method will be permanently deleted. Continue?",
+    sending: "Sending...",
+    notificationSent: "Notification sent.",
+    firebaseNotConfigured: "Push notifications are disabled: Firebase is not configured on the server.",
+    searchUser: "Search by name or email",
+    noUsersFound: "No users found",
+    menu: "Menu",
   },
   ar: {
-       appName: 'لوحة يونيتل',
+    appName: 'لوحة يونيتل',
     dashboard: 'لوحة التحكم',
-    users: 'المستخدمون',
+    users: 'المستخدمين',
     ads: 'الإعلانات',
     adReports: 'بلاغات الإعلانات',
     chatReports: 'بلاغات المحادثات',
     coupons: 'الكوبونات',
     userVerifications: 'طلبات التوثيق',
-    admins: 'المدراء',
+    admins: 'المديرين',
     roles: 'الأدوار',
     permissions: 'الصلاحيات',
     profile: 'الملف الشخصي',
@@ -387,7 +647,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     contactUs: 'اتصل بنا',
     pushNotifications: 'الإشعارات',
     sendNotification: 'إرسال إشعار',
-    sendToAll: 'جميع المستخدمين (Topic)',
+    sendToAll: 'جميع المستخدمين',
     sendToUser: 'مستخدم واحد',
     audience: 'الفئة المستهدفة',
     notificationTitle: 'العنوان',
@@ -537,6 +797,135 @@ const dictionaries: Record<Locale, Dictionary> = {
     published: 'منشور',
     rejected: 'مرفوض',
     sold: 'مباع',
+    add: "إضافة",
+    admin: "مدير",
+    permission: "صلاحية",
+    role: "دور",
+    subCategory: "قسم فرعي",
+    university: "جامعة",
+    legalAffair: "شأن قانوني",
+    contactReason: "سبب تواصل",
+    paymentMethod: "طريقة دفع",
+    coupon: "كوبون",
+    total: "الإجمالي",
+    reviewed: "تمت المراجعة",
+    dismissed: "مرفوض",
+    approved: "مقبول",
+    usedUp: "مستنفد",
+    default: "افتراضي",
+    deletedSuccessfully: "تم الحذف بنجاح.",
+    savedSuccessfully: "تم الحفظ بنجاح.",
+    statusUpdatedSuccessfully: "تم تحديث الحالة بنجاح.",
+    adDeleted: "تم حذف الإعلان",
+    adOwner: "صاحب الإعلان",
+    reporterExplanation: "شرح المُبلِّغ",
+    reportedAd: "الإعلان المُبلَّغ عنه",
+    relatedAd: "الإعلان المرتبط",
+    openAd: "فتح الإعلان",
+    noMessagesInConversation: "لا توجد رسائل في هذه المحادثة.",
+    welcomeToDashboard: "مرحباً بك في لوحة التحكم!",
+    rememberMe: "تذكرني",
+    forgotPassword: "نسيت كلمة المرور؟",
+    profit: "الأرباح",
+    order: "الطلبات",
+    topic: "الموضوع",
+    estimatedAudience: "الجمهور المتوقع",
+    firebase: "Firebase",
+    userId: "معرّف المستخدم",
+    linkOptional: "الرابط (اختياري)",
+    history: "السجل",
+    titleAndBodyRequired: "العنوان والنص مطلوبان.",
+    userIdRequiredForSingle: "معرّف المستخدم مطلوب لإشعار مستخدم واحد.",
+    newCoupon: "كوبون جديد",
+    maxDiscountOptional: "أقصى خصم £ (اختياري)",
+    minSpendOptional: "أقل قيمة شراء £ (اختياري)",
+    totalUsesHint: "إجمالي الاستخدامات (فارغ = غير محدود)",
+    startsAtOptional: "يبدأ في (اختياري)",
+    expiresAtOptional: "ينتهي في (اختياري)",
+    redemptions: "مرات الاستخدام",
+    couponNotUsedYet: "لم يُستخدم هذا الكوبون بعد.",
+    managePlatformSettings: "إدارة إعدادات المنصة وبيانات التواصل.",
+    loadingSettings: "جارٍ تحميل الإعدادات...",
+    noChangesToSave: "لا توجد تغييرات للحفظ.",
+    settingsUpdated: "تم تحديث الإعدادات بنجاح.",
+    noDomainsAdded: "لم تتم إضافة نطاقات بعد.",
+    stateHint: "الولاية (مثال: CA)",
+    domainHint: "مثال: harvard.edu",
+    universityNameRequired: "اسم الجامعة مطلوب.",
+    atLeastOneTranslation: "مطلوب ترجمة واحدة على الأقل.",
+    passwordRequired: "كلمة المرور مطلوبة.",
+    passwordConfirmationMismatch: "تأكيد كلمة المرور غير مطابق.",
+    permissionNameRequired: "اسم الصلاحية مطلوب.",
+    userVerificationDetails: "تفاصيل طلب التوثيق",
+    allRequests: "كل الطلبات",
+    latestVerificationRequest: "أحدث طلب توثيق",
+    noVerificationRequest: "لا يوجد طلب توثيق لهذا المستخدم.",
+    allUserVerificationRequests: "كل طلبات التوثيق",
+    operationsCity: "مدينة العمل",
+    preferredContact: "وسيلة التواصل المفضلة",
+    offersSummary: "ملخص العروض",
+    viewVerificationDetails: "عرض تفاصيل التوثيق",
+    deviceSessions: "جلسات الأجهزة",
+    favoriteAds: "الإعلانات المفضلة",
+    userAds: "إعلانات المستخدم",
+    dashboards: "لوحات التحكم",
+    editCoupon: "تعديل الكوبون",
+    couponOncePerUserNote: "يمكن استخدام كل كوبون مرة واحدة فقط لكل مستخدم — يُطبَّق هذا الحد تلقائياً.",
+    deleteConfirmation: "سيتم حذف هذا العنصر نهائياً. هل تريد المتابعة؟",
+    deleteUniversityConfirmation: "سيتم حذف هذه الجامعة ونطاقاتها نهائياً. هل تريد المتابعة؟",
+    actionFailed: "تعذّر إتمام العملية.",
+    newPasswordOptional: "كلمة مرور جديدة (اختياري)",
+    deleteAdConfirmation: "سيتم حذف هذا الإعلان نهائياً. هل تريد المتابعة؟",
+    verificationRequest: "طلب توثيق",
+    business: "شركة",
+    service_provider: "مقدّم خدمة",
+    organization_type: "مؤسسة",
+    website: "موقع إلكتروني",
+    updatedSuccessfully: "تم التحديث بنجاح.",
+    createdSuccessfully: "تم الإنشاء بنجاح.",
+    passwordTooShort: "يجب ألا تقل كلمة المرور عن {min} أحرف.",
+    passwordConfirmationRequired: "يرجى تأكيد كلمة المرور.",
+    roleRequired: "يرجى اختيار دور لهذا المشرف.",
+    deleteAdminConfirmation: "سيتم حذف هذا المشرف نهائياً. هل تريد المتابعة؟",
+    view: "عرض",
+    create: "إنشاء",
+    update: "تعديل",
+    page: "الصفحة",
+    rolePermissions: "صلاحيات الدور",
+    noPermissionsAssigned: "لا توجد صلاحيات مسندة.",
+    roleNameRequired: "يرجى إدخال اسم الدور.",
+    rolePermissionsRequired: "يرجى اختيار صلاحية واحدة على الأقل.",
+    deleteRoleConfirmation: "سيتم حذف هذا الدور نهائياً. هل تريد المتابعة؟",
+    permissionsSelected: "محددة",
+    countryCodeRequired: "رمز الدولة مطلوب.",
+    countryCodeLength: "يجب أن يتكون رمز الدولة من حرفين بالضبط.",
+    nameRequiredAnyLanguage: "أدخل الاسم بلغة واحدة على الأقل.",
+    countryRequired: "يرجى اختيار الدولة.",
+    cityCodeLength: "يجب ألا يتجاوز رمز المدينة 50 حرفاً.",
+    nameInLanguage: "الاسم",
+    currentImage: "الصورة الحالية",
+    noImage: "لا توجد صورة",
+    changeImage: "تغيير الصورة",
+    languageCodeRequired: "رمز اللغة مطلوب.",
+    languageCodeLength: "يجب ألا يتجاوز رمز اللغة {max} أحرف.",
+    titleRequired: "العنوان مطلوب.",
+    isActiveQuestion: "حالة التفعيل",
+    loginFailed: "فشل تسجيل الدخول",
+    nameArRequired: "الاسم بالعربية مطلوب.",
+    nameEnRequired: "الاسم بالإنجليزية مطلوب.",
+    slugRequired: "المُعرّف (slug) مطلوب.",
+    imageRequired: "الصورة مطلوبة.",
+    viewImage: "عرض الصورة",
+    allUsers: "جميع المستخدمين",
+    singleUser: "مستخدم واحد",
+    selectUser: "اختر المستخدم",
+    deletePaymentMethodConfirmation: "سيتم حذف طريقة الدفع هذه نهائياً. هل تريد المتابعة؟",
+    sending: "جارٍ الإرسال...",
+    notificationSent: "تم إرسال الإشعار.",
+    firebaseNotConfigured: "الإشعارات معطّلة: لم يتم إعداد Firebase على الخادم.",
+    searchUser: "ابحث بالاسم أو البريد الإلكتروني",
+    noUsersFound: "لا يوجد مستخدمون",
+    menu: "القائمة",
   },
 };
 

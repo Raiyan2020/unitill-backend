@@ -7,6 +7,7 @@ import { Input } from '../components/ui/input';
 import { TableFooter, TableLoadingRow } from '../components/table/TableHelpers';
 import { api } from '../lib/api';
 import { ensureApiSuccess } from '../lib/api-response';
+import { digitsOnly, toInteger } from '../lib/form';
 import { useNotify } from '../lib/notify';
 import { useI18n } from '../providers/i18n-provider';
 
@@ -20,6 +21,9 @@ type CountryRow = {
 };
 
 type PaginatedResponse<T> = { data: T[]; total: number };
+
+/** Mirrors CountryController: country_code => 'size:2'. */
+const COUNTRY_CODE_LENGTH = 2;
 
 export function CountriesPage() {
   const notify = useNotify();
@@ -43,7 +47,7 @@ export function CountriesPage() {
     setLoading(true);
     try {
       const res = await api.get('/admin/countries', { params: { page, per_page: pageSize, search: search || undefined } });
-      const payload: PaginatedResponse<CountryRow> = ensureApiSuccess<PaginatedResponse<CountryRow>>(res, 'Failed to load countries');
+      const payload: PaginatedResponse<CountryRow> = ensureApiSuccess<PaginatedResponse<CountryRow>>(res, t.actionFailed);
       setRows(payload?.data || []);
       setTotal(payload?.total || 0);
     } finally {
@@ -53,7 +57,7 @@ export function CountriesPage() {
 
   const fetchLanguages = async () => {
     const res = await api.get('/admin/languages', { params: { per_page: 100 } });
-    const listPayload = ensureApiSuccess<PaginatedResponse<LanguageRow>>(res, 'Failed to load languages');
+    const listPayload = ensureApiSuccess<PaginatedResponse<LanguageRow>>(res, t.actionFailed);
     const list: LanguageRow[] = listPayload?.data || [];
     setLanguages(list.filter((l) => l.code));
   };
@@ -96,28 +100,43 @@ export function CountriesPage() {
   };
 
   const save = async () => {
+    const code = form.country_code.trim();
+    if (!code) {
+      notify.error(t.countryCodeRequired);
+      return;
+    }
+    if (code.length !== COUNTRY_CODE_LENGTH) {
+      notify.error(t.countryCodeLength);
+      return;
+    }
+    // At least one translation, otherwise the country lists as a bare code.
+    if (!Object.values(form.translations).some((value) => value.trim())) {
+      notify.error(t.nameRequiredAnyLanguage);
+      return;
+    }
+
     setSaving(true);
     try {
       const payload = {
         country_code: form.country_code.toUpperCase(),
         status: form.status,
-        sort: Number(form.sort || 0),
+        sort: toInteger(form.sort),
         translations: form.translations,
       };
 
       if (editing) {
         const res = await api.put(`/admin/countries/${editing.id}`, payload);
-        ensureApiSuccess(res, 'Failed to update country');
+        ensureApiSuccess(res, t.actionFailed);
       } else {
         const res = await api.post('/admin/countries', payload);
-        ensureApiSuccess(res, 'Failed to create country');
+        ensureApiSuccess(res, t.actionFailed);
       }
 
       setFormOpen(false);
       await fetchRows();
-      notify.success(editing ? 'Country updated successfully.' : 'Country created successfully.');
+      notify.success(editing ? t.updatedSuccessfully : t.createdSuccessfully);
     } catch (error) {
-      notify.errorFrom(error, editing ? 'Failed to update country.' : 'Failed to create country.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setSaving(false);
     }
@@ -128,12 +147,12 @@ export function CountriesPage() {
     setSaving(true);
     try {
       const res = await api.delete(`/admin/countries/${deleting.id}`);
-      ensureApiSuccess(res, 'Failed to delete country');
+      ensureApiSuccess(res, t.actionFailed);
       setDeleting(null);
       await fetchRows();
-      notify.success('Country deleted successfully.');
+      notify.success(t.deletedSuccessfully);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to delete country.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setSaving(false);
     }
@@ -161,7 +180,7 @@ export function CountriesPage() {
             ))}
           </select>
           <Input className="h-9 w-[220px]" placeholder={t.search} value={search} onChange={(e) => setSearch(e.target.value)} />
-          <Button size="sm" onClick={openCreate}>+ Add Country</Button>
+          <Button size="sm" onClick={openCreate}>+ {t.add} {t.country}</Button>
         </div>
       </div>
 
@@ -221,31 +240,42 @@ export function CountriesPage() {
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
           <Card className="w-full max-w-2xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle>{editing ? `Edit #${editing.id}` : 'Create Country'}</CardTitle>
+              <CardTitle>{editing ? `${t.edit} ${t.country}` : `${t.add} ${t.country}`}</CardTitle>
               <Button variant="ghost" size="icon" onClick={() => setFormOpen(false)}><X className="h-4 w-4" /></Button>
             </CardHeader>
             <CardContent className="grid gap-3 md:grid-cols-2">
-              <Input placeholder={t.countryCodeHint} value={form.country_code} onChange={(e) => setForm((s) => ({ ...s, country_code: e.target.value }))} />
-              <Input placeholder={t.sort} value={form.sort} onChange={(e) => setForm((s) => ({ ...s, sort: e.target.value }))} />
+              <label className="space-y-1.5">
+                <span className="text-xs text-[#8a8da8]">{t.countryCode}</span>
+                <Input placeholder={t.countryCodeHint} value={form.country_code} onChange={(e) => setForm((s) => ({ ...s, country_code: e.target.value }))} />
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-xs text-[#8a8da8]">{t.sort}</span>
+                <Input placeholder={t.sort} inputMode="numeric" value={form.sort} onChange={(e) => setForm((s) => ({ ...s, sort: digitsOnly(e.target.value) }))} />
+              </label>
 
               {languages.map((language) => (
-                <Input
-                  key={language.id}
-                  placeholder={`Name (${language.code})`}
-                  value={form.translations[language.code] || ''}
-                  onChange={(e) =>
-                    setForm((s) => ({
-                      ...s,
-                      translations: { ...s.translations, [language.code]: e.target.value },
-                    }))
-                  }
-                />
+                <label key={language.id} className="space-y-1.5">
+                  <span className="text-xs text-[#8a8da8]">{`${t.nameInLanguage} (${language.code})`}</span>
+                  <Input
+                    placeholder={`${t.nameInLanguage} (${language.code})`}
+                    value={form.translations[language.code] || ''}
+                    onChange={(e) =>
+                      setForm((s) => ({
+                        ...s,
+                        translations: { ...s.translations, [language.code]: e.target.value },
+                      }))
+                    }
+                  />
+                </label>
               ))}
 
-              <select value={form.status} onChange={(e) => setForm((s) => ({ ...s, status: e.target.value }))} className="h-10 rounded-xl border border-[#dbdbe8] bg-white px-3 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]">
-                <option value="active">{t.active}</option>
-                <option value="inactive">{t.inactive}</option>
-              </select>
+              <label className="space-y-1.5">
+                <span className="text-xs text-[#8a8da8]">{t.status}</span>
+                <select value={form.status} onChange={(e) => setForm((s) => ({ ...s, status: e.target.value }))} className="h-10 w-full rounded-xl border border-[#dbdbe8] bg-white px-3 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]">
+                  <option value="active">{t.active}</option>
+                  <option value="inactive">{t.inactive}</option>
+                </select>
+              </label>
 
               <div className="col-span-full flex justify-end gap-2">
                 <Button variant="secondary" onClick={() => setFormOpen(false)}>{t.cancel}</Button>
@@ -259,9 +289,9 @@ export function CountriesPage() {
       {deleting && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
           <Card className="w-full max-w-md">
-            <CardHeader><CardTitle>Confirm deletion</CardTitle></CardHeader>
+            <CardHeader><CardTitle>{t.confirmDeletion}</CardTitle></CardHeader>
             <CardContent>
-              <p className="mb-4 text-sm">Delete country #{deleting.id}?</p>
+              <p className="mb-4 text-sm">{t.deleteConfirmation}</p>
               <div className="flex justify-end gap-2">
                 <Button variant="secondary" onClick={() => setDeleting(null)}>{t.cancel}</Button>
                 <Button variant="destructive" onClick={confirmDelete} disabled={saving}>{t.delete}</Button>

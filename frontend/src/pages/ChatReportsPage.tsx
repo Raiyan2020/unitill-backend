@@ -50,11 +50,7 @@ type ReportsResponse = {
   reasons: ReasonOption[];
 };
 
-const statusOptions: { value: ReportStatus; label: string }[] = [
-  { value: 'pending', label: 'Pending' },
-  { value: 'reviewed', label: 'Reviewed' },
-  { value: 'dismissed', label: 'Dismissed' },
-];
+const statusValues: ReportStatus[] = ['pending', 'reviewed', 'dismissed'];
 
 function statusSelectClass(status: ReportStatus) {
   if (status === 'reviewed') return 'border-emerald-300/70 bg-emerald-500/15 text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/20 dark:text-emerald-300';
@@ -93,13 +89,13 @@ export function ChatReportsPage() {
           type: typeFilter || undefined,
         },
       });
-      const payload = ensureApiSuccess<ReportsResponse>(res, 'Failed to load chat reports');
+      const payload = ensureApiSuccess<ReportsResponse>(res, t.actionFailed);
       setRows(payload?.reports?.data || []);
       setTotal(payload?.reports?.total || 0);
       if (payload?.counts) setCounts(payload.counts);
       if (payload?.reasons) setReasons(payload.reasons);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to load chat reports.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setLoading(false);
     }
@@ -126,10 +122,10 @@ export function ChatReportsPage() {
   const openDetails = async (id: number) => {
     try {
       const res = await api.get(`/admin/chat-reports/${id}`);
-      const payload = ensureApiSuccess<ReportDetails>(res, 'Failed to load report details');
+      const payload = ensureApiSuccess<ReportDetails>(res, t.actionFailed);
       setDetails(payload || null);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to load report details.');
+      notify.errorFrom(error, t.actionFailed);
     }
   };
 
@@ -138,16 +134,16 @@ export function ChatReportsPage() {
     setStatusSavingId(row.id);
     try {
       const res = await api.put(`/admin/chat-reports/${row.id}`, { status });
-      ensureApiSuccess(res, 'Failed to update report status');
+      ensureApiSuccess(res, t.actionFailed);
       setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, status } : r)));
       setCounts((prev) => ({
         ...prev,
         [previous]: Math.max(0, prev[previous] - 1),
         [status]: prev[status] + 1,
       }));
-      notify.success('Report status updated successfully.');
+      notify.success(t.statusUpdatedSuccessfully);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to update report status.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setStatusSavingId(null);
     }
@@ -158,7 +154,7 @@ export function ChatReportsPage() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-2xl font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">Chat Reports</h2>
+        <h2 className="text-2xl font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">{t.chatReports}</h2>
         <div className="flex flex-wrap items-center gap-2">
           <select
             value={typeFilter}
@@ -181,8 +177,8 @@ export function ChatReportsPage() {
             className="h-9 rounded-lg border border-[#dbdbe8] bg-white px-2 text-sm text-[#2f2b3d] dark:border-[#4a4f68] dark:bg-[#2f3349] dark:text-[#d7d8ea]"
           >
             <option value="">{t.allStatuses}</option>
-            {statusOptions.map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
+            {statusValues.map((value) => (
+              <option key={value} value={value}>{t[value]}</option>
             ))}
           </select>
           <select
@@ -277,8 +273,8 @@ export function ChatReportsPage() {
                           onChange={(e) => updateStatus(row, e.target.value as ReportStatus)}
                           className={`h-9 min-w-[130px] rounded-full border px-3 text-xs font-semibold shadow-sm outline-none transition-all focus:ring-2 focus:ring-[#7367f0]/30 ${statusSelectClass(row.status)}`}
                         >
-                          {statusOptions.map((option) => (
-                            <option key={option.value} value={option.value}>{option.label}</option>
+                          {statusValues.map((value) => (
+                            <option key={value} value={value}>{t[value]}</option>
                           ))}
                         </select>
                       </td>
@@ -321,33 +317,33 @@ export function ChatReportsPage() {
 
               <div className="grid gap-3 md:grid-cols-2">
                 <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                  <p className="text-xs text-[#8a8da8]">Reason</p>
+                  <p className="text-xs text-[#8a8da8]">{t.reason}</p>
                   <p className="mt-1 text-sm font-semibold">{details.reason_label || details.reason}</p>
                 </div>
                 <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                  <p className="text-xs text-[#8a8da8]">Type</p>
+                  <p className="text-xs text-[#8a8da8]">{t.type}</p>
                   <p className="mt-1 text-sm font-semibold">{details.type === 'user' ? 'Reported user' : 'Reported conversation'}</p>
                 </div>
                 <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                  <p className="text-xs text-[#8a8da8]">Reporter</p>
+                  <p className="text-xs text-[#8a8da8]">{t.reporter}</p>
                   <p className="mt-1 text-sm">{details.reporter?.name || '-'}</p>
                   <p className="text-xs text-[#8a8da8]">{details.reporter?.email || ''}</p>
                 </div>
                 <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                  <p className="text-xs text-[#8a8da8]">Reported user</p>
+                  <p className="text-xs text-[#8a8da8]">{t.reportedUser}</p>
                   <p className="mt-1 text-sm">{details.reported_user?.name || '-'}</p>
                   <p className="text-xs text-[#8a8da8]">{details.reported_user?.email || ''}</p>
                 </div>
               </div>
 
               <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                <p className="text-xs text-[#8a8da8]">Reporter's explanation</p>
+                <p className="text-xs text-[#8a8da8]">{t.reporterExplanation}</p>
                 <p className="mt-1 whitespace-pre-wrap text-sm">{details.description || '-'}</p>
               </div>
 
               {details.ad ? (
                 <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                  <p className="text-xs text-[#8a8da8]">Related ad</p>
+                  <p className="text-xs text-[#8a8da8]">{t.relatedAd}</p>
                   <Link to={`/ads/${details.ad.id}`} className="mt-1 inline-block text-sm font-semibold text-[#7367f0] hover:underline">
                     {details.ad.title || `#${details.ad.public_id}`}
                   </Link>
@@ -377,7 +373,7 @@ export function ChatReportsPage() {
                   </div>
                 ) : (
                   <div className="rounded-xl border border-dashed border-[#ececf3] p-3 text-sm text-[#8a8da8] dark:border-[#44485f]">
-                    No messages in this conversation.
+                    {t.noMessagesInConversation}
                   </div>
                 )}
               </div>

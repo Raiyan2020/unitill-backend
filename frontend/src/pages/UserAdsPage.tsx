@@ -29,14 +29,7 @@ function statusSelectClass(status: AdStatus) {
   return 'border-rose-300/70 bg-rose-500/15 text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/20 dark:text-rose-300';
 }
 
-const statusOptions: { value: AdStatus; label: string }[] = [
-  { value: 'draft', label: 'Draft' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'published', label: 'Published' },
-  { value: 'rejected', label: 'Rejected' },
-  { value: 'sold', label: 'Sold' },
-  { value: 'expired', label: 'Expired' },
-];
+const statusValues: AdStatus[] = ['draft', 'pending', 'published', 'rejected', 'sold', 'expired'];
 
 export function UserAdsPage() {
   const { t } = useI18n();
@@ -66,11 +59,11 @@ export function UserAdsPage() {
     setLoading(true);
     try {
       const res = await api.get('/admin/ads', { params: { user_id: uid, page, per_page: pageSize, search: search || undefined } });
-      const payload = ensureApiSuccess<PaginatedResponse<AdRow>>(res, 'Failed to load user ads');
+      const payload = ensureApiSuccess<PaginatedResponse<AdRow>>(res, t.actionFailed);
       setRows(payload?.data || []);
       setTotal(payload?.total || 0);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to load user ads.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setLoading(false);
     }
@@ -98,11 +91,11 @@ export function UserAdsPage() {
     setStatusSavingId(row.id);
     try {
       const res = await api.put(`/admin/ads/${row.id}`, { status });
-      ensureApiSuccess(res, 'Failed to update ad status');
+      ensureApiSuccess(res, t.actionFailed);
       setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, status } : r)));
-      notify.success('Ad status updated successfully.');
+      notify.success(t.statusUpdatedSuccessfully);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to update ad status.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setStatusSavingId(null);
     }
@@ -115,7 +108,7 @@ export function UserAdsPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-2xl font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">User Ads</h2>
+          <h2 className="text-2xl font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">{t.userAds}</h2>
           <p className="text-sm text-[#8a8da8]">Owner: {ownerName}</p>
         </div>
         <div className="flex items-center gap-2">
@@ -171,7 +164,7 @@ export function UserAdsPage() {
                           onChange={(e) => updateStatus(row, e.target.value as AdStatus)}
                           className={`h-9 min-w-[130px] rounded-full border px-3 text-xs font-semibold shadow-sm outline-none transition-all focus:ring-2 focus:ring-[#7367f0]/30 ${statusSelectClass(row.status)}`}
                         >
-                          {statusOptions.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+                          {statusValues.map((s) => <option key={s} value={s}>{t[s]}</option>)}
                         </select>
                       </td>
                       <td className="px-4 py-3">

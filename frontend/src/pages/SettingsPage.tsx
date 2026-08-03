@@ -23,6 +23,9 @@ export function SettingsPage() {
   const notify = useNotify();
   const [rows, setRows] = useState<SettingRow[]>([]);
   const [values, setValues] = useState<Record<string, string>>({});
+  // The values as last loaded from the server. "Changed" is measured against
+  // this, not against which fields happen to be unlocked for editing.
+  const [savedValues, setSavedValues] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -31,15 +34,16 @@ export function SettingsPage() {
     setLoading(true);
     try {
       const res = await api.get('/admin/settings');
-      const data = ensureApiSuccess<SettingRow[]>(res, 'Failed to load settings');
+      const data = ensureApiSuccess<SettingRow[]>(res, t.actionFailed);
       setRows(data || []);
       const mapped: Record<string, string> = {};
       for (const row of data || []) {
         mapped[row.key_id] = row.value ?? '';
       }
       setValues(mapped);
+      setSavedValues(mapped);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to load settings.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setLoading(false);
     }
@@ -73,20 +77,26 @@ export function SettingsPage() {
   const save = async () => {
     setSaving(true);
     try {
+      // Compare against the loaded values. Filtering on `editing` meant that
+      // toggling a field's pencil shut after typing discarded the edit — the
+      // save reported "no changes" and the new value was never sent.
       const changedItems = Object.entries(values)
-        .filter(([key]) => editing[key])
+        .filter(([key, value]) => value !== (savedValues[key] ?? ''))
         .map(([key, value]) => ({ key_id: key, value }));
 
       if (changedItems.length === 0) {
-        notify.success('No changes to save.');
+        notify.success(t.noChangesToSave);
         return;
       }
 
-      await api.put('/admin/settings', { items: changedItems });
+      const res = await api.put('/admin/settings', { items: changedItems });
+      ensureApiSuccess(res, t.actionFailed);
       setEditing({});
-      notify.success('Settings updated successfully.');
+      // Re-read so the baseline matches what the server actually stored.
+      await loadSettings();
+      notify.success(t.settingsUpdated);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to save settings.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setSaving(false);
     }
@@ -96,7 +106,7 @@ export function SettingsPage() {
     <div className="space-y-4 animate-in fade-in duration-300">
       <div>
         <h2 className="text-2xl font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">{t.settings}</h2>
-        <p className="text-sm text-[#8a8da8] dark:text-[#a2a5be]">Manage platform settings and contact info.</p>
+        <p className="text-sm text-[#8a8da8] dark:text-[#a2a5be]">{t.managePlatformSettings}</p>
       </div>
 
       <Card className="shadow-[0_10px_24px_rgba(47,43,61,0.08)] dark:shadow-[0_10px_24px_rgba(0,0,0,0.25)]">
@@ -105,7 +115,7 @@ export function SettingsPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="py-10 text-center text-sm text-[#8a8da8] dark:text-[#a2a5be]">Loading settings...</div>
+            <div className="py-10 text-center text-sm text-[#8a8da8] dark:text-[#a2a5be]">{t.loadingSettings}</div>
           ) : (
             <div className="grid gap-3 md:grid-cols-2">
             {fields.map((field) => {
@@ -155,11 +165,7 @@ export function SettingsPage() {
             <Button
               variant="secondary"
               onClick={() => {
-                const mapped: Record<string, string> = {};
-                for (const row of rows) {
-                  mapped[row.key_id] = row.value ?? '';
-                }
-                setValues(mapped);
+                setValues(savedValues);
                 setEditing({});
               }}
             >

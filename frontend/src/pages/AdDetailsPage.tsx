@@ -14,6 +14,8 @@ type AdAttribute = {
   label: string;
   input_type: 'string' | 'number' | 'boolean' | 'select' | 'date' | 'multiselect';
   value: string | null;
+  /** Localized display text; the API falls back to value when nothing needs translating. */
+  value_label?: string | null;
 };
 
 type AdDetails = {
@@ -49,7 +51,8 @@ type AdDetails = {
  * so a newly added input_type still shows something useful here.
  */
 function formatAttributeValue(attribute: AdAttribute, yes: string, no: string, locale: 'en' | 'ar') {
-  const raw = (attribute.value ?? '').trim();
+  // Prefer the localized label; value stays the raw English option key.
+  const raw = (attribute.value_label ?? attribute.value ?? '').trim();
   if (!raw) return '-';
 
   switch (attribute.input_type) {
@@ -83,10 +86,10 @@ export function AdDetailsPage() {
       setLoading(true);
       try {
         const res = await api.get(`/admin/ads/${id}`);
-        const payload = ensureApiSuccess<AdDetails>(res, 'Failed to load ad details');
+        const payload = ensureApiSuccess<AdDetails>(res, t.actionFailed);
         setAd(payload || null);
       } catch (error) {
-        notify.errorFrom(error, 'Failed to load ad details.');
+        notify.errorFrom(error, t.actionFailed);
       } finally {
         setLoading(false);
       }

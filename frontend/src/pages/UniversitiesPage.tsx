@@ -6,6 +6,7 @@ import { Input } from '../components/ui/input';
 import { TableFooter, TableLoadingRow } from '../components/table/TableHelpers';
 import { api } from '../lib/api';
 import { ensureApiSuccess } from '../lib/api-response';
+import { digitsOnly, toInteger } from '../lib/form';
 import { useNotify } from '../lib/notify';
 import { useI18n } from '../providers/i18n-provider';
 
@@ -53,7 +54,7 @@ export function UniversitiesPage() {
     setLoading(true);
     try {
       const res = await api.get('/admin/universities', { params: { page, per_page: pageSize, search: search || undefined } });
-      const payload: PaginatedResponse<UniversityRow> = ensureApiSuccess<PaginatedResponse<UniversityRow>>(res, 'Failed to load universities');
+      const payload: PaginatedResponse<UniversityRow> = ensureApiSuccess<PaginatedResponse<UniversityRow>>(res, t.actionFailed);
       setRows(payload?.data || []);
       setTotal(payload?.total || 0);
     } finally {
@@ -118,7 +119,7 @@ export function UniversitiesPage() {
 
   const save = async () => {
     if (!form.name.trim()) {
-      notify.error('University name is required.');
+      notify.error(t.universityNameRequired);
       return;
     }
     setSaving(true);
@@ -129,23 +130,23 @@ export function UniversitiesPage() {
         state: form.state.trim() || null,
         city: form.city.trim() || null,
         status: form.status,
-        sort: Number(form.sort || 0),
+        sort: toInteger(form.sort),
         domains: form.domains,
       };
 
       if (editing) {
         const res = await api.put(`/admin/universities/${editing.id}`, payload);
-        ensureApiSuccess(res, 'Failed to update university');
+        ensureApiSuccess(res, t.actionFailed);
       } else {
         const res = await api.post('/admin/universities', payload);
-        ensureApiSuccess(res, 'Failed to create university');
+        ensureApiSuccess(res, t.actionFailed);
       }
 
       setFormOpen(false);
       await fetchRows();
-      notify.success(editing ? 'University updated successfully.' : 'University created successfully.');
+      notify.success(editing ? t.updatedSuccessfully : t.createdSuccessfully);
     } catch (error) {
-      notify.errorFrom(error, editing ? 'Failed to update university.' : 'Failed to create university.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setSaving(false);
     }
@@ -156,12 +157,12 @@ export function UniversitiesPage() {
     setSaving(true);
     try {
       const res = await api.delete(`/admin/universities/${deleting.id}`);
-      ensureApiSuccess(res, 'Failed to delete university');
+      ensureApiSuccess(res, t.actionFailed);
       setDeleting(null);
       await fetchRows();
-      notify.success('University deleted successfully.');
+      notify.success(t.deletedSuccessfully);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to delete university.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setSaving(false);
     }
@@ -189,7 +190,7 @@ export function UniversitiesPage() {
             ))}
           </select>
           <Input className="h-9 w-[220px]" placeholder={t.search} value={search} onChange={(e) => setSearch(e.target.value)} />
-          <Button size="sm" onClick={openCreate}>+ Add University</Button>
+          <Button size="sm" onClick={openCreate}>+ {t.add} {t.university}</Button>
         </div>
       </div>
 
@@ -262,15 +263,15 @@ export function UniversitiesPage() {
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
           <Card className="w-full max-w-2xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle>{editing ? `Edit #${editing.id}` : 'Create University'}</CardTitle>
+              <CardTitle>{editing ? `${t.edit} ${t.university}` : `${t.add} ${t.university}`}</CardTitle>
               <Button variant="ghost" size="icon" onClick={() => setFormOpen(false)}><X className="h-4 w-4" /></Button>
             </CardHeader>
             <CardContent className="grid gap-3 md:grid-cols-2">
               <Input placeholder={t.name} className="md:col-span-2" value={form.name} onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))} />
-              <Input placeholder="State (e.g. CA)" value={form.state} onChange={(e) => setForm((s) => ({ ...s, state: e.target.value }))} />
+              <Input placeholder={t.stateHint} value={form.state} onChange={(e) => setForm((s) => ({ ...s, state: e.target.value }))} />
               <Input placeholder={t.city} value={form.city} onChange={(e) => setForm((s) => ({ ...s, city: e.target.value }))} />
               <Input placeholder={t.countryCodeHint} value={form.country_code} onChange={(e) => setForm((s) => ({ ...s, country_code: e.target.value }))} />
-              <Input placeholder={t.sort} value={form.sort} onChange={(e) => setForm((s) => ({ ...s, sort: e.target.value }))} />
+              <Input placeholder={t.sort} inputMode="numeric" value={form.sort} onChange={(e) => setForm((s) => ({ ...s, sort: digitsOnly(e.target.value) }))} />
 
               <select value={form.status} onChange={(e) => setForm((s) => ({ ...s, status: e.target.value }))} className="h-10 rounded-xl border border-[#dbdbe8] bg-white px-3 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]">
                 <option value="active">{t.active}</option>
@@ -281,7 +282,7 @@ export function UniversitiesPage() {
                 <label className="mb-1 block text-sm font-medium text-[#6f6b7d] dark:text-[#b6b8cc]">{t.emailDomains}</label>
                 <div className="flex gap-2">
                   <Input
-                    placeholder="e.g. harvard.edu"
+                    placeholder={t.domainHint}
                     value={domainInput}
                     onChange={(e) => setDomainInput(e.target.value)}
                     onKeyDown={(e) => {
@@ -291,11 +292,11 @@ export function UniversitiesPage() {
                       }
                     }}
                   />
-                  <Button type="button" variant="secondary" onClick={addDomain}>Add</Button>
+                  <Button type="button" variant="secondary" onClick={addDomain}>{t.add}</Button>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {form.domains.length === 0 ? (
-                    <span className="text-xs text-[#8a8da8]">No domains added yet.</span>
+                    <span className="text-xs text-[#8a8da8]">{t.noDomainsAdded}</span>
                   ) : (
                     form.domains.map((domain) => (
                       <span key={domain} className="inline-flex items-center gap-1 rounded-md bg-[#7367f0]/10 px-2 py-1 text-xs text-[#7367f0]">
@@ -321,9 +322,9 @@ export function UniversitiesPage() {
       {deleting && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
           <Card className="w-full max-w-md">
-            <CardHeader><CardTitle>Confirm deletion</CardTitle></CardHeader>
+            <CardHeader><CardTitle>{t.confirmDeletion}</CardTitle></CardHeader>
             <CardContent>
-              <p className="mb-4 text-sm">Delete university "{deleting.name}"? Its domains will be removed too.</p>
+              <p className="mb-4 text-sm">{t.deleteUniversityConfirmation}</p>
               <div className="flex justify-end gap-2">
                 <Button variant="secondary" onClick={() => setDeleting(null)}>{t.cancel}</Button>
                 <Button variant="destructive" onClick={confirmDelete} disabled={saving}>{t.delete}</Button>

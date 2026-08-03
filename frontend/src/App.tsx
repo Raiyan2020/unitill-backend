@@ -17,7 +17,6 @@ import { LegalAffairsPage } from './pages/LegalAffairsPage';
 import { LanguagesPage } from './pages/LanguagesPage';
 import { LoginPage } from './pages/LoginPage';
 import { PaymentMethodsPage } from './pages/PaymentMethodsPage';
-import { PermissionsPage } from './pages/PermissionsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { PushNotificationsPage } from './pages/PushNotificationsPage';
 import { RolesPage } from './pages/RolesPage';
@@ -75,7 +74,6 @@ export default function App() {
         <Route path="users/:id/favorites" element={<PermissionRoute permission="users.view"><UserFavoritesPage /></PermissionRoute>} />
         <Route path="admins" element={<PermissionRoute permission="admins.view"><AdminsPage /></PermissionRoute>} />
         <Route path="roles" element={<PermissionRoute permission="roles.view"><RolesPage /></PermissionRoute>} />
-        <Route path="permissions" element={<PermissionRoute permission="permissions.view"><PermissionsPage /></PermissionRoute>} />
         <Route path="countries" element={<PermissionRoute permission="countries.view"><CountriesPage /></PermissionRoute>} />
         <Route path="categories" element={<PermissionRoute permission="categories.view"><CategoriesPage /></PermissionRoute>} />
         <Route path="categories/:categoryId/subcategories" element={<PermissionRoute permission="subcategories.view"><SubCategoriesPage /></PermissionRoute>} />

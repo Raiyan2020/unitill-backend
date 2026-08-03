@@ -13,5 +13,14 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  // DB-backed text — category names, attribute labels and their options, city
+  // and country names, report reasons — is localized by the API from this
+  // header. Without it every one of those came back in the default language
+  // however the dashboard was set. Read from storage rather than the provider
+  // so this stays a plain module with no React dependency.
+  const locale = localStorage.getItem('unitill_locale');
+  config.headers.lang = locale === 'ar' ? 'ar' : 'en';
+
   return config;
 });

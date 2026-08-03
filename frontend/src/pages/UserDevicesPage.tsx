@@ -37,11 +37,11 @@ export function UserDevicesPage() {
     setLoading(true);
     try {
       const res = await api.get(`/admin/users/${uid}/devices`, { params: { page, per_page: pageSize } });
-      const payload = ensureApiSuccess<PaginatedResponse<DeviceRow>>(res, 'Failed to load user devices');
+      const payload = ensureApiSuccess<PaginatedResponse<DeviceRow>>(res, t.actionFailed);
       setRows(payload?.data || []);
       setTotal(payload?.total || 0);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to load user devices.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setLoading(false);
     }

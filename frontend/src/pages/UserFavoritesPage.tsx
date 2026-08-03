@@ -49,11 +49,11 @@ export function UserFavoritesPage() {
     setLoading(true);
     try {
       const res = await api.get(`/admin/users/${uid}/favorites`, { params: { page, per_page: pageSize } });
-      const payload = ensureApiSuccess<PaginatedResponse<FavoriteAdRow>>(res, 'Failed to load favorite ads');
+      const payload = ensureApiSuccess<PaginatedResponse<FavoriteAdRow>>(res, t.actionFailed);
       setRows(payload?.data || []);
       setTotal(payload?.total || 0);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to load favorite ads.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setLoading(false);
     }

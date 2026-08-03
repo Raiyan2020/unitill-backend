@@ -26,14 +26,7 @@ type AdRow = {
 
 type PaginatedResponse<T> = { data: T[]; total: number };
 
-const statusOptions: { value: AdStatus; label: string }[] = [
-  { value: 'draft', label: 'Draft' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'published', label: 'Published' },
-  { value: 'rejected', label: 'Rejected' },
-  { value: 'sold', label: 'Sold' },
-  { value: 'expired', label: 'Expired' },
-];
+const statusValues: AdStatus[] = ['draft', 'pending', 'published', 'rejected', 'sold', 'expired'];
 
 function statusSelectClass(status: AdStatus) {
   if (status === 'published') return 'border-emerald-300/70 bg-emerald-500/15 text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/20 dark:text-emerald-300';
@@ -68,11 +61,11 @@ export function AdsPage() {
     setLoading(true);
     try {
       const res = await api.get('/admin/ads', { params: { page, per_page: pageSize, search: search || undefined } });
-      const payload = ensureApiSuccess<PaginatedResponse<AdRow>>(res, 'Failed to load ads');
+      const payload = ensureApiSuccess<PaginatedResponse<AdRow>>(res, t.actionFailed);
       setRows(payload?.data || []);
       setTotal(payload?.total || 0);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to load ads.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setLoading(false);
     }
@@ -101,12 +94,12 @@ export function AdsPage() {
     setSavingDelete(true);
     try {
       const res = await api.delete(`/admin/ads/${deleting.id}`);
-      ensureApiSuccess(res, 'Failed to delete ad');
+      ensureApiSuccess(res, t.actionFailed);
       setDeleting(null);
       await fetchRows();
-      notify.success('Ad deleted successfully.');
+      notify.success(t.deletedSuccessfully);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to delete ad.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setSavingDelete(false);
     }
@@ -116,11 +109,11 @@ export function AdsPage() {
     setStatusSavingId(row.id);
     try {
       const res = await api.put(`/admin/ads/${row.id}`, { status });
-      ensureApiSuccess(res, 'Failed to update ad status');
+      ensureApiSuccess(res, t.actionFailed);
       setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, status } : r)));
-      notify.success('Ad status updated successfully.');
+      notify.success(t.statusUpdatedSuccessfully);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to update ad status.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setStatusSavingId(null);
     }
@@ -202,9 +195,9 @@ export function AdsPage() {
                           onChange={(e) => updateStatus(row, e.target.value as AdStatus)}
                           className={`h-9 min-w-[130px] rounded-full border px-3 text-xs font-semibold shadow-sm outline-none transition-all focus:ring-2 focus:ring-[#7367f0]/30 ${statusSelectClass(row.status)}`}
                         >
-                          {statusOptions.map((s) => (
-                            <option key={s.value} value={s.value}>
-                              {s.label}
+                          {statusValues.map((s) => (
+                            <option key={s} value={s}>
+                              {t[s]}
                             </option>
                           ))}
                         </select>
@@ -241,7 +234,10 @@ export function AdsPage() {
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
           <Card className="w-full max-w-md">
             <CardContent className="pt-6">
-              <p className="mb-4 text-sm">Delete ad #{deleting.public_id || deleting.id}?</p>
+              <p className="text-sm">{t.deleteAdConfirmation}</p>
+              <p className="mb-4 mt-1 text-sm font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">
+                {deleting.title || deleting.public_id || `#${deleting.id}`}
+              </p>
               <div className="flex justify-end gap-2">
                 <Button variant="secondary" onClick={() => setDeleting(null)}>{t.cancel}</Button>
                 <Button variant="destructive" onClick={deleteAd} disabled={savingDelete}>{t.delete}</Button>

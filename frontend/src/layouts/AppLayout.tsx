@@ -1,4 +1,4 @@
-import { BadgeCheck, Bell, Building2, FileText, Flag, MessageSquareWarning, TicketPercent, FolderTree, GraduationCap, Globe, KeyRound, Languages, LayoutDashboard, LogOut, Mail, Megaphone, Menu, MessageSquare, Moon, Settings, ShieldCheck, Sun, User, UserCog, Users, X } from 'lucide-react';
+import { BadgeCheck, Bell, Building2, FileText, Flag, MessageSquareWarning, TicketPercent, FolderTree, GraduationCap, Globe, Languages, LayoutDashboard, LogOut, Mail, Megaphone, Menu, MessageSquare, Moon, Settings, ShieldCheck, Sun, User, UserCog, Users, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
@@ -16,7 +16,6 @@ const navItems = [
   { to: '/user-verifications', labelKey: 'userVerifications', icon: BadgeCheck, permission: 'users.view' },
   { to: '/admins', labelKey: 'admins', icon: UserCog, permission: 'admins.view' },
   { to: '/roles', labelKey: 'roles', icon: ShieldCheck, permission: 'roles.view' },
-  { to: '/permissions', labelKey: 'permissions', icon: KeyRound, permission: 'permissions.view' },
   { to: '/countries', labelKey: 'countries', icon: Building2, permission: 'countries.view' },
   { to: '/universities', labelKey: 'universities', icon: GraduationCap, permission: 'universities.view' },
   { to: '/categories', labelKey: 'categories', icon: FolderTree, permission: 'categories.view' },
@@ -146,7 +145,7 @@ export function AppLayout() {
             </div>
           </div>
 
-          <p className="px-2 pb-2 pt-3 text-[11px] font-semibold uppercase tracking-wider text-[#a5a7b8]">Dashboards</p>
+          <p className="px-2 pb-2 pt-3 text-[11px] font-semibold uppercase tracking-wider text-[#a5a7b8]">{t.dashboards}</p>
           <nav className="space-y-1">
             {visibleNavItems.map((item) => {
               const Icon = item.icon;
@@ -192,7 +191,7 @@ export function AppLayout() {
       <div className="ms-0 flex min-h-screen flex-col md:ms-[288px]">
         <header className="sticky top-0 z-10 m-2 flex h-auto min-h-16 items-center justify-end rounded-2xl border border-[#e6e6ef] bg-white px-3 py-2 shadow-[0_8px_22px_rgba(47,43,61,0.08)] backdrop-blur dark:border-[#44485f] dark:bg-[#2f3349]/95 dark:shadow-[0_10px_24px_rgba(0,0,0,0.28)] md:m-3 md:h-16 md:px-6 md:py-0">
           <div className="flex items-center gap-1 md:gap-2">
-            <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)} className="md:hidden" title="Menu">
+            <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)} className="md:hidden" title={t.menu}>
               <Menu size={16} />
             </Button>
             <Button variant="ghost" size="icon" onClick={() => setLocale(locale === 'en' ? 'ar' : 'en')} title={t.language}>

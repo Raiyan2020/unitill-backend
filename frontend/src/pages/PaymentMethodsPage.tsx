@@ -16,13 +16,19 @@ type PaymentRow = {
   slug: string;
   status: 'active' | 'inactive';
   image: string | null;
+  image_url: string | null;
 };
 
 type PaginatedResponse<T> = { data: T[]; total: number };
 
+/** Display name in the active locale, for dialog titles. */
+function methodName(row: PaymentRow, locale: 'en' | 'ar'): string {
+  return (locale === 'ar' ? row.name_ar : row.name_en) || row.name_en || row.name_ar || row.slug;
+}
+
 export function PaymentMethodsPage() {
   const notify = useNotify();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [rows, setRows] = useState<PaymentRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
@@ -41,7 +47,7 @@ export function PaymentMethodsPage() {
     setLoading(true);
     try {
       const res = await api.get('/admin/payment-methods', { params: { page, per_page: pageSize, search: search || undefined } });
-      const payload: PaginatedResponse<PaymentRow> = ensureApiSuccess<PaginatedResponse<PaymentRow>>(res, 'Failed to load payment methods');
+      const payload: PaginatedResponse<PaymentRow> = ensureApiSuccess<PaginatedResponse<PaymentRow>>(res, t.actionFailed);
       setRows(payload?.data || []);
       setTotal(payload?.total || 0);
     } finally {
@@ -80,6 +86,23 @@ export function PaymentMethodsPage() {
   };
 
   const save = async () => {
+    if (!form.name_ar.trim()) {
+      notify.error(t.nameArRequired);
+      return;
+    }
+    if (!form.name_en.trim()) {
+      notify.error(t.nameEnRequired);
+      return;
+    }
+    if (!form.slug.trim()) {
+      notify.error(t.slugRequired);
+      return;
+    }
+    if (!editing && !imageFile) {
+      notify.error(t.imageRequired);
+      return;
+    }
+
     setSaving(true);
     try {
       const payload = new FormData();
@@ -93,16 +116,16 @@ export function PaymentMethodsPage() {
 
       if (editing) {
         const res = await api.post(`/admin/payment-methods/${editing.id}?_method=PUT`, payload);
-        ensureApiSuccess(res, 'Failed to update payment method');
+        ensureApiSuccess(res, t.actionFailed);
       } else {
         const res = await api.post('/admin/payment-methods', payload);
-        ensureApiSuccess(res, 'Failed to create payment method');
+        ensureApiSuccess(res, t.actionFailed);
       }
       setFormOpen(false);
       await fetchRows();
-      notify.success(editing ? 'Payment method updated successfully.' : 'Payment method created successfully.');
+      notify.success(editing ? t.updatedSuccessfully : t.createdSuccessfully);
     } catch (error) {
-      notify.errorFrom(error, editing ? 'Failed to update payment method.' : 'Failed to create payment method.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setSaving(false);
     }
@@ -113,12 +136,12 @@ export function PaymentMethodsPage() {
     setSaving(true);
     try {
       const res = await api.delete(`/admin/payment-methods/${deleting.id}`);
-      ensureApiSuccess(res, 'Failed to delete payment method');
+      ensureApiSuccess(res, t.actionFailed);
       setDeleting(null);
       await fetchRows();
-      notify.success('Payment method deleted successfully.');
+      notify.success(t.deletedSuccessfully);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to delete payment method.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setSaving(false);
     }
@@ -146,7 +169,7 @@ export function PaymentMethodsPage() {
             ))}
           </select>
           <Input className="h-9 w-[220px]" placeholder={t.search} value={search} onChange={(e) => setSearch(e.target.value)} />
-          <Button size="sm" onClick={openCreate}>+ Add Payment Method</Button>
+          <Button size="sm" onClick={openCreate}>+ {t.add} {t.paymentMethod}</Button>
         </div>
       </div>
 
@@ -207,34 +230,47 @@ export function PaymentMethodsPage() {
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
           <Card className="w-full max-w-xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle>{editing ? `Edit #${editing.id}` : 'Create Payment Method'}</CardTitle>
+              <CardTitle>{editing ? `${t.edit}: ${methodName(editing, locale)}` : `${t.add} ${t.paymentMethod}`}</CardTitle>
               <Button variant="ghost" size="icon" onClick={() => setFormOpen(false)}><X className="h-4 w-4" /></Button>
             </CardHeader>
             <CardContent className="grid gap-3 md:grid-cols-2">
-              <Input placeholder={t.nameAr} value={form.name_ar} onChange={(e) => setForm((s) => ({ ...s, name_ar: e.target.value }))} />
-              <Input placeholder={t.nameEn} value={form.name_en} onChange={(e) => setForm((s) => ({ ...s, name_en: e.target.value }))} />
-              <Input placeholder={t.slug} value={form.slug} onChange={(e) => setForm((s) => ({ ...s, slug: e.target.value }))} />
-              <div className="flex items-center gap-3">
-                <Input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] ?? null)} />
-                {editing?.image ? (
-                  <a
-                    className="text-xs text-[#7367f0] underline"
-                    href={editing.image.startsWith('http') ? editing.image : `/storage/${editing.image}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    current
-                  </a>
-                ) : null}
-              </div>
-              <select
-                value={form.status}
-                onChange={(e) => setForm((s) => ({ ...s, status: e.target.value as 'active' | 'inactive' }))}
-                className="h-10 rounded-xl border border-[#dbdbe8] bg-white px-3 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]"
-              >
-                <option value="active">{t.active}</option>
-                <option value="inactive">{t.inactive}</option>
-              </select>
+              <label className="space-y-1.5">
+                <span className="text-xs text-[#8a8da8]">{t.nameAr}</span>
+                <Input placeholder={t.nameAr} value={form.name_ar} onChange={(e) => setForm((s) => ({ ...s, name_ar: e.target.value }))} />
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-xs text-[#8a8da8]">{t.nameEn}</span>
+                <Input placeholder={t.nameEn} value={form.name_en} onChange={(e) => setForm((s) => ({ ...s, name_en: e.target.value }))} />
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-xs text-[#8a8da8]">{t.slug}</span>
+                <Input placeholder={t.slug} value={form.slug} onChange={(e) => setForm((s) => ({ ...s, slug: e.target.value }))} />
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-xs text-[#8a8da8]">{editing ? t.changeImage : t.image}</span>
+                <div className="flex items-center gap-3">
+                  <Input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] ?? null)} />
+                  {imageFile || editing?.image_url ? (
+                    <img
+                      src={imageFile ? URL.createObjectURL(imageFile) : (editing?.image_url as string)}
+                      alt=""
+                      title={t.viewImage}
+                      className="h-10 w-10 shrink-0 rounded-lg border border-[#ececf3] object-cover dark:border-[#44485f]"
+                    />
+                  ) : null}
+                </div>
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-xs text-[#8a8da8]">{t.status}</span>
+                <select
+                  value={form.status}
+                  onChange={(e) => setForm((s) => ({ ...s, status: e.target.value as 'active' | 'inactive' }))}
+                  className="h-10 w-full rounded-xl border border-[#dbdbe8] bg-white px-3 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]"
+                >
+                  <option value="active">{t.active}</option>
+                  <option value="inactive">{t.inactive}</option>
+                </select>
+              </label>
               <div className="col-span-full flex justify-end gap-2">
                 <Button variant="secondary" onClick={() => setFormOpen(false)}>{t.cancel}</Button>
                 <Button onClick={save} disabled={saving}>{t.save}</Button>
@@ -247,9 +283,10 @@ export function PaymentMethodsPage() {
       {deleting && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
           <Card className="w-full max-w-md">
-            <CardHeader><CardTitle>Confirm deletion</CardTitle></CardHeader>
+            <CardHeader><CardTitle>{t.confirmDeletion}</CardTitle></CardHeader>
             <CardContent>
-              <p className="mb-4 text-sm">Delete payment method #{deleting.id}?</p>
+              <p className="text-sm">{t.deletePaymentMethodConfirmation}</p>
+              <p className="mb-4 mt-1 text-sm font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">{methodName(deleting, locale)}</p>
               <div className="flex justify-end gap-2">
                 <Button variant="secondary" onClick={() => setDeleting(null)}>{t.cancel}</Button>
                 <Button variant="destructive" onClick={confirmDelete} disabled={saving}>{t.delete}</Button>

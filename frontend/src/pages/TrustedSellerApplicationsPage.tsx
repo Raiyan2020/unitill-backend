@@ -51,12 +51,20 @@ type RequestDetails = {
 
 type PaginatedResponse<T> = { data: T[]; total: number };
 
-const statusOptions: { value: RequestStatus; label: string }[] = [
-  { value: 'pending', label: 'Pending' },
-  { value: 'approved', label: 'Approved' },
-  { value: 'rejected', label: 'Rejected' },
-  { value: 'draft', label: 'Draft' },
-];
+const statusValues: RequestStatus[] = ['pending', 'approved', 'rejected', 'draft'];
+
+/** API enum keys -> dictionary keys. */
+const sellerTypeKey = {
+  business: 'business',
+  service_provider: 'service_provider',
+  organization: 'organization_type',
+} as const;
+
+const contactMethodKey = {
+  phone: 'phone',
+  email: 'email',
+  website: 'website',
+} as const;
 
 function statusSelectClass(status: RequestStatus) {
   if (status === 'approved') return 'border-emerald-300/70 bg-emerald-500/15 text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/20 dark:text-emerald-300';
@@ -83,11 +91,11 @@ export function TrustedSellerApplicationsPage() {
       const res = await api.get('/admin/trusted-seller-applications', {
         params: { page, per_page: pageSize, search: search || undefined },
       });
-      const payload = ensureApiSuccess<PaginatedResponse<RequestRow>>(res, 'Failed to load trusted seller requests');
+      const payload = ensureApiSuccess<PaginatedResponse<RequestRow>>(res, t.actionFailed);
       setRows(payload?.data || []);
       setTotal(payload?.total || 0);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to load trusted seller requests.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setLoading(false);
     }
@@ -114,10 +122,10 @@ export function TrustedSellerApplicationsPage() {
   const openDetails = async (id: number) => {
     try {
       const res = await api.get(`/admin/trusted-seller-applications/${id}`);
-      const payload = ensureApiSuccess<RequestDetails>(res, 'Failed to load request details');
+      const payload = ensureApiSuccess<RequestDetails>(res, t.actionFailed);
       setDetails(payload || null);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to load request details.');
+      notify.errorFrom(error, t.actionFailed);
     }
   };
 
@@ -125,15 +133,24 @@ export function TrustedSellerApplicationsPage() {
     setStatusSavingId(row.id);
     try {
       const res = await api.put(`/admin/trusted-seller-applications/${row.id}`, { status });
-      ensureApiSuccess(res, 'Failed to update request status');
+      ensureApiSuccess(res, t.actionFailed);
       setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, status } : r)));
       window.dispatchEvent(new Event('trusted-verifications-changed'));
-      notify.success('Request status updated successfully.');
+      notify.success(t.statusUpdatedSuccessfully);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to update request status.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setStatusSavingId(null);
     }
+  };
+
+  const sellerTypeLabel = (value: string | null | undefined) => {
+    const key = value ? sellerTypeKey[value as keyof typeof sellerTypeKey] : undefined;
+    return key ? t[key] : value || '-';
+  };
+  const contactMethodLabel = (value: string | null | undefined) => {
+    const key = value ? contactMethodKey[value as keyof typeof contactMethodKey] : undefined;
+    return key ? t[key] : value || '-';
   };
 
   const pagesCount = Math.max(1, Math.ceil(total / pageSize));
@@ -183,7 +200,7 @@ export function TrustedSellerApplicationsPage() {
                     <tr key={row.id} className="border-t border-[#ececf3] dark:border-[#44485f]">
                       <td className="px-4 py-3">{row.id}</td>
                       <td className="px-4 py-3">{row.user_name || '-'}</td>
-                      <td className="px-4 py-3">{row.seller_type || '-'}</td>
+                      <td className="px-4 py-3">{sellerTypeLabel(row.seller_type)}</td>
                       <td className="px-4 py-3">{row.operations_city || '-'}</td>
                       <td className="px-4 py-3">
                         <select
@@ -192,8 +209,8 @@ export function TrustedSellerApplicationsPage() {
                           onChange={(e) => updateStatus(row, e.target.value as RequestStatus)}
                           className={`h-9 min-w-[130px] rounded-full border px-3 text-xs font-semibold shadow-sm outline-none transition-all focus:ring-2 focus:ring-[#7367f0]/30 ${statusSelectClass(row.status)}`}
                         >
-                          {statusOptions.map((s) => (
-                            <option key={s.value} value={s.value}>{s.label}</option>
+                          {statusValues.map((s) => (
+                            <option key={s} value={s}>{t[s]}</option>
                           ))}
                         </select>
                       </td>
@@ -224,35 +241,35 @@ export function TrustedSellerApplicationsPage() {
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
           <Card className="w-full max-w-3xl">
             <CardContent className="space-y-4 p-5">
-              <h3 className="text-lg font-semibold">Verification Request #{details.id}</h3>
+              <h3 className="text-lg font-semibold">{t.verificationRequest} #{details.id}</h3>
               <div className="grid gap-3 md:grid-cols-3">
                 <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                  <p className="text-xs text-[#8a8da8]">User</p>
+                  <p className="text-xs text-[#8a8da8]">{t.user}</p>
                   <p className="mt-1 text-sm font-semibold">{details.user_name}</p>
                 </div>
                 <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                  <p className="text-xs text-[#8a8da8]">Email</p>
+                  <p className="text-xs text-[#8a8da8]">{t.email}</p>
                   <p className="mt-1 text-sm">{details.user_email || '-'}</p>
                 </div>
                 <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                  <p className="text-xs text-[#8a8da8]">Status</p>
-                  <p className="mt-1 text-sm capitalize">{details.status}</p>
+                  <p className="text-xs text-[#8a8da8]">{t.status}</p>
+                  <p className="mt-1 text-sm">{t[details.status]}</p>
                 </div>
                 <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                  <p className="text-xs text-[#8a8da8]">Seller Type</p>
-                  <p className="mt-1 text-sm">{details.seller_type}</p>
+                  <p className="text-xs text-[#8a8da8]">{t.sellerType}</p>
+                  <p className="mt-1 text-sm">{sellerTypeLabel(details.seller_type)}</p>
                 </div>
                 <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                  <p className="text-xs text-[#8a8da8]">Operations City</p>
+                  <p className="text-xs text-[#8a8da8]">{t.operationsCity}</p>
                   <p className="mt-1 text-sm">{details.operations_city || '-'}</p>
                 </div>
                 <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                  <p className="text-xs text-[#8a8da8]">Preferred Contact</p>
-                  <p className="mt-1 text-sm">{details.preferred_student_contact_method}</p>
+                  <p className="text-xs text-[#8a8da8]">{t.preferredContact}</p>
+                  <p className="mt-1 text-sm">{contactMethodLabel(details.preferred_student_contact_method)}</p>
                 </div>
               </div>
               <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                <p className="text-xs text-[#8a8da8]">Offers Summary</p>
+                <p className="text-xs text-[#8a8da8]">{t.offersSummary}</p>
                 <p className="mt-1 whitespace-pre-wrap text-sm">{details.offers_summary || '-'}</p>
               </div>
               <div className="flex justify-end">
