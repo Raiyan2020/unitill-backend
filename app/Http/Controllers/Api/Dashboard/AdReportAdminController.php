@@ -53,7 +53,8 @@ class AdReportAdminController extends Controller
         }
 
         $rows = $query->paginate($perPage);
-        $rows->getCollection()->transform(fn (AdReport $report) => $this->present($report));
+        $lang = (string) $request->header('lang', 'en');
+        $rows->getCollection()->transform(fn (AdReport $report) => $this->present($report, $lang));
 
         return sendResponse([
             'reports' => $rows,
@@ -75,7 +76,7 @@ class AdReportAdminController extends Controller
         }
 
         return sendResponse(
-            $this->present($report) + [
+            $this->present($report, (string) $request->header('lang', 'en')) + [
                 'ad_description' => $report->ad?->description,
                 'ad_owner' => $report->ad?->user ? [
                     'id' => $report->ad->user->id,
@@ -110,7 +111,7 @@ class AdReportAdminController extends Controller
         $report->update(['status' => $request->input('status')]);
 
         return sendResponse(
-            $this->present($report->fresh(['user', 'ad'])),
+            $this->present($report->fresh(['user', 'ad']), (string) $request->header('lang', 'en')),
             'Report status updated'
         );
     }
@@ -130,12 +131,12 @@ class AdReportAdminController extends Controller
         ];
     }
 
-    private function present(AdReport $report): array
+    private function present(AdReport $report, string $lang = 'en'): array
     {
         return [
             'id' => $report->id,
             'reason' => $report->reason,
-            'reason_label' => AdReportReason::label($report->reason, 'en'),
+            'reason_label' => AdReportReason::label($report->reason, $lang),
             'comment' => $report->comment,
             'status' => $report->status,
             'created_at' => optional($report->created_at)->toDateTimeString(),

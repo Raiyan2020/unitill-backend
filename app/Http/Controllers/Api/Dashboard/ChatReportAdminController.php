@@ -59,7 +59,8 @@ class ChatReportAdminController extends Controller
         }
 
         $rows = $query->paginate($perPage);
-        $rows->getCollection()->transform(fn (ChatReport $report) => $this->present($report));
+        $lang = (string) $request->header('lang', 'en');
+        $rows->getCollection()->transform(fn (ChatReport $report) => $this->present($report, $lang));
 
         return sendResponse([
             'reports' => $rows,
@@ -82,7 +83,7 @@ class ChatReportAdminController extends Controller
         }
 
         return sendResponse(
-            $this->present($report) + ['messages' => $this->conversationContext($report)],
+            $this->present($report, (string) $request->header('lang', 'en')) + ['messages' => $this->conversationContext($report)],
             'Report details'
         );
     }
@@ -109,7 +110,7 @@ class ChatReportAdminController extends Controller
         $report->update(['status' => $request->input('status')]);
 
         return sendResponse(
-            $this->present($report->fresh(['reporter', 'reportedUser', 'conversation.ad'])),
+            $this->present($report->fresh(['reporter', 'reportedUser', 'conversation.ad']), (string) $request->header('lang', 'en')),
             'Report status updated'
         );
     }
@@ -165,13 +166,13 @@ class ChatReportAdminController extends Controller
         ];
     }
 
-    private function present(ChatReport $report): array
+    private function present(ChatReport $report, string $lang = 'en'): array
     {
         return [
             'id' => $report->id,
             'type' => $report->type,
             'reason' => $report->reason,
-            'reason_label' => ChatReportReason::label($report->reason, 'en'),
+            'reason_label' => ChatReportReason::label($report->reason, $lang),
             'description' => $report->description,
             'status' => $report->status,
             'created_at' => optional($report->created_at)->toDateTimeString(),
