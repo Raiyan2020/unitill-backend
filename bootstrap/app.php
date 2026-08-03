@@ -41,7 +41,13 @@ return Application::configure(basePath: dirname(__DIR__))
                 | Request::HEADER_X_FORWARDED_AWS_ELB
         );
 
-        $middleware->statefulApi();
+        // No statefulApi(): every API caller authenticates with a Sanctum bearer
+        // token — the mobile app, the React dashboard (frontend/src/lib/api.ts)
+        // and broadcasting/auth alike. Nothing sends cookies, so nothing sets
+        // withCredentials. statefulApi() would attach session + CSRF to /api/*
+        // for any request whose Origin matches a sanctum.stateful domain, which
+        // is what made the dashboard's cross-domain POST /api/admin/login fail
+        // with 419 CSRF token mismatch.
         $middleware->throttleApi('api');
 
         // Must run before controllers and FormRequests so __() and validation

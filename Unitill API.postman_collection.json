@@ -4552,14 +4552,13 @@
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}/../ads/FDSDU1GVU8?lang=en",
+                            "raw": "{{web_url}}/ads/{{public_id}}?lang=en",
                             "host": [
-                                "{{base_url}}"
+                                "{{web_url}}"
                             ],
                             "path": [
-                                "..",
                                 "ads",
-                                "FDSDU1GVU8"
+                                "{{public_id}}"
                             ],
                             "query": [
                                 {
@@ -4568,7 +4567,7 @@
                                 }
                             ]
                         },
-                        "description": "The public web page behind a shared link — NOT an API route (no /api prefix).\n\nReal URL: {app.url}/ads/{public_id}, where app.url comes from GET /settings.\n\nReturns HTML with Open Graph tags for link previews, or a 404 page for an unknown, removed, expired or pending-payment ad."
+                        "description": "The public web page behind a shared link. It is NOT an API route, so it uses {{web_url}} (no /api suffix), not {{base_url}}.\n\nReal URL: {app.url}/ads/{public_id}, where app.url comes from GET /settings.\n\nReturns HTML with Open Graph tags, or a 404 page for an unknown, removed, expired or pending-payment ad."
                     },
                     "response": []
                 }
@@ -13470,6 +13469,14 @@
         {
             "key": "otp_user_id",
             "value": ""
+        },
+        {
+            "key": "web_url",
+            "value": "http://localhost/unitill-backend/public"
+        },
+        {
+            "key": "public_id",
+            "value": "FDSDU1GVU8"
         }
     ]
 }
