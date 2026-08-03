@@ -52,8 +52,8 @@ class PushNotificationService
             'body' => $body,
             'data' => $data ?: null,
             'status' => $result['success'] ? PushNotification::STATUS_SENT : PushNotification::STATUS_FAILED,
-            'fcm_message_id' => $result['message_id'] ?? null,
-            'error_message' => $result['error'] ?? null,
+            'fcm_message_id' => self::asText($result['message_id'] ?? null),
+            'error_message' => self::asText($result['error'] ?? null),
             'recipients_count' => $recipientsCount,
         ]);
 
@@ -115,8 +115,8 @@ class PushNotificationService
             'body' => $body,
             'data' => $data ?: null,
             'status' => $result['success'] ? PushNotification::STATUS_SENT : PushNotification::STATUS_FAILED,
-            'fcm_message_id' => $result['message_id'] ?? null,
-            'error_message' => $result['error'] ?? null,
+            'fcm_message_id' => self::asText($result['message_id'] ?? null),
+            'error_message' => self::asText($result['error'] ?? null),
             'recipients_count' => $result['success'] ? 1 : 0,
         ]);
 
@@ -209,5 +209,23 @@ class PushNotificationService
             'body' => $log->body,
             'data' => $log->data,
         ]);
+    }
+
+    /**
+     * Text columns must never receive an array: a driver-level
+     * "Array to string conversion" would fail the whole request, so a status
+     * change would appear broken because of a logging detail.
+     */
+    protected static function asText(mixed $value): ?string
+    {
+        if ($value === null || is_string($value)) {
+            return $value;
+        }
+
+        if (is_scalar($value)) {
+            return (string) $value;
+        }
+
+        return json_encode($value, JSON_UNESCAPED_UNICODE) ?: null;
     }
 }

@@ -36,6 +36,9 @@ function isPrimaryAdminRow(row: AdminRow): boolean {
 /** Mirrors the API rule in AdminController: password => 'min:6'. */
 const MIN_PASSWORD_LENGTH = 6;
 
+/** Deliberately permissive: the API is the authority, this only catches typos. */
+const EMAIL_PATTERN = /^[^s@]+@[^s@]+.[^s@]{2,}$/;
+
 export function AdminsPage() {
   const notify = useNotify();
   const { t } = useI18n();
@@ -121,6 +124,21 @@ export function AdminsPage() {
   };
 
   const save = async () => {
+    if (!form.name.trim()) {
+      notify.error(t.nameRequired);
+      return;
+    }
+    // Mirrors AdminController: email => 'required|email'. Checking the shape
+    // here turns a raw 422 into a message the admin can act on.
+    const email = form.email.trim();
+    if (!email) {
+      notify.error(t.emailRequired);
+      return;
+    }
+    if (!EMAIL_PATTERN.test(email)) {
+      notify.error(t.emailInvalid);
+      return;
+    }
     if (!editing && !form.password) {
       notify.error(t.passwordRequired);
       return;

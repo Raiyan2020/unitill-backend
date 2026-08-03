@@ -311,6 +311,9 @@ export type Dictionary = {
   firebaseNotConfigured: string;
   searchUser: string;
   noUsersFound: string;
+  nameRequired: string;
+  emailRequired: string;
+  emailInvalid: string;
   menu: string;
 };
 
@@ -619,6 +622,9 @@ const dictionaries: Record<Locale, Dictionary> = {
     firebaseNotConfigured: "Push notifications are disabled: Firebase is not configured on the server.",
     searchUser: "Search by name or email",
     noUsersFound: "No users found",
+    nameRequired: "The name is required.",
+    emailRequired: "The email address is required.",
+    emailInvalid: "Enter a valid email address, for example name@example.com",
     menu: "Menu",
   },
   ar: {
@@ -925,6 +931,9 @@ const dictionaries: Record<Locale, Dictionary> = {
     firebaseNotConfigured: "الإشعارات معطّلة: لم يتم إعداد Firebase على الخادم.",
     searchUser: "ابحث بالاسم أو البريد الإلكتروني",
     noUsersFound: "لا يوجد مستخدمون",
+    nameRequired: "الاسم مطلوب.",
+    emailRequired: "البريد الإلكتروني مطلوب.",
+    emailInvalid: "أدخل بريداً إلكترونياً صحيحاً، مثال: name@example.com",
     menu: "القائمة",
   },
 };
