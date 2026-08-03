@@ -263,6 +263,22 @@ class BackendRequiredChangesTest extends TestCase
         $this->assertNull($fresh->paused_at);
     }
 
+    public function test_api_login_from_a_stateful_origin_is_not_csrf_blocked(): void
+    {
+        // The React dashboard is on another host and authenticates with a bearer
+        // token, never cookies. statefulApi() used to attach session + CSRF to
+        // /api/* for any Origin in sanctum.stateful, which made this return 419.
+        config(['sanctum.stateful' => ['dashboard.unitill.test']]);
+
+        $this->postJson('/api/admin/login', [
+            'email' => 'nobody@example.test',
+            'password' => 'wrong-on-purpose',
+        ], [
+            'Origin' => 'https://dashboard.unitill.test',
+            'Referer' => 'https://dashboard.unitill.test/admin/login',
+        ])->assertStatus(401);
+    }
+
     public function test_reactivating_an_expired_ad_still_starts_a_new_paid_period(): void
     {
         Setting::updateOrCreate(['key_id' => 'post_price'], ['value' => '5.00']);

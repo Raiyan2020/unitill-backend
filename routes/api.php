@@ -166,11 +166,11 @@ Route::middleware('auth:sanctum')->prefix('admin')->controller(RoleController::c
     Route::delete('roles/{id}', 'destroy')->middleware('permission:roles.delete');
 });
 
+// Read-only: permissions are seeded per page/action by RolePermissionSeeder, so
+// there is nothing for an admin to create or rename. Only the list survives —
+// the Roles screen uses it to populate its permission picker.
 Route::middleware('auth:sanctum')->prefix('admin')->controller(PermissionController::class)->group(function () {
     Route::get('permissions', 'index')->middleware('permission:permissions.view');
-    Route::post('permissions', 'store')->middleware('permission:permissions.create');
-    Route::put('permissions/{id}', 'update')->middleware('permission:permissions.update');
-    Route::delete('permissions/{id}', 'destroy')->middleware('permission:permissions.delete');
 });
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(CountryController::class)->group(function () {

@@ -30,15 +30,17 @@ class ContactUsAdminController extends Controller
             });
         }
 
-        $rows = $query->paginate($perPage)->through(function (ContactUsMessage $row) {
+        $lang = (string) $request->header("lang", "en");
+
+        $rows = $query->paginate($perPage)->through(function (ContactUsMessage $row) use ($lang) {
             return [
                 'id' => $row->id,
                 'user_id' => $row->user_id,
                 'user_name' => $row->user?->name ?? '-',
                 'user_email' => $row->user?->email ?? '-',
-                'reason' => $row->contactReason?->nameForLanguageCode('en')
-                    ?: $row->contactReason?->nameForLanguageCode('ar')
-                    ?: '-',
+                // Follows the dashboard language; nameForLanguageCode already
+                // falls back to English when a translation is missing.
+                'reason' => $row->contactReason?->nameForLanguageCode($lang) ?: '-',
                 'message' => $row->message,
                 'mail_sent' => $row->mail_sent_at !== null,
                 'mail_sent_at' => $row->mail_sent_at?->toDateTimeString(),

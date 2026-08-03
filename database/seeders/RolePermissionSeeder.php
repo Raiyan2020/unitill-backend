@@ -23,10 +23,9 @@ class RolePermissionSeeder extends Seeder
             'roles.create',
             'roles.update',
             'roles.delete',
+            // View only: permissions are derived from the pages and actions the
+            // code implements, so there is no create/update/delete screen.
             'permissions.view',
-            'permissions.create',
-            'permissions.update',
-            'permissions.delete',
             'countries.view',
             'countries.create',
             'countries.update',
