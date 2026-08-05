@@ -27,6 +27,15 @@ class AdSort
     public const YEAR_OLD_TO_NEW = 'year_old_to_new';
 
     /**
+     * Date-ordering expression. Legacy rows (and any published outside the paid
+     * flow) can carry a null published_at; MySQL sorts those last on DESC, which
+     * buried brand-new ads at the bottom of "newest first".
+     * The resources already fall back to created_at when reporting the date, so
+     * the sort now matches what the client sees.
+     */
+    protected const PUBLISHED_AT = 'coalesce(published_at, created_at)';
+
+    /**
      * Sorts offered only on the Cars category, keyed by the attribute slug they
      * read and the direction they apply.
      *
@@ -93,7 +102,7 @@ class AdSort
 
         if ($normalized === self::DISTANCE_NEAREST || $normalized === self::DISTANCE_FARTHEST) {
             if ($lat === null || $lng === null) {
-                $query->orderByDesc('published_at')->orderByDesc('id');
+                $query->orderByRaw(self::PUBLISHED_AT.' desc')->orderByDesc('id');
 
                 return;
             }
@@ -112,10 +121,10 @@ class AdSort
         }
 
         match ($normalized) {
-            self::OLDEST => $query->orderBy('published_at')->orderBy('id'),
+            self::OLDEST => $query->orderByRaw(self::PUBLISHED_AT.' asc')->orderBy('id'),
             self::PRICE_LOW_TO_HIGH => $query->orderBy('price')->orderByDesc('id'),
             self::PRICE_HIGH_TO_LOW => $query->orderByDesc('price')->orderByDesc('id'),
-            default => $query->orderByDesc('published_at')->orderByDesc('id'),
+            default => $query->orderByRaw(self::PUBLISHED_AT.' desc')->orderByDesc('id'),
         };
     }
 

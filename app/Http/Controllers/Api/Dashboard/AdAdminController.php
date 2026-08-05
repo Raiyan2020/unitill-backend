@@ -215,6 +215,19 @@ class AdAdminController extends Controller
         }
 
         $ad->status = $newStatus;
+
+        // Publishing from the dashboard has to stamp the same fields the paid
+        // publish flow does. Without this the ad goes live with a null
+        // published_at and sinks to the bottom of every "newest first" listing.
+        if ($newStatus === 'published' && $ad->published_at === null) {
+            $publishedAt = now();
+            $ad->published_at = $publishedAt;
+
+            if ($ad->expires_at === null) {
+                $ad->expires_at = $publishedAt->copy()->addDays((int) setting('post_duration', '30'));
+            }
+        }
+
         $ad->save();
 
         if ($oldStatus !== $newStatus && $ad->user) {
