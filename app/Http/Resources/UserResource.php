@@ -26,8 +26,6 @@ class UserResource extends JsonResource
             return (strlen($local) <= 2 ? substr($local, 0, 1) : substr($local, 0, 2)).'***@'.$domain;
         };
 
-        $name = $lang === 'en' ? 'name_en' : 'name_ar';
-
         // "Show first name only" applies to everyone except the owner, who always
         // sees their own full name inside Edit Profile.
         $showLastName = $isOwnProfile || (bool) $this->show_last_name;
@@ -56,8 +54,7 @@ class UserResource extends JsonResource
             'total_reviews' => (int) ($this->total_reviews_count ?? 0),
             'is_trusted_seller' => (bool) $this->is_trusted_seller,
             'device_type' => $this->device_type,
-            'city_id' => (int) $this->city_id,
-            'city_name' => $this->city ? $this->city->$name : null,
+            'city' => $this->city ? new CityResource($this->city) : null,
             'status' => ($this->status === '1' || $this->status === 1)
                 ? 'active'
                 : (($this->status === '2' || $this->status === 2) ? 'pending_verification' : 'inactive'),
