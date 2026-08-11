@@ -11317,6 +11317,200 @@
                             "body": "{\n    \"status\": true,\n    \"message\": \"FCM token registered\"\n}"
                         }
                     ]
+                },
+                {
+                    "name": "Deactivate Account (V2)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/v2/deactivate-account",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "v2",
+                                "deactivate-account"
+                            ]
+                        },
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "description": "Reversible closure. The account, its ads and its chats are hidden, and signing in again with email + password restores all of it.\n\nNo request body. Requires a bearer token."
+                    },
+                    "response": [
+                        {
+                            "name": "Deactivate Account (V2) — Example",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/v2/deactivate-account",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "v2",
+                                        "deactivate-account"
+                                    ]
+                                },
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "description": "Reversible closure. The account, its ads and its chats are hidden, and signing in again with email + password restores all of it.\n\nNo request body. Requires a bearer token."
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"message\": \"Your account has been deactivated. Signing in again will restore it.\",\n    \"data\": {\n        \"deactivated_at\": \"2026-08-11T09:00:00+00:00\",\n        \"restorable\": true\n    }\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Delete Account — Permanent (V2)",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/v2/delete-account",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "v2",
+                                "delete-account"
+                            ]
+                        },
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "description": "PERMANENT and irreversible. The user row is hard-deleted along with their ads, uploaded files, devices, tokens and notifications. The user can never sign in again.\n\nRecords kept for legal or security reasons survive with the link to the person set to NULL: orders, the other participant's conversations and messages, reports, ratings the user left, and login logs.\n\nNo request body. Requires a bearer token. The token is dead immediately after this call."
+                    },
+                    "response": [
+                        {
+                            "name": "Delete Account — Permanent (V2) — Example",
+                            "originalRequest": {
+                                "method": "DELETE",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/v2/delete-account",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "v2",
+                                        "delete-account"
+                                    ]
+                                },
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "description": "PERMANENT and irreversible. The user row is hard-deleted along with their ads, uploaded files, devices, tokens and notifications. The user can never sign in again.\n\nRecords kept for legal or security reasons survive with the link to the person set to NULL: orders, the other participant's conversations and messages, reports, ratings the user left, and login logs.\n\nNo request body. Requires a bearer token. The token is dead immediately after this call."
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"message\": \"Your account and data have been permanently deleted. This cannot be undone.\",\n    \"data\": {\n        \"deleted_at\": \"2026-08-11T09:00:00+00:00\",\n        \"restorable\": false\n    }\n}"
+                        }
+                    ]
                 }
             ],
             "description": "Profile, security and self-service account management."

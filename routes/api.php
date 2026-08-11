@@ -103,6 +103,17 @@ Route::prefix('v2')->controller(\App\Http\Controllers\Api\V2\AuthController::cla
     Route::post('auth/refresh', 'refresh');
 });
 
+// V2 account closure: deactivate (reversible) and delete (permanent) as two
+// separate actions. Additive only — V1's delete-account keeps its existing
+// restorable behaviour so already-published app builds are unaffected.
+Route::middleware('auth:sanctum')
+    ->prefix('v2')
+    ->controller(\App\Http\Controllers\Api\V2\AccountController::class)
+    ->group(function () {
+        Route::post('deactivate-account', 'deactivate');
+        Route::delete('delete-account', 'destroy');
+    });
+
 Route::prefix('admin')->controller(AdminAuthController::class)->group(function () {
     Route::post('login', 'login');
     Route::middleware('auth:sanctum')->post('logout', 'logout');
