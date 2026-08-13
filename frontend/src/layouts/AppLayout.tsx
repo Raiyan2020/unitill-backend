@@ -1,4 +1,4 @@
-import { BadgeCheck, Bell, Building2, FileText, Flag, MessageSquareWarning, TicketPercent, FolderTree, GraduationCap, Globe, Languages, LayoutDashboard, LogOut, Mail, Megaphone, Menu, MessageSquare, Moon, RotateCcw, Settings, ShieldCheck, Sun, User, UserCog, Users, X } from 'lucide-react';
+import { BadgeCheck, Bell, Building2, FileText, Flag, Gavel, MessageSquareWarning, TicketPercent, FolderTree, GraduationCap, Globe, Languages, LayoutDashboard, LogOut, Mail, Megaphone, Menu, MessageSquare, Moon, RotateCcw, Settings, ShieldCheck, Sun, User, UserCog, Users, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
@@ -14,6 +14,7 @@ const navItems = [
   { to: '/refund-requests', labelKey: 'refundRequests', icon: RotateCcw, permission: 'categories.view' },
   { to: '/ad-reports', labelKey: 'adReports', icon: Flag, permission: 'ad_reports.view' },
   { to: '/chat-reports', labelKey: 'chatReports', icon: MessageSquareWarning, permission: 'chat_reports.view' },
+  { to: '/moderation-appeals', labelKey: 'moderationAppeals', icon: Gavel, permission: 'users.view' },
   { to: '/user-verifications', labelKey: 'userVerifications', icon: BadgeCheck, permission: 'users.view' },
   { to: '/admins', labelKey: 'admins', icon: UserCog, permission: 'admins.view' },
   { to: '/roles', labelKey: 'roles', icon: ShieldCheck, permission: 'roles.view' },

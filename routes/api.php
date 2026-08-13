@@ -120,7 +120,11 @@ Route::middleware('auth:sanctum')
 Route::middleware('auth:sanctum')->prefix('v2')->group(function () {
     Route::post('ads/{id}/publish', [\App\Http\Controllers\Api\V2\AdController::class, 'publish']);
     Route::post('my-ads/{id}/extend', [\App\Http\Controllers\Api\V2\MyAdController::class, 'extend']);
+    Route::post('users/{id}/reports', [\App\Http\Controllers\Api\V2\UserReportController::class, 'store']);
 });
+
+Route::post('v2/moderation-appeals', [\App\Http\Controllers\Api\V2\ModerationAppealController::class, 'store'])
+    ->middleware('throttle:5,1');
 
 Route::prefix('admin')->controller(AdminAuthController::class)->group(function () {
     Route::post('login', 'login');
@@ -157,6 +161,13 @@ Route::middleware('auth:sanctum')->prefix('admin')->controller(ChatReportAdminCo
     Route::get('chat-reports', 'index')->middleware('permission:chat_reports.view');
     Route::get('chat-reports/{id}', 'show')->middleware('permission:chat_reports.view');
     Route::put('chat-reports/{id}', 'update')->middleware('permission:chat_reports.update');
+});
+
+Route::middleware('auth:sanctum')->prefix('admin')->controller(\App\Http\Controllers\Api\Dashboard\ModerationAdminController::class)->group(function () {
+    Route::get('users/{id}/moderation-actions', 'userActions')->middleware('permission:users.view');
+    Route::post('users/{id}/moderation-actions', 'storeAction')->middleware('permission:users.update');
+    Route::get('moderation-appeals', 'appeals')->middleware('permission:users.view');
+    Route::put('moderation-appeals/{id}', 'decideAppeal')->middleware('permission:users.update');
 });
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(CouponAdminController::class)->group(function () {

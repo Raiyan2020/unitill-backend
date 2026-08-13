@@ -10,6 +10,7 @@ use App\Models\ChatReport;
 use App\Models\Conversation;
 use App\Services\ChatService;
 use App\Support\ChatReportReason;
+use App\Support\ReportPriority;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -479,6 +480,7 @@ class ConversationController extends Controller
             'type' => $validated['type'],
             'reason' => $validated['reason'] ?? null,
             'description' => $validated['description'] ?? null,
+            'priority' => ReportPriority::fromReason($validated['reason']),
         ]);
 
         return sendResponse(

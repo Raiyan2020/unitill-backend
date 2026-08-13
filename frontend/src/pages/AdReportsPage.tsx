@@ -11,6 +11,7 @@ import { useNotify } from '../lib/notify';
 import { useI18n } from '../providers/i18n-provider';
 
 type ReportStatus = 'pending' | 'reviewed' | 'dismissed';
+type ReportPriority = 'normal' | 'urgent' | 'critical';
 
 type ReportedAd = { id: number; public_id: string | null; title: string | null; status: string };
 type Reporter = { id: number; name: string; email: string | null };
@@ -21,6 +22,7 @@ type ReportRow = {
   reason_label: string | null;
   comment: string | null;
   status: ReportStatus;
+  priority: ReportPriority;
   created_at: string | null;
   ad: ReportedAd | null;
   reporter: Reporter | null;
@@ -59,11 +61,15 @@ export function AdReportsPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [reasonFilter, setReasonFilter] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
   const [statusSavingId, setStatusSavingId] = useState<number | null>(null);
   const [details, setDetails] = useState<ReportDetails | null>(null);
+  const [action, setAction] = useState('warning');
+  const [actionReason, setActionReason] = useState('');
+  const [durationDays, setDurationDays] = useState('7');
 
   const fetchRows = async () => {
     setLoading(true);
@@ -75,6 +81,7 @@ export function AdReportsPage() {
           search: search || undefined,
           status: statusFilter || undefined,
           reason: reasonFilter || undefined,
+          priority: priorityFilter || undefined,
         },
       });
       const payload = ensureApiSuccess<ReportsResponse>(res, t.actionFailed);
@@ -92,7 +99,7 @@ export function AdReportsPage() {
   useEffect(() => {
     fetchRows();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, statusFilter, reasonFilter]);
+  }, [page, pageSize, statusFilter, reasonFilter, priorityFilter]);
 
   useEffect(() => {
     if (!didInitSearch.current) {
@@ -140,11 +147,25 @@ export function AdReportsPage() {
 
   const pagesCount = Math.max(1, Math.ceil(total / pageSize));
 
+  const applyModeration = async () => {
+    if (!details?.ad_owner || !actionReason.trim()) return;
+    const payload: Record<string, string | number> = { action, reason: actionReason.trim(), source_type: 'ad_report', source_id: details.id };
+    if (action === 'temporary_suspension') payload.duration_days = Number(durationDays);
+    try {
+      await api.post(`/admin/users/${details.ad_owner.id}/moderation-actions`, payload);
+      setActionReason('');
+      notify.success('Moderation action recorded');
+    } catch (error) { notify.errorFrom(error, t.actionFailed); }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-2xl font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">{t.adReports}</h2>
         <div className="flex flex-wrap items-center gap-2">
+          <select value={priorityFilter} onChange={(e) => { setPage(1); setPriorityFilter(e.target.value); }} className="h-9 rounded-lg border border-[#dbdbe8] bg-white px-2 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]">
+            <option value="">All priorities</option><option value="critical">Critical</option><option value="urgent">Urgent</option><option value="normal">Normal</option>
+          </select>
           <select
             value={statusFilter}
             onChange={(e) => {
@@ -212,6 +233,7 @@ export function AdReportsPage() {
                   <th className="px-4 py-3 text-start">{t.id}</th>
                   <th className="px-4 py-3 text-start">{t.ad}</th>
                   <th className="px-4 py-3 text-start">{t.reason}</th>
+                  <th className="px-4 py-3 text-start">Priority</th>
                   <th className="px-4 py-3 text-start">{t.reporter}</th>
                   <th className="px-4 py-3 text-start">{t.date}</th>
                   <th className="px-4 py-3 text-start">{t.status}</th>
@@ -220,9 +242,9 @@ export function AdReportsPage() {
               </thead>
               <tbody>
                 {loading ? (
-                  <TableLoadingRow colSpan={7} />
+                  <TableLoadingRow colSpan={8} />
                 ) : rows.length === 0 ? (
-                  <tr><td className="px-4 py-6 text-center text-sm text-[#8a8da8]" colSpan={7}>{t.noDataFound}</td></tr>
+                  <tr><td className="px-4 py-6 text-center text-sm text-[#8a8da8]" colSpan={8}>{t.noDataFound}</td></tr>
                 ) : (
                   rows.map((row) => (
                     <tr key={row.id} className="border-t border-[#ececf3] dark:border-[#44485f]">
@@ -237,6 +259,7 @@ export function AdReportsPage() {
                         )}
                       </td>
                       <td className="px-4 py-3">{row.reason_label || row.reason}</td>
+                      <td className="px-4 py-3"><span className={`rounded-full px-2 py-1 text-xs font-semibold ${row.priority === 'critical' ? 'bg-rose-500/15 text-rose-600' : row.priority === 'urgent' ? 'bg-amber-500/15 text-amber-600' : 'bg-slate-500/15 text-slate-600'}`}>{row.priority || 'normal'}</span></td>
                       <td className="px-4 py-3">{row.reporter?.name || '-'}</td>
                       <td className="px-4 py-3 whitespace-nowrap">{row.created_at || '-'}</td>
                       <td className="px-4 py-3">
@@ -313,6 +336,16 @@ export function AdReportsPage() {
                 <p className="text-xs text-[#8a8da8]">{t.reporterExplanation}</p>
                 <p className="mt-1 whitespace-pre-wrap text-sm">{details.comment || '-'}</p>
               </div>
+
+              {details.ad_owner ? <div className="space-y-3 rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
+                <p className="text-sm font-semibold">Moderation action for ad owner</p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <select value={action} onChange={(e) => setAction(e.target.value)} className="h-10 rounded-lg border bg-white px-3 text-sm dark:bg-[#2f3349]"><option value="warning">Warning</option><option value="temporary_suspension">Temporary suspension</option><option value="permanent_suspension">Permanent suspension</option><option value="reactivated">Reactivate</option></select>
+                  {action === 'temporary_suspension' ? <Input type="number" min="1" max="365" value={durationDays} onChange={(e) => setDurationDays(e.target.value)} /> : null}
+                </div>
+                <textarea rows={3} value={actionReason} onChange={(e) => setActionReason(e.target.value)} placeholder="Decision reason" className="w-full rounded-lg border bg-white px-3 py-2 text-sm dark:bg-[#2f3349]" />
+                <Button disabled={!actionReason.trim()} onClick={applyModeration}>Apply action</Button>
+              </div> : null}
 
               <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
                 <p className="text-xs text-[#8a8da8]">{t.reportedAd}</p>

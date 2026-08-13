@@ -4,6 +4,7 @@ import { AppLayout } from './layouts/AppLayout';
 import { AdDetailsPage } from './pages/AdDetailsPage';
 import { AdReportsPage } from './pages/AdReportsPage';
 import { ChatReportsPage } from './pages/ChatReportsPage';
+import { ModerationAppealsPage } from './pages/ModerationAppealsPage';
 import { CouponsPage } from './pages/CouponsPage';
 import { AdsPage } from './pages/AdsPage';
 import { AdminsPage } from './pages/AdminsPage';
@@ -68,6 +69,7 @@ export default function App() {
         <Route path="refund-requests" element={<PermissionRoute permission="categories.view"><RefundRequestsPage /></PermissionRoute>} />
         <Route path="ad-reports" element={<PermissionRoute permission="ad_reports.view"><AdReportsPage /></PermissionRoute>} />
         <Route path="chat-reports" element={<PermissionRoute permission="chat_reports.view"><ChatReportsPage /></PermissionRoute>} />
+        <Route path="moderation-appeals" element={<PermissionRoute permission="users.view"><ModerationAppealsPage /></PermissionRoute>} />
         <Route path="coupons" element={<PermissionRoute permission="coupons.view"><CouponsPage /></PermissionRoute>} />
         <Route path="user-verifications" element={<PermissionRoute permission="users.view"><TrustedSellerApplicationsPage /></PermissionRoute>} />
         <Route path="user-verifications/user/:userId" element={<PermissionRoute permission="users.view"><UserVerificationDetailsPage /></PermissionRoute>} />

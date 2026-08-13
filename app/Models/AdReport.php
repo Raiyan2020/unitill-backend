@@ -13,6 +13,7 @@ class AdReport extends Model
         'reason',
         'comment',
         'status',
+        'priority',
     ];
 
     public function user(): BelongsTo

@@ -10,6 +10,7 @@ export type Dictionary = {
   ads: string;
   adReports: string;
   chatReports: string;
+  moderationAppeals: string;
   coupons: string;
   userVerifications: string;
   admins: string;
@@ -349,6 +350,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     ads: 'Ads',
     adReports: 'Ad Reports',
     chatReports: 'Chat Reports',
+    moderationAppeals: 'Moderation Appeals',
     coupons: 'Coupons',
     userVerifications: 'User Verifications',
     admins: 'Admins',
@@ -682,6 +684,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     ads: 'الإعلانات',
     adReports: 'بلاغات الإعلانات',
     chatReports: 'بلاغات المحادثات',
+    moderationAppeals: 'استئنافات الإشراف',
     coupons: 'الكوبونات',
     userVerifications: 'طلبات التوثيق',
     admins: 'المديرين',

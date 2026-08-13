@@ -18,6 +18,18 @@ type UserDetails = {
   city_id: number | null;
   status: '1' | '2' | '3';
   created_at: string;
+  warning_count: number;
+  suspended_until: string | null;
+};
+
+type ModerationAction = {
+  id: number;
+  action: string;
+  reason: string;
+  starts_at: string | null;
+  ends_at: string | null;
+  created_at: string;
+  admin: { name: string; email: string } | null;
 };
 
 export function UserDetailsPage() {
@@ -25,6 +37,7 @@ export function UserDetailsPage() {
   const { t, locale } = useI18n();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<UserDetails | null>(null);
+  const [actions, setActions] = useState<ModerationAction[]>([]);
 
   useEffect(() => {
     const load = async () => {
@@ -32,6 +45,8 @@ export function UserDetailsPage() {
       try {
         const res = await api.get(`/admin/users/${id}`);
         setUser(res?.data?.data || null);
+        const history = await api.get(`/admin/users/${id}/moderation-actions`, { params: { per_page: 100 } });
+        setActions(history?.data?.data?.data || []);
       } finally {
         setLoading(false);
       }
@@ -75,8 +90,24 @@ export function UserDetailsPage() {
                 <Badge variant={statusVariant}>{statusText}</Badge>
               </div>
               <Item label={t.createdAt} value={formatDateTime(user.created_at, locale)} />
+              <Item label={locale === 'ar' ? 'عدد التحذيرات' : 'Warnings'} value={String(user.warning_count || 0)} />
+              <Item label={locale === 'ar' ? 'موقوف حتى' : 'Suspended until'} value={user.suspended_until ? formatDateTime(user.suspended_until, locale) : '-'} />
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle>{locale === 'ar' ? 'سجل قرارات الإشراف' : 'Moderation Decision Log'}</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          {actions.map((action) => (
+            <div key={action.id} className="rounded-lg border border-slate-200 p-3 dark:border-[#44485f]">
+              <div className="flex flex-wrap justify-between gap-2"><strong>{action.action.replaceAll('_', ' ')}</strong><span className="text-xs text-slate-500">{formatDateTime(action.created_at, locale)}</span></div>
+              <p className="mt-2 text-sm">{action.reason}</p>
+              <p className="mt-1 text-xs text-slate-500">{action.admin?.name || 'System'}{action.ends_at ? ` · until ${formatDateTime(action.ends_at, locale)}` : ''}</p>
+            </div>
+          ))}
+          {!actions.length ? <p className="text-sm text-slate-500">{locale === 'ar' ? 'لا توجد قرارات مسجلة' : 'No moderation decisions recorded'}</p> : null}
         </CardContent>
       </Card>
     </div>

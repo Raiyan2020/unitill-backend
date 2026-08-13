@@ -3245,7 +3245,7 @@
                                 "login"
                             ]
                         },
-                        "description": "Step 1 of 2. Verifies the password and emails a 6-digit code. Returns **no tokens**.\n\nRequired: `type`, `password`, `device_id` (or `device_identifier`), and one of `email` / `login` (`login` accepts email or phone).\n\nOptional: `device_type` (ios|android), `device_token`, `device_name`, `city_name`, `country_code` (2 letters), `enable_biometric`."
+                        "description": "Step 1 of 2. Verifies the password and emails a 6-digit code. Returns **no tokens**.\n\nRequired: `type`, `password`, `device_id` (or `device_identifier`), and one of `email` / `login` (`login` accepts email or phone).\n\nOptional: `device_type` (ios|android), `device_token`, `device_name`, `city_name`, `country_code` (2 letters), `enable_biometric`.\n\nAnnual verification: after 12 months the user receives a push reminder. After the 60-day grace period all sessions are revoked. This same existing V2 login/OTP response is reused; no new mobile response field is required."
                     },
                     "response": [
                         {
@@ -12871,7 +12871,7 @@
                                 "conversations"
                             ]
                         },
-                        "description": "`ad_id` is required and accepts either the numeric id or the `public_id`.\n\n`message` is OPTIONAL — omit the key entirely rather than sending \"\". When present it is stored as the first message of the thread and broadcast like any other message.\n\n`client_message_id` is optional and only meaningful alongside `message`; it makes the opening message idempotent on retry.\n\nOpening a conversation twice on the same ad returns the EXISTING thread, it never creates a duplicate.\n\nAccepts both `application/json` and `multipart/form-data`.\n\nReturns 403 with `data.needs_reverify = true` when the student status has lapsed."
+                        "description": "`ad_id` is required and accepts either the numeric id or the `public_id`.\n\n`message` is OPTIONAL — omit the key entirely rather than sending \"\". When present it is stored as the first message of the thread and broadcast like any other message.\n\n`client_message_id` is optional and only meaningful alongside `message`; it makes the opening message idempotent on retry.\n\nOpening a conversation twice on the same ad returns the EXISTING thread, it never creates a duplicate.\n\nAccepts both `application/json` and `multipart/form-data`.\n\nAfter the annual verification grace period expires, all sessions are revoked and authenticated requests use the standard 401 Unauthenticated response."
                     },
                     "response": [
                         {
@@ -12921,7 +12921,7 @@
                                         "conversations"
                                     ]
                                 },
-                                "description": "`ad_id` is required and accepts either the numeric id or the `public_id`.\n\n`message` is OPTIONAL — omit the key entirely rather than sending \"\". When present it is stored as the first message of the thread and broadcast like any other message.\n\n`client_message_id` is optional and only meaningful alongside `message`; it makes the opening message idempotent on retry.\n\nOpening a conversation twice on the same ad returns the EXISTING thread, it never creates a duplicate.\n\nAccepts both `application/json` and `multipart/form-data`.\n\nReturns 403 with `data.needs_reverify = true` when the student status has lapsed."
+                                "description": "`ad_id` is required and accepts either the numeric id or the `public_id`.\n\n`message` is OPTIONAL — omit the key entirely rather than sending \"\". When present it is stored as the first message of the thread and broadcast like any other message.\n\n`client_message_id` is optional and only meaningful alongside `message`; it makes the opening message idempotent on retry.\n\nOpening a conversation twice on the same ad returns the EXISTING thread, it never creates a duplicate.\n\nAccepts both `application/json` and `multipart/form-data`.\n\nAfter the annual verification grace period expires, all sessions are revoked and authenticated requests use the standard 401 Unauthenticated response."
                             },
                             "status": "OK",
                             "code": 200,
@@ -13243,7 +13243,7 @@
                                 }
                             ]
                         },
-                        "description": "Send as `multipart/form-data` (required when attaching a file); `application/json` also works for text-only sends.\n\nEither `body` or `attachment` must be present.\n\n**Idempotency** — pass `client_message_id` and a retried request will return the message the first attempt stored rather than writing a duplicate. The id is echoed back in the response and in the `message.sent` broadcast so you can match your optimistic bubble.\n\n**Realtime delivery never fails this call.** Broadcasting and push run after the row is committed and their failures are logged, not returned. A 200 means the message is stored.\n\nReturns 403 with `data.needs_reverify = true` when the student status has lapsed, 422 with `data.can_send_messages = false` when the thread is archived or the item is sold."
+                        "description": "Send as `multipart/form-data` (required when attaching a file); `application/json` also works for text-only sends.\n\nEither `body` or `attachment` must be present.\n\n**Idempotency** — pass `client_message_id` and a retried request will return the message the first attempt stored rather than writing a duplicate. The id is echoed back in the response and in the `message.sent` broadcast so you can match your optimistic bubble.\n\n**Realtime delivery never fails this call.** Broadcasting and push run after the row is committed and their failures are logged, not returned. A 200 means the message is stored.\n\nAfter the annual verification grace period expires, all sessions are revoked and authenticated requests use the standard 401 Unauthenticated response, 422 with `data.can_send_messages = false` when the thread is archived or the item is sold."
                     },
                     "response": [
                         {
@@ -13312,7 +13312,7 @@
                                         }
                                     ]
                                 },
-                                "description": "Send as `multipart/form-data` (required when attaching a file); `application/json` also works for text-only sends.\n\nEither `body` or `attachment` must be present.\n\n**Idempotency** — pass `client_message_id` and a retried request will return the message the first attempt stored rather than writing a duplicate. The id is echoed back in the response and in the `message.sent` broadcast so you can match your optimistic bubble.\n\n**Realtime delivery never fails this call.** Broadcasting and push run after the row is committed and their failures are logged, not returned. A 200 means the message is stored.\n\nReturns 403 with `data.needs_reverify = true` when the student status has lapsed, 422 with `data.can_send_messages = false` when the thread is archived or the item is sold."
+                                "description": "Send as `multipart/form-data` (required when attaching a file); `application/json` also works for text-only sends.\n\nEither `body` or `attachment` must be present.\n\n**Idempotency** — pass `client_message_id` and a retried request will return the message the first attempt stored rather than writing a duplicate. The id is echoed back in the response and in the `message.sent` broadcast so you can match your optimistic bubble.\n\n**Realtime delivery never fails this call.** Broadcasting and push run after the row is committed and their failures are logged, not returned. A 200 means the message is stored.\n\nAfter the annual verification grace period expires, all sessions are revoked and authenticated requests use the standard 401 Unauthenticated response, 422 with `data.can_send_messages = false` when the thread is archived or the item is sold."
                             },
                             "status": "OK",
                             "code": 200,
@@ -13392,7 +13392,7 @@
                                         }
                                     ]
                                 },
-                                "description": "Send as `multipart/form-data` (required when attaching a file); `application/json` also works for text-only sends.\n\nEither `body` or `attachment` must be present.\n\n**Idempotency** — pass `client_message_id` and a retried request will return the message the first attempt stored rather than writing a duplicate. The id is echoed back in the response and in the `message.sent` broadcast so you can match your optimistic bubble.\n\n**Realtime delivery never fails this call.** Broadcasting and push run after the row is committed and their failures are logged, not returned. A 200 means the message is stored.\n\nReturns 403 with `data.needs_reverify = true` when the student status has lapsed, 422 with `data.can_send_messages = false` when the thread is archived or the item is sold."
+                                "description": "Send as `multipart/form-data` (required when attaching a file); `application/json` also works for text-only sends.\n\nEither `body` or `attachment` must be present.\n\n**Idempotency** — pass `client_message_id` and a retried request will return the message the first attempt stored rather than writing a duplicate. The id is echoed back in the response and in the `message.sent` broadcast so you can match your optimistic bubble.\n\n**Realtime delivery never fails this call.** Broadcasting and push run after the row is committed and their failures are logged, not returned. A 200 means the message is stored.\n\nAfter the annual verification grace period expires, all sessions are revoked and authenticated requests use the standard 401 Unauthenticated response, 422 with `data.can_send_messages = false` when the thread is archived or the item is sold."
                             },
                             "status": "OK",
                             "code": 200,
@@ -13472,7 +13472,7 @@
                                         }
                                     ]
                                 },
-                                "description": "Send as `multipart/form-data` (required when attaching a file); `application/json` also works for text-only sends.\n\nEither `body` or `attachment` must be present.\n\n**Idempotency** — pass `client_message_id` and a retried request will return the message the first attempt stored rather than writing a duplicate. The id is echoed back in the response and in the `message.sent` broadcast so you can match your optimistic bubble.\n\n**Realtime delivery never fails this call.** Broadcasting and push run after the row is committed and their failures are logged, not returned. A 200 means the message is stored.\n\nReturns 403 with `data.needs_reverify = true` when the student status has lapsed, 422 with `data.can_send_messages = false` when the thread is archived or the item is sold."
+                                "description": "Send as `multipart/form-data` (required when attaching a file); `application/json` also works for text-only sends.\n\nEither `body` or `attachment` must be present.\n\n**Idempotency** — pass `client_message_id` and a retried request will return the message the first attempt stored rather than writing a duplicate. The id is echoed back in the response and in the `message.sent` broadcast so you can match your optimistic bubble.\n\n**Realtime delivery never fails this call.** Broadcasting and push run after the row is committed and their failures are logged, not returned. A 200 means the message is stored.\n\nAfter the annual verification grace period expires, all sessions are revoked and authenticated requests use the standard 401 Unauthenticated response, 422 with `data.can_send_messages = false` when the thread is archived or the item is sold."
                             },
                             "status": "Unprocessable Content",
                             "code": 422,
@@ -14029,6 +14029,804 @@
                 }
             ],
             "description": "Chat between a buyer and a seller about one ad.\n\n**Realtime.** Subscribe with the bearer token; the channel auth endpoint is\n`POST {{base_url}}/broadcasting/auth`.\n\n| Channel | Events |\n| --- | --- |\n| `private-conversation.{id}` | `message.sent`, `conversation.archived` |\n| `private-user.{id}` | `conversation.updated` |\n\n`message.sent` carries exactly one item of List Messages (including\n`client_message_id`). Derive \"is this mine?\" from `sender_id` — the `is_mine`\nflag is always false in a broadcast, because a broadcast has no viewer.\n\n`conversation.updated` carries the conversation resource; re-reading the list is\nalso fine.\n\nPusher `key` and `cluster` are served by `GET /settings` under `pusher`.\n\n**Field names.** `participant`, `last_message_preview`, `unread_count`,\n`last_message_ago`, `attachment_url` + `attachment_type` are the real names.\n`other_user`, `last_message`, `unread` and `attachment` never existed."
+        },
+        {
+            "name": "Moderation · V2 (Mobile)",
+            "description": "Additive V2 moderation endpoints. Existing V1/mobile endpoints and their response contracts are unchanged.",
+            "item": [
+                {
+                    "name": "Report User from Profile (V2)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"reason\": \"threats_or_violence\",\n    \"description\": \"Threatening behaviour visible on the user profile.\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/v2/users/:user_id/reports",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "v2",
+                                "users",
+                                ":user_id",
+                                "reports"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "user_id",
+                                    "value": "{{reported_user_id}}",
+                                    "description": "User being reported"
+                                }
+                            ]
+                        },
+                        "description": "Reports a user without requiring an existing conversation. This is a new V2 endpoint, so no existing mobile response changes. Reasons use the existing GET /chat-report-reasons values. Duplicate pending profile reports return 409."
+                    },
+                    "response": [
+                        {
+                            "name": "User report submitted",
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"data\": {\n        \"id\": 41,\n        \"status\": \"pending\"\n    },\n    \"message\": \"Report submitted\"\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Submit Moderation Appeal (V2)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "const res = pm.response.json();",
+                                    "if (res.status && res.data && res.data.id) pm.collectionVariables.set('appeal_id', res.data.id);"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"student.personal@example.com\",\n    \"password\": \"secret123\",\n    \"moderation_action_id\": \"{{moderation_action_id}}\",\n    \"message\": \"Please review the decision and the attached context again.\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/v2/moderation-appeals",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "v2",
+                                "moderation-appeals"
+                            ]
+                        },
+                        "description": "Public V2 endpoint because suspended users have no valid access token. Credentials are verified and requests are rate-limited. The moderation action ID is supplied in the moderation push/in-app notification. Only one appeal is allowed per action."
+                    },
+                    "response": [
+                        {
+                            "name": "Appeal submitted",
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"data\": {\n        \"id\": 12,\n        \"status\": \"pending\"\n    },\n    \"message\": \"Appeal submitted\"\n}"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Admin · Moderation",
+            "description": "Dashboard moderation workflow: priorities, warnings, temporary/permanent suspension, decision history, and appeals.",
+            "item": [
+                {
+                    "name": "Admin Login",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "const res = pm.response.json();",
+                                    "const token = res?.data?.token || res?.token;",
+                                    "if (token) pm.collectionVariables.set('admin_token', token);"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"email\": \"admin@example.com\",\n    \"password\": \"password\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/login",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "login"
+                            ]
+                        },
+                        "description": "Authenticates an administrator and stores the returned token in admin_token."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "List Chat/User Reports by Priority",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{admin_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/chat-reports?status=pending&priority=critical&per_page=20",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "chat-reports"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "pending"
+                                },
+                                {
+                                    "key": "priority",
+                                    "value": "critical",
+                                    "description": "normal | urgent | critical"
+                                },
+                                {
+                                    "key": "per_page",
+                                    "value": "20"
+                                }
+                            ]
+                        },
+                        "description": "Lists direct-user and conversation reports. Pending reports are ordered critical, urgent, then normal."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "List Ad Reports by Priority",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{admin_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/ad-reports?status=pending&priority=urgent&per_page=20",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "ad-reports"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "pending"
+                                },
+                                {
+                                    "key": "priority",
+                                    "value": "urgent",
+                                    "description": "normal | urgent | critical"
+                                },
+                                {
+                                    "key": "per_page",
+                                    "value": "20"
+                                }
+                            ]
+                        },
+                        "description": "Lists ad reports with the same priority workflow as user/chat reports."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Warn User",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{admin_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"action\": \"warning\",\n    \"reason\": \"First warning for abusive behaviour.\",\n    \"source_type\": \"chat_report\",\n    \"source_id\": 41\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/users/:user_id/moderation-actions",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "users",
+                                ":user_id",
+                                "moderation-actions"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "user_id",
+                                    "value": "{{reported_user_id}}"
+                                }
+                            ]
+                        },
+                        "description": "Adds a warning, increments warning_count, records an audit entry, and sends an in-app/push notification."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Temporarily Suspend User",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "type": "text/javascript",
+                                "exec": [
+                                    "const res = pm.response.json();",
+                                    "if (res.status && res.data && res.data.id) pm.collectionVariables.set('moderation_action_id', res.data.id);"
+                                ]
+                            }
+                        }
+                    ],
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{admin_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"action\": \"temporary_suspension\",\n    \"duration_days\": 7,\n    \"reason\": \"Repeated violations after a warning.\",\n    \"source_type\": \"chat_report\",\n    \"source_id\": 41\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/users/:user_id/moderation-actions",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "users",
+                                ":user_id",
+                                "moderation-actions"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "user_id",
+                                    "value": "{{reported_user_id}}"
+                                }
+                            ]
+                        },
+                        "description": "Suspends for 1–365 days and revokes access, refresh, biometric tokens, and device sessions."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Permanently Suspend User",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{admin_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"action\": \"permanent_suspension\",\n    \"reason\": \"Serious policy violation.\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/users/:user_id/moderation-actions",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "users",
+                                ":user_id",
+                                "moderation-actions"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "user_id",
+                                    "value": "{{reported_user_id}}"
+                                }
+                            ]
+                        },
+                        "description": "Disables the account, revokes all sessions, records the decision, and notifies the user."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Reactivate User",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{admin_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"action\": \"reactivated\",\n    \"reason\": \"Review completed; account restored.\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/users/:user_id/moderation-actions",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "users",
+                                ":user_id",
+                                "moderation-actions"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "user_id",
+                                    "value": "{{reported_user_id}}"
+                                }
+                            ]
+                        },
+                        "description": "Reactivates a user and appends a new immutable audit-log entry."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get User Moderation Decision Log",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{admin_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/users/:user_id/moderation-actions?per_page=100",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "users",
+                                ":user_id",
+                                "moderation-actions"
+                            ],
+                            "query": [
+                                {
+                                    "key": "per_page",
+                                    "value": "100"
+                                }
+                            ],
+                            "variable": [
+                                {
+                                    "key": "user_id",
+                                    "value": "{{reported_user_id}}"
+                                }
+                            ]
+                        },
+                        "description": "Returns the administrator/system decision history for the user."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "List Moderation Appeals",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{admin_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/moderation-appeals?status=pending&per_page=20",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "moderation-appeals"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "pending"
+                                },
+                                {
+                                    "key": "per_page",
+                                    "value": "20"
+                                }
+                            ]
+                        },
+                        "description": "Lists appeal requests for the admin dashboard."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Accept Moderation Appeal",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{admin_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"status\": \"accepted\",\n    \"decision_reason\": \"The appeal evidence supports restoring the account.\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/moderation-appeals/:appeal_id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "moderation-appeals",
+                                ":appeal_id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "appeal_id",
+                                    "value": "{{appeal_id}}"
+                                }
+                            ]
+                        },
+                        "description": "Accepts the appeal. Suspension decisions are automatically followed by a reactivation audit entry."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Reject Moderation Appeal",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{admin_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"status\": \"rejected\",\n    \"decision_reason\": \"The original decision is supported by the report evidence.\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/moderation-appeals/:appeal_id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "moderation-appeals",
+                                ":appeal_id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "appeal_id",
+                                    "value": "{{appeal_id}}"
+                                }
+                            ]
+                        },
+                        "description": "Rejects the appeal and records the administrator and decision reason."
+                    },
+                    "response": []
+                }
+            ]
         }
     ],
     "variable": [
@@ -14063,6 +14861,26 @@
         {
             "key": "public_id",
             "value": "FDSDU1GVU8"
+        },
+        {
+            "key": "admin_token",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "reported_user_id",
+            "value": "2",
+            "type": "string"
+        },
+        {
+            "key": "moderation_action_id",
+            "value": "1",
+            "type": "string"
+        },
+        {
+            "key": "appeal_id",
+            "value": "1",
+            "type": "string"
         }
     ]
 }

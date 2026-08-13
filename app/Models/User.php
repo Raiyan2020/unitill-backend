@@ -29,6 +29,8 @@ class User extends Authenticatable
         'password',
         'address',
         'status',
+        'suspended_until',
+        'warning_count',
         'activation_code',
         'resend_code_count',
         'device_token',
@@ -106,6 +108,8 @@ class User extends Authenticatable
         'student_verified_at' => 'datetime',
         'student_reverify_due_at' => 'datetime',
         'reverify_notified_at' => 'datetime',
+        'suspended_until' => 'datetime',
+        'warning_count' => 'integer',
     ];
 
     /** Whether the annual verification date has arrived. */
@@ -159,6 +163,16 @@ class User extends Authenticatable
     public function notifications()
     {
         return $this->hasMany(UserNotification::class);
+    }
+
+    public function moderationActions()
+    {
+        return $this->hasMany(UserModerationAction::class);
+    }
+
+    public function moderationAppeals()
+    {
+        return $this->hasMany(ModerationAppeal::class);
     }
 
     public function userDevices()

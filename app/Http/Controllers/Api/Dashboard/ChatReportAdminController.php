@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ChatReport;
 use App\Models\Message;
 use App\Support\ChatReportReason;
+use App\Support\ReportPriority;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -26,6 +27,7 @@ class ChatReportAdminController extends Controller
         $status = (string) $request->input('status', '');
         $reason = (string) $request->input('reason', '');
         $type = (string) $request->input('type', '');
+        $priority = (string) $request->input('priority', '');
 
         $query = ChatReport::query()
             ->with([
@@ -36,6 +38,7 @@ class ChatReportAdminController extends Controller
             ])
             // Pending first — those are the ones waiting on a decision
             ->orderByRaw("FIELD(status, 'pending', 'reviewed', 'dismissed')")
+            ->orderByRaw("FIELD(priority, 'critical', 'urgent', 'normal')")
             ->orderByDesc('id');
 
         if (in_array($status, self::STATUSES, true)) {
@@ -48,6 +51,10 @@ class ChatReportAdminController extends Controller
 
         if ($reason !== '') {
             $query->where('reason', $reason);
+        }
+
+        if (in_array($priority, ReportPriority::allowed(), true)) {
+            $query->where('priority', $priority);
         }
 
         if ($search !== '') {
@@ -69,7 +76,7 @@ class ChatReportAdminController extends Controller
         ], 'Chat reports fetched');
     }
 
-    public function show(int $id)
+    public function show(Request $request, int $id)
     {
         $report = ChatReport::with([
             'reporter:id,name,first_name,last_name,email',
@@ -175,6 +182,7 @@ class ChatReportAdminController extends Controller
             'reason_label' => ChatReportReason::label($report->reason, $lang),
             'description' => $report->description,
             'status' => $report->status,
+            'priority' => $report->priority,
             'created_at' => optional($report->created_at)->toDateTimeString(),
             'conversation_id' => $report->conversation_id,
             'ad' => $report->conversation?->ad ? [

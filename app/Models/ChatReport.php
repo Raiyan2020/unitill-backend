@@ -15,6 +15,7 @@ class ChatReport extends Model
         'reason',
         'description',
         'status',
+        'priority',
     ];
 
     public function reporter(): BelongsTo

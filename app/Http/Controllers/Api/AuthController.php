@@ -226,6 +226,8 @@ class AuthController extends Controller
 
     protected function validateActiveUser(User $user, bool $lang)
     {
+        app(\App\Services\UserModerationService::class)->restoreExpiredSuspension($user);
+
         if ($user->status === '3') {
             return sendError(__('api.auth.account_disabled'), [], 403);
         }
