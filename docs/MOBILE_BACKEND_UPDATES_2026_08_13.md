@@ -34,6 +34,7 @@ though — read this box before anything else:
 | Moderation (warn/suspend/appeal) | **Yes** — suspended-account error now carries an appeal ID you need to keep |
 | Student re-verification changes | **No new fields**, but one behaviour fix + one new restriction — read carefully |
 | New-listing blocked for lapsed students | **Yes** — a 403 you may now see on `POST /ads`, `POST /ads/draft`, `POST /my-ads/{id}/sell-again` |
+| New `/v3/login` (no OTP on normal login) | **Yes, if** you want this — brand-new endpoint, `/v2/login` is untouched and still works exactly as it does today |
 
 ---
 
@@ -213,8 +214,55 @@ API, it's now only triggered by the three listing-creation endpoints above.
 
 ---
 
+## 8. `POST /v3/login` — new endpoint, no OTP on a normal login
+
+**`/v2/login` is untouched and still works exactly as it does in the published app** —
+two-step OTP flow, same fields, same behaviour. This is a brand-new, separate endpoint
+for when you're ready to move off the every-login OTP:
+
+```json
+// POST /v3/login  (same request body as /v2/login: type, email/login, password
+// or biometric_token, device_id, ...)
+// response — tokens straight away, no OTP step
+{ "status": true, "message": "...", "data": {
+    "user": {...}, "access_token": "...", "refresh_token": "...", ... } }
+```
+
+An OTP is only ever sent from `/v3/login` for one reason: **recovering an account fully
+logged out** after its 12-month/60-day cycle elapsed (see §7). In that case you get:
+
+```json
+{ "status": true, "message": "...", "data": {
+    "needs_verification": true, "user_id": 123,
+    "student_email_masked": "...", "activation_expires_at": "..." } }
+```
+
+Complete it with the **existing** `POST /verify-student-email` endpoint (the same one
+your registration screen already calls) — there's no `/v3/`-specific recovery endpoint.
+
+**Once-a-year re-verification** (while an account is still within its grace window, not
+locked) is not part of login at all — trigger it with the existing
+`POST /reverify/send-otp` + `POST /reverify/confirm` whenever you want to prompt the
+user (e.g. from the push notification they get when it comes due).
+
+**Token refresh is shared with v2** — `POST /v2/auth/refresh` works for `/v3/login`-issued
+tokens too, no separate `/v3/auth/refresh` needed.
+
+Migrate to `/v3/login` whenever you're ready; there's no deadline and `/v2/login` isn't
+going away.
+
+---
+
 ## Verify
 
+- Log in via `POST /v2/login` and confirm it's completely unaffected — still the
+  two-step OTP flow, same as today's published app.
+- Log in via `POST /v3/login` with a normal active account — confirm tokens come back
+  immediately, no OTP step.
+- Log in via `POST /v3/login` for an account past its 60-day grace period — confirm you
+  get `needs_verification` (not tokens), then complete recovery via
+  `POST /verify-student-email` with the code that arrives.
+- Refresh a `/v3/login`-issued token via `POST /v2/auth/refresh` — confirm it works.
 - Post a listing in each of Standard/Cars/Accommodation categories, confirm the charged
   amount.
 - Extend an expired ad via `/v2/my-ads/{id}/extend`, confirm it charges £0.99 regardless

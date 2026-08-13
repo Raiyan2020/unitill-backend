@@ -95,12 +95,21 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('reset-password', 'resetPassword');
 });
 
-// V2 login: two-step OTP flow with a 30-day access token.
+// V2 login: two-step OTP flow with a 30-day access token. Already live in the
+// published app — left completely untouched.
 Route::prefix('v2')->controller(\App\Http\Controllers\Api\V2\AuthController::class)->group(function () {
     Route::post('login', 'login');
     Route::post('login/verify-otp', 'verifyOtp');
     Route::post('login/resend-otp', 'resendOtp');
     Route::post('auth/refresh', 'refresh');
+});
+
+// V3 login: tokens issued directly, no OTP on a normal login. OTP only for
+// registration and locked-account recovery (see V3\AuthController). Token
+// refresh is shared with v2 — POST /v2/auth/refresh works for v3-issued
+// tokens too, since the refresh mechanism is not version-specific.
+Route::prefix('v3')->controller(\App\Http\Controllers\Api\V3\AuthController::class)->group(function () {
+    Route::post('login', 'login');
 });
 
 // V2 account closure: deactivate (reversible) and delete (permanent) as two
