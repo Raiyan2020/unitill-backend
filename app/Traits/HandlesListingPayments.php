@@ -3,6 +3,7 @@
 namespace App\Traits;
 
 use App\Models\Ad;
+use App\Models\Payment;
 use App\Models\User;
 use App\Services\ListingPaymentService;
 use App\Services\StripeService;
@@ -11,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 
 trait HandlesListingPayments
 {
-    protected function startPublication(Ad $ad, ?string $couponCode = null, ?float $feeOverride = null): array
+    protected function startPublication(Ad $ad, ?string $couponCode = null, ?float $feeOverride = null, string $type = 'listing'): array
     {
         // Where to return the ad if Stripe setup fails: a posted ad goes back to
         // "pending", a draft being published goes back to "draft". Hardcoding one
@@ -37,7 +38,7 @@ trait HandlesListingPayments
                     'expires_at' => $publishedAt->copy()->addDays((int) setting('post_duration', '30')),
                     'listing_fee' => 0, 'payment_status' => $used < $limit ? 'free' : 'waived', 'is_free_listing' => $used < $limit,
                 ]);
-                return ['published' => true, 'ad' => $lockedAd->fresh()];
+                return ['published' => true, 'ad' => $lockedAd->fresh(), 'fee' => $fee];
             }
 
             // A Stripe intent locks the amount. Do not apply a second coupon
@@ -73,11 +74,11 @@ trait HandlesListingPayments
                     'expires_at' => $publishedAt->copy()->addDays((int) setting('post_duration', '30')),
                     'listing_fee' => 0, 'payment_status' => 'coupon',
                 ]);
-                return ['published' => true, 'ad' => $lockedAd->fresh(), 'coupon' => $coupon];
+                return ['published' => true, 'ad' => $lockedAd->fresh(), 'coupon' => $coupon, 'fee' => $fee];
             }
 
             $lockedAd->update(['status' => 'pending', 'listing_fee' => $fee, 'payment_status' => 'requires_payment']);
-            return ['published' => false, 'ad' => $lockedAd->fresh(), 'coupon' => $coupon];
+            return ['published' => false, 'ad' => $lockedAd->fresh(), 'coupon' => $coupon, 'fee' => $fee];
         });
 
         if (isset($result['coupon_error'])) {
@@ -85,6 +86,10 @@ trait HandlesListingPayments
         }
 
         if ($result['published']) {
+            if (isset($result['fee'])) {
+                $this->recordPayment($result['ad'], $type, (float) $result['fee'], $result['ad']->payment_status, now());
+            }
+
             return app(ListingPaymentService::class)->publicationState($result['ad']) + [
                 'coupon' => $result['coupon'] ?? null,
                 'free_ads_remaining' => $this->freeAdsRemaining($ad->user_id),
@@ -106,9 +111,42 @@ trait HandlesListingPayments
 
         $paymentAd->stripe_payment_intent_id = $intent['id'];
 
+        if (isset($result['fee'])) {
+            $this->recordPayment($paymentAd, $type, (float) $result['fee'], 'requires_payment', null, $intent['id']);
+        }
+
         return app(ListingPaymentService::class)->publicationState($paymentAd, $intent) + [
             'coupon' => $result['coupon'] ?? null,
         ];
+    }
+
+    /**
+     * One row per payment attempt, upserted by Stripe intent when there is
+     * one — audit trail for admin/financial reporting, additive only. The ad
+     * row stays the source of truth for current-state reads.
+     */
+    protected function recordPayment(
+        Ad $ad,
+        string $type,
+        float $amount,
+        string $status,
+        ?\Illuminate\Support\Carbon $paidAt = null,
+        ?string $stripePaymentIntentId = null
+    ): void {
+        Payment::updateOrCreate(
+            $stripePaymentIntentId
+                ? ['stripe_payment_intent_id' => $stripePaymentIntentId]
+                : ['ad_id' => $ad->id, 'type' => $type, 'stripe_payment_intent_id' => null, 'status' => $status],
+            [
+                'ad_id' => $ad->id,
+                'user_id' => $ad->user_id,
+                'type' => $type,
+                'amount' => $amount,
+                'currency' => strtoupper(config('services.stripe.currency', 'GBP')),
+                'status' => $status,
+                'paid_at' => $paidAt,
+            ]
+        );
     }
 
     protected function freeAdsRemaining(int $userId): int
@@ -130,7 +168,8 @@ trait HandlesListingPayments
         return $this->startPublication(
             $ad->fresh(),
             $couponCode,
-            (float) setting('listing_extension_price', '0.99')
+            (float) setting('listing_extension_price', '0.99'),
+            'extension'
         );
     }
 

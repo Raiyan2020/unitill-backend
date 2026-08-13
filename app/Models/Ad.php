@@ -123,6 +123,11 @@ class Ad extends Model
         return $this->hasMany(AdImage::class)->orderBy('sort_order');
     }
 
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class)->latest('id');
+    }
+
     public function attributeValues(): HasMany
     {
         return $this->hasMany(AdAttributeValue::class);

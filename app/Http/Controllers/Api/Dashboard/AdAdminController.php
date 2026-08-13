@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Models\Ad;
 use App\Models\Category;
+use App\Models\Payment;
 use App\Services\PushNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -342,11 +343,23 @@ class AdAdminController extends Controller
 
         $refund = app(\App\Services\StripeService::class)->refund($ad->stripe_payment_intent_id);
 
+        $refundStatus = 'refunded';
+        $refundReference = $refund['id'] ?? null;
+        $refundReason = $validator->validated()['reason'];
+        $refundedAt = now();
+
         $ad->update([
-            'refund_status' => 'refunded',
-            'refund_reference' => $refund['id'] ?? null,
-            'refund_reason' => $validator->validated()['reason'],
-            'refunded_at' => now(),
+            'refund_status' => $refundStatus,
+            'refund_reference' => $refundReference,
+            'refund_reason' => $refundReason,
+            'refunded_at' => $refundedAt,
+        ]);
+
+        Payment::where('stripe_payment_intent_id', $ad->stripe_payment_intent_id)->update([
+            'refund_status' => $refundStatus,
+            'refund_reference' => $refundReference,
+            'refund_reason' => $refundReason,
+            'refunded_at' => $refundedAt,
         ]);
 
         if ($ad->user) {
@@ -382,11 +395,18 @@ class AdAdminController extends Controller
         }
 
         $reason = $validator->validated()['reason'];
+        $declinedAt = now();
 
         $ad->update([
             'refund_status' => 'declined',
             'refund_reason' => $reason,
-            'refund_declined_at' => now(),
+            'refund_declined_at' => $declinedAt,
+        ]);
+
+        Payment::where('stripe_payment_intent_id', $ad->stripe_payment_intent_id)->update([
+            'refund_status' => 'declined',
+            'refund_reason' => $reason,
+            'refund_declined_at' => $declinedAt,
         ]);
 
         if ($ad->user) {

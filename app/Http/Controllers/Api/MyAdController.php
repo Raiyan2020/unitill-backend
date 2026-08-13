@@ -8,6 +8,7 @@ use App\Models\Ad;
 use App\Models\AdAttributeValue;
 use App\Models\AdImage;
 use App\Models\Conversation;
+use App\Models\Payment;
 use App\Models\User;
 use App\Services\ChatService;
 use App\Services\ListingPaymentService;
@@ -271,9 +272,17 @@ class MyAdController extends Controller
             'reason.required' => __('api.ad.refund_reason_required'),
         ]);
 
+        $requestedAt = now();
+
         $ad->update([
             'refund_status' => 'requested',
-            'refund_requested_at' => now(),
+            'refund_requested_at' => $requestedAt,
+            'refund_request_reason' => $validated['reason'],
+        ]);
+
+        Payment::where('stripe_payment_intent_id', $ad->stripe_payment_intent_id)->update([
+            'refund_status' => 'requested',
+            'refund_requested_at' => $requestedAt,
             'refund_request_reason' => $validated['reason'],
         ]);
 

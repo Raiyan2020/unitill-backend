@@ -19,7 +19,7 @@ class StripeWebhookController extends Controller
         $event = json_decode($payload, true);
         if (($event['type'] ?? '') === 'payment_intent.succeeded') {
             $intent = $event['data']['object'] ?? [];
-            $listings->publishPaidListing($intent['id'], (int) $intent['amount_received'], (string) $intent['currency']);
+            $listings->publishPaidListing($intent['id'], (int) $intent['amount_received'], (string) $intent['currency'], $intent);
         }
 
         return response()->json(['received' => true]);

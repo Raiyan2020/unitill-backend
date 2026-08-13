@@ -740,7 +740,7 @@ class AdController extends Controller
             ], 422);
         }
 
-        $ad = $listings->publishPaidListing($intent['id'], (int) $intent['amount_received'], (string) $intent['currency']);
+        $ad = $listings->publishPaidListing($intent['id'], (int) $intent['amount_received'], (string) $intent['currency'], $intent);
 
         return sendResponse([
             'publication' => $listings->publicationState($ad),
