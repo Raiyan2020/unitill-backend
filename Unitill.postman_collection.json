@@ -12705,6 +12705,113 @@
             ]
         },
         {
+            "name": "Translation",
+            "item": [
+                {
+                    "name": "Translate Text",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/translate",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "translate"
+                            ]
+                        },
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"text\": \"Barely used desk lamp, pickup only.\",\n    \"target\": \"ar\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "description": "Translates exactly the text sent — call this only when the user explicitly taps \"Translate\" on a listing description or chat message, never automatically or in bulk.\n\ntarget is required: one of en, ar, es, fr, zh. source is optional (auto-detected if omitted) and must be one of the same five if provided.\n\n503 if the backend has no Google Cloud Translation API key configured. 429 if throttled (30/minute per user)."
+                    },
+                    "response": [
+                        {
+                            "name": "Translate Text — Example",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/translate",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "translate"
+                                    ]
+                                },
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"text\": \"Barely used desk lamp, pickup only.\",\n    \"target\": \"ar\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"data\": {\n        \"translated_text\": \"مصباح مكتب مستعمل قليلاً، استلام شخصي فقط.\",\n        \"source_language\": \"en\",\n        \"target_language\": \"ar\"\n    },\n    \"message\": \"Translated\"\n}"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
             "name": "Conversations",
             "item": [
                 {

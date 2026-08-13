@@ -368,6 +368,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('trusted-seller-application', [TrustedSellerApplicationController::class, 'show']);
     Route::post('trusted-seller-application', [TrustedSellerApplicationController::class, 'store']);
     Route::post('contact-us', ContactUsController::class);
+    // User-triggered only — translates exactly the text sent, nothing automatic.
+    Route::post('translate', \App\Http\Controllers\Api\TranslateController::class)
+        ->middleware('throttle:30,1');
 
 
     Route::controller(ConversationController::class)->prefix('conversations')->group(function () {

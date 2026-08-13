@@ -35,6 +35,7 @@ though — read this box before anything else:
 | Student re-verification changes | **No new fields**, but one behaviour fix + one new restriction — read carefully |
 | New-listing blocked for lapsed students | **Yes** — a 403 you may now see on `POST /ads`, `POST /ads/draft`, `POST /my-ads/{id}/sell-again` |
 | New `/v3/login` (no OTP on normal login) | **Yes, if** you want this — brand-new endpoint, `/v2/login` is untouched and still works exactly as it does today |
+| Translation | **Yes, if** you want the "Translate" button to actually work — new endpoint, replaces any unofficial in-app translator package |
 
 ---
 
@@ -253,6 +254,41 @@ going away.
 
 ---
 
+## 9. Translation — new endpoint, replaces the unofficial in-app package
+
+Per the compliance notes: translation must go through the official Google Cloud
+Translation API, triggered only when the user explicitly taps "Translate," sending only
+the text that needs it — not the unofficial Flutter translator package, not automatic or
+bulk translation.
+
+`POST /translate` (authenticated, throttled to 30/minute per user):
+
+```json
+// request
+{ "text": "Barely used desk lamp, pickup only.", "target": "ar" }
+// source is optional — omit it and the source language is auto-detected
+
+// response
+{ "status": true, "message": "Translated", "data": {
+    "translated_text": "مصباح مكتب مستعمل قليلاً، استلام شخصي فقط.",
+    "source_language": "en",
+    "target_language": "ar" } }
+```
+
+- `target` is required — one of `en`, `ar`, `es`, `fr`, `zh` (the app's five languages).
+  `source` is optional and, if given, must be one of the same five.
+- Call this **only** when the user taps "Translate" on a specific listing description or
+  chat message — send just that text, not the whole ad object or a batch of messages.
+- `503` if the backend doesn't have a Google Cloud Translation API key configured yet
+  (ask us to confirm before you ship against this).
+- `422` for an unsupported `target`/`source`, `429` if you exceed the rate limit.
+
+If the app currently has its own in-app translation (the unofficial Flutter package the
+compliance notes flag), this endpoint is meant to replace that — swap the "Translate"
+button's implementation to call this instead of the local package.
+
+---
+
 ## Verify
 
 - Log in via `POST /v2/login` and confirm it's completely unaffected — still the
@@ -263,6 +299,8 @@ going away.
   get `needs_verification` (not tokens), then complete recovery via
   `POST /verify-student-email` with the code that arrives.
 - Refresh a `/v3/login`-issued token via `POST /v2/auth/refresh` — confirm it works.
+- Call `POST /translate` with a listing description and confirm the translated text
+  comes back correctly for each of the 5 supported languages.
 - Post a listing in each of Standard/Cars/Accommodation categories, confirm the charged
   amount.
 - Extend an expired ad via `/v2/my-ads/{id}/extend`, confirm it charges £0.99 regardless
