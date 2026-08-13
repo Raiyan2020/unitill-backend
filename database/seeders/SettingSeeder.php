@@ -17,9 +17,9 @@ class SettingSeeder extends Seeder
 
         Setting::create([
             'key_id' => 'post_price',
-            'title_en'=>'Post Price',
-            'title_ar'=>'سعر الاعلان',
-            'value' => '5.00',
+            'title_en'=>'Standard Post Price',
+            'title_ar'=>'سعر الاعلان القياسي',
+            'value' => '0.99',
             'set_group' => 'app',
             'is_object' => '1',
         ]);

@@ -29,7 +29,7 @@ trait HandlesListingPayments
 
             $limit = max(0, (int) setting('free_ads_per_user', '0'));
             $used = Ad::withTrashed()->where('user_id', $lockedAd->user_id)->where('is_free_listing', true)->count();
-            $fee = (float) setting('post_price', '0');
+            $fee = $lockedAd->mainCategory?->resolvedListingFee() ?? (float) setting('post_price', '0.99');
             if ($used < $limit || $fee <= 0) {
                 $publishedAt = now();
                 $lockedAd->update([

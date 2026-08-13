@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
 use App\Services\CouponRedemptionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,10 +20,14 @@ class CouponController extends Controller
     {
         $validated = $request->validate([
             'code' => 'required|string|max:40',
+            'main_category_id' => 'sometimes|nullable|integer|exists:categories,id',
         ]);
 
         $ar = $request->header('lang') === 'ar';
-        $amount = (float) (setting('post_price') ?? 0);
+        $category = isset($validated['main_category_id'])
+            ? Category::find($validated['main_category_id'])
+            : null;
+        $amount = $category ? $category->resolvedListingFee() : (float) setting('post_price', '0.99');
 
         $result = $this->coupons->preview($validated['code'], Auth::user(), $amount);
 

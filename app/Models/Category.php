@@ -19,11 +19,20 @@ class Category extends Model
         'status',
         'filter_group_id',
         'sort',
+        'listing_fee',
     ];
 
     protected $casts = [
         'sort' => 'integer',
+        'listing_fee' => 'decimal:2',
     ];
+
+    public function resolvedListingFee(): float
+    {
+        return $this->listing_fee !== null
+            ? (float) $this->listing_fee
+            : (float) setting('post_price', '0.99');
+    }
 
     public function parent(): BelongsTo
     {

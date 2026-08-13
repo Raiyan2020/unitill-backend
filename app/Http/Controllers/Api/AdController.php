@@ -426,7 +426,7 @@ class AdController extends Controller
             'attributeValues.definition.translations',
         ]);
 
-        $listingFee = (float) (setting('post_price') ?? 0);
+        $listingFee = $ad->mainCategory?->resolvedListingFee() ?? (float) setting('post_price', '0.99');
 
         return sendResponse(
             array_replace(
