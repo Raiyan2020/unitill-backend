@@ -289,7 +289,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('ads/{id}/payment/status', [AdController::class, 'paymentStatus']);
     Route::post('ads', [AdController::class, 'store']);
     Route::post('ads/{id}/report', [AdReportController::class, 'store']);
-    // Student status reconfirmation (term-based re-verification).
+    // Student status reconfirmation (annual, with a 60-day grace period).
     Route::post('reverify/send-otp', [AuthController::class, 'sendReverifyOtp']);
     Route::post('reverify/confirm', [AuthController::class, 'confirmReverify']);
     Route::post('coupons/validate', [CouponController::class, 'validateCode']);

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Support\StudentVerificationPeriod;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -107,17 +108,34 @@ class User extends Authenticatable
         'reverify_notified_at' => 'datetime',
     ];
 
-    /**
-     * Whether the student must reconfirm their university status before they
-     * can keep using student-gated features (posting, messaging).
-     *
-     * A null due date means the account predates the lifecycle or has just
-     * reconfirmed, so it is never overdue.
-     */
+    /** Whether the annual verification date has arrived. */
     public function needsReverification(): bool
     {
         return $this->student_reverify_due_at !== null
             && now()->greaterThanOrEqualTo($this->student_reverify_due_at);
+    }
+
+    /** The end of the 60-day period in which the user may still use the app. */
+    public function reverificationGraceEndsAt(): ?\Carbon\Carbon
+    {
+        if ($this->student_reverify_due_at === null) {
+            return null;
+        }
+
+        return StudentVerificationPeriod::graceEndsAt($this->student_reverify_due_at);
+    }
+
+    public function isInReverificationGracePeriod(): bool
+    {
+        return $this->needsReverification() && ! $this->isReverificationBlocked();
+    }
+
+    /** Whether the annual due date and the complete grace period have passed. */
+    public function isReverificationBlocked(): bool
+    {
+        $graceEndsAt = $this->reverificationGraceEndsAt();
+
+        return $graceEndsAt !== null && now()->greaterThanOrEqualTo($graceEndsAt);
     }
 
     protected static function booted(): void

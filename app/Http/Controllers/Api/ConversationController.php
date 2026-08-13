@@ -105,9 +105,9 @@ class ConversationController extends Controller
         $lang = $request->header('lang') === 'ar';
         $user = Auth::user();
 
-        // Students past their term deadline cannot start new conversations
-        // until they reconfirm. Existing threads are never cut off mid-chat.
-        if ($user->needsReverification()) {
+        // The annual verification date starts a 60-day grace period. Only
+        // after that period ends are student-gated actions blocked.
+        if ($user->isReverificationBlocked()) {
             return sendError(
                 $lang
                     ? 'يجب إعادة تأكيد حالتك كطالب قبل بدء محادثة'
@@ -269,7 +269,7 @@ class ConversationController extends Controller
 
         $lang = $request->header('lang') === 'ar';
 
-        if (Auth::user()->needsReverification()) {
+        if (Auth::user()->isReverificationBlocked()) {
             return sendError(
                 $lang
                     ? 'يجب إعادة تأكيد حالتك كطالب قبل إرسال رسالة'

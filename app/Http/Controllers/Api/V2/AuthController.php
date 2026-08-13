@@ -231,11 +231,26 @@ class AuthController extends Controller
         }
 
         // Consume the OTP so it cannot be replayed.
-        $user->forceFill([
+        $updates = [
             'login_otp' => null,
             'login_otp_expires_at' => null,
             'login_otp_sent_at' => null,
-        ])->save();
+        ];
+
+        // A successful code sent to the university inbox is also proof of the
+        // user's current student status. It starts a fresh annual cycle and
+        // reactivates accounts logged out after their 60-day grace period.
+        if ($user->student_email) {
+            $verifiedAt = now();
+            $updates += [
+                'status' => '1',
+                'student_verified_at' => $verifiedAt,
+                'student_reverify_due_at' => \App\Support\StudentVerificationPeriod::dueAt($verifiedAt),
+                'reverify_notified_at' => null,
+            ];
+        }
+
+        $user->forceFill($updates)->save();
 
         return $this->completeLogin($user, $request, $lang);
     }
@@ -395,6 +410,10 @@ class AuthController extends Controller
         }
 
         if ($user->status === '2') {
+            if ($user->student_verified_at !== null) {
+                return null;
+            }
+
             return sendError(
                 __('api.auth.verify_email_first'),
                 [

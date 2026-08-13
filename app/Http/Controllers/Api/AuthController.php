@@ -75,6 +75,18 @@ class AuthController extends Controller
             app(AccountDeletionService::class)->restore($user);
         }
 
+        // A previously verified student is moved back to status 2 only when
+        // the annual deadline and 60-day grace period have both elapsed.
+        // Reuse the existing V1 verification response and endpoint so legacy
+        // clients do not need a new response contract.
+        if ($user->status === '2' && $user->student_verified_at !== null) {
+            if (! Hash::check($request->password, $user->password)) {
+                return sendError(__('api.auth.wrong_password'), [], 400);
+            }
+
+            return $this->startForcedReverification($user);
+        }
+
         $statusError = $this->validateActiveUser($user, $lang);
         if ($statusError) {
             return $statusError;
@@ -85,6 +97,40 @@ class AuthController extends Controller
         }
 
         return $this->completeLogin($user, $request, $lang, UserLoginLog::TYPE_DATA);
+    }
+
+    protected function startForcedReverification(User $user)
+    {
+        if (! $user->student_email) {
+            return sendError(__('api.auth.no_student_email'), [], 422);
+        }
+
+        $fixed = app()->environment('testing')
+            ? config('mobile_auth.login_otp_test_code')
+            : null;
+        $otp = (int) ($fixed ?: random_int(100000, 999999));
+
+        $user->forceFill([
+            'activation_code' => (string) $otp,
+            'activation_code_expires_at' => now()->addMinutes(15),
+            'activation_sent_at' => now(),
+        ])->save();
+
+        try {
+            Mail::to($user->student_email)->send(new OtpMail($otp));
+        } catch (\Throwable $e) {
+            Log::error('Forced reverification OTP mail failed', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return sendResponse([
+            'needs_verification' => true,
+            'user_id' => $user->id,
+            'student_email_masked' => $this->maskEmail($user->student_email),
+            'activation_expires_at' => $user->activation_code_expires_at?->toIso8601String(),
+        ], __('api.auth.code_sent_student_email'));
     }
 
     protected function loginWithFingerprint(ApiLoginRequest $request, bool $lang)
@@ -330,7 +376,11 @@ class AuthController extends Controller
 
         $user->activation_code = null;
         $user->activation_code_expires_at = null;
+        $verifiedAt = now();
         $user->status = '1';
+        $user->student_verified_at = $verifiedAt;
+        $user->student_reverify_due_at = \App\Support\StudentVerificationPeriod::dueAt($verifiedAt);
+        $user->reverify_notified_at = null;
         $user->save();
 
         $user->update([
@@ -407,7 +457,8 @@ class AuthController extends Controller
 
     /**
      * Start student status reconfirmation by emailing an OTP to the university
-     * address on file. Students must reconfirm each term (30 Sep / 31 Mar).
+     * address on file. Students must reconfirm 12 months after their own most
+     * recent verification date.
      *
      * An already-verified student whose re-check is not due yet is accepted:
      * confirmReverify just pushes the due date to the next deadline. The only
@@ -462,7 +513,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Complete reconfirmation and push the due date to the next term deadline.
+     * Complete reconfirmation and push the due date forward by 12 months.
      */
     public function confirmReverify(Request $request)
     {
@@ -490,8 +541,9 @@ class AuthController extends Controller
 
         $user->activation_code = null;
         $user->activation_code_expires_at = null;
-        $user->student_verified_at = now();
-        $user->student_reverify_due_at = \App\Support\StudentTerm::nextDeadline();
+        $verifiedAt = now();
+        $user->student_verified_at = $verifiedAt;
+        $user->student_reverify_due_at = \App\Support\StudentVerificationPeriod::dueAt($verifiedAt);
         $user->reverify_notified_at = null;
         $user->save();
 
