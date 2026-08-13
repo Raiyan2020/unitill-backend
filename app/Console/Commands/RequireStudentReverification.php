@@ -11,8 +11,12 @@ use Illuminate\Console\Command;
 /**
  * Notifies active students whose annual reconfirmation deadline has passed, asking
  * them to re-verify their student status in the app. Runs daily; only notifies
- * each user once per deadline (tracked by reverify_notified_at). Messaging is
- * gated separately after the 60-day grace period.
+ * each user once per deadline (tracked by reverify_notified_at).
+ *
+ * During the 60-day grace period the account stays fully active except that
+ * new listings/conversations are blocked (see User::needsReverification()).
+ * Once the grace period elapses, the account is fully logged out (status 2,
+ * all tokens revoked) and must go through re-verification to log back in.
  */
 class RequireStudentReverification extends Command
 {
@@ -23,8 +27,7 @@ class RequireStudentReverification extends Command
     public function handle(
         PushNotificationService $pushNotifications,
         MobileAuthTokenService $tokens,
-    ): int
-    {
+    ): int {
         $due = User::query()
             ->where('status', '1')
             ->whereNotNull('student_reverify_due_at')

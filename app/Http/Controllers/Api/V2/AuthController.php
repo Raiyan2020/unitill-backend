@@ -237,10 +237,12 @@ class AuthController extends Controller
             'login_otp_sent_at' => null,
         ];
 
-        // A successful code sent to the university inbox is also proof of the
-        // user's current student status. It starts a fresh annual cycle and
-        // reactivates accounts logged out after their 60-day grace period.
-        if ($user->student_email) {
+        // Routine monthly login OTPs prove the inbox still works right now,
+        // not that the annual reverification is done — the 12-month clock
+        // stays untouched by an ordinary login. Only reactivating a locked
+        // account counts as reverification, since that is a deliberate act
+        // of coming back after the grace period, not a routine login.
+        if ($user->student_email && $user->status === '2') {
             $verifiedAt = now();
             $updates += [
                 'status' => '1',
@@ -408,7 +410,17 @@ class AuthController extends Controller
         app(\App\Services\UserModerationService::class)->restoreExpiredSuspension($user);
 
         if ($user->status === '3') {
-            return sendError(__('api.auth.account_disabled'), [], 403);
+            $latestAction = \App\Models\UserModerationAction::query()
+                ->where('user_id', $user->id)
+                ->whereIn('action', ['temporary_suspension', 'permanent_suspension'])
+                ->latest('id')
+                ->first();
+
+            return sendError(__('api.auth.account_disabled'), [
+                'moderation_action_id' => $latestAction?->id,
+                'moderation_reason' => $latestAction?->reason,
+                'suspended_until' => $latestAction?->ends_at?->toIso8601String(),
+            ], 403);
         }
 
         if ($user->status === '2') {

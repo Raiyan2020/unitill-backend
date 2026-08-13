@@ -327,6 +327,18 @@ class MyAdController extends Controller
     public function sellAgain(Request $request, string $id)
     {
         $lang = $request->header('lang') === 'ar';
+        $user = Auth::user();
+
+        if ($user->needsReverification()) {
+            return sendError(
+                $lang
+                    ? 'يجب إعادة تأكيد حالتك كطالب قبل إنشاء إعلان جديد'
+                    : 'Please re-verify your student status before creating a new listing',
+                ['needs_reverify' => true],
+                403
+            );
+        }
+
         $ad = $this->findOwnedAd($id);
 
         if (! $ad) {

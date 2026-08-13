@@ -340,6 +340,17 @@ class AdController extends Controller
     {
         $lang = $request->header('lang') === 'ar';
         $user = Auth::user();
+
+        if ($user->needsReverification()) {
+            return sendError(
+                $lang
+                    ? 'يجب إعادة تأكيد حالتك كطالب قبل إنشاء إعلان جديد'
+                    : 'Please re-verify your student status before creating a new listing',
+                ['needs_reverify' => true],
+                403
+            );
+        }
+
         $data = $request->validated();
         $attributes = (array) ($data['attributes'] ?? []);
         // Attribute definitions live on the main category; resolve from both.
@@ -504,7 +515,17 @@ class AdController extends Controller
     {
         $lang = $request->header('lang') === 'ar';
         $user = Auth::user();
-        
+
+        if ($user->needsReverification()) {
+            return sendError(
+                $lang
+                    ? 'يجب إعادة تأكيد حالتك كطالب قبل إنشاء إعلان جديد'
+                    : 'Please re-verify your student status before creating a new listing',
+                ['needs_reverify' => true],
+                403
+            );
+        }
+
         $cityId = $request->input('city_id');
         if ($cityId == 1 && !\App\Models\City::where('id', 1)->exists()) {
             $userCity = $user->city_id;

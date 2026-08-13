@@ -229,7 +229,17 @@ class AuthController extends Controller
         app(\App\Services\UserModerationService::class)->restoreExpiredSuspension($user);
 
         if ($user->status === '3') {
-            return sendError(__('api.auth.account_disabled'), [], 403);
+            $latestAction = \App\Models\UserModerationAction::query()
+                ->where('user_id', $user->id)
+                ->whereIn('action', ['temporary_suspension', 'permanent_suspension'])
+                ->latest('id')
+                ->first();
+
+            return sendError(__('api.auth.account_disabled'), [
+                'moderation_action_id' => $latestAction?->id,
+                'moderation_reason' => $latestAction?->reason,
+                'suspended_until' => $latestAction?->ends_at?->toIso8601String(),
+            ], 403);
         }
 
         if ($user->status === '2') {

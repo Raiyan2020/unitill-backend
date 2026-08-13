@@ -52,7 +52,7 @@ class StudentReverificationNotificationTest extends TestCase
         $user = User::create([
             'name' => 'Expired Student',
             'email' => 'expired.personal@example.com',
-            'password' => 'password',
+            'password' => Hash::make('password'),
             'status' => '1',
             'student_email' => 'expired@example.ac.uk',
             'student_verified_at' => now()->subYear()->subDays(61),
@@ -90,6 +90,36 @@ class StudentReverificationNotificationTest extends TestCase
         ]);
         $this->assertNotNull($user->refreshTokens()->first()->revoked_at);
         $this->assertNotNull($user->biometricTokens()->first()->revoked_at);
+    }
+
+    public function test_student_within_grace_period_keeps_account_access_but_cannot_create_new_listings(): void
+    {
+        $user = User::create([
+            'name' => 'Grace Period Student',
+            'email' => 'grace.personal@example.com',
+            'password' => Hash::make('password'),
+            'status' => '1',
+            'student_email' => 'grace@example.ac.uk',
+            'student_verified_at' => now()->subYear()->subDays(10),
+            'student_reverify_due_at' => now()->subDays(10),
+        ]);
+
+        $token = $user->createToken('mobile-access');
+
+        // Account access is untouched: status stays active, token still works.
+        $this->assertSame('1', $user->fresh()->status);
+        $this->assertDatabaseHas('personal_access_tokens', [
+            'tokenable_type' => User::class,
+            'tokenable_id' => $user->id,
+        ]);
+
+        // But creating a new listing is blocked from the due date onward,
+        // even while still inside the 60-day grace window.
+        $this->postJson('/api/ads/draft', [], [
+            'Authorization' => 'Bearer '.$token->plainTextToken,
+        ])
+            ->assertStatus(403)
+            ->assertJsonPath('data.needs_reverify', true);
     }
 
     public function test_v2_login_otp_reactivates_student_and_starts_a_new_year(): void
