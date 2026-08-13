@@ -116,4 +116,30 @@ trait HandlesListingPayments
         $used = Ad::withTrashed()->where('user_id', $userId)->where('is_free_listing', true)->count();
         return max(0, (int) setting('free_ads_per_user', '0') - $used);
     }
+
+    protected function startExtension(Ad $ad, ?string $couponCode): array
+    {
+        $ad->update([
+            'paused_at' => null,
+            'inactive_reason' => null,
+            'listing_fee' => null,
+            'payment_status' => 'not_required',
+            'stripe_payment_intent_id' => null,
+        ]);
+
+        return $this->startPublication(
+            $ad->fresh(),
+            $couponCode,
+            (float) setting('listing_extension_price', '0.99')
+        );
+    }
+
+    protected function hasUnexpiredPaidPeriod(Ad $ad): bool
+    {
+        $settled = in_array($ad->payment_status, ['paid', 'free', 'waived', 'coupon'], true);
+
+        return $settled
+            && $ad->expires_at !== null
+            && $ad->expires_at->isFuture();
+    }
 }

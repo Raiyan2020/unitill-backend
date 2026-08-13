@@ -35,6 +35,7 @@ class Ad extends Model
         'listing_fee',
         'payment_status',
         'stripe_payment_intent_id',
+        'publish_confirmed_at',
         'is_free_listing',
         'currency',
         'is_negotiable',
@@ -63,6 +64,7 @@ class Ad extends Model
         'expires_at' => 'datetime',
         'paused_at' => 'datetime',
         'sold_at' => 'datetime',
+        'publish_confirmed_at' => 'datetime',
     ];
 
     protected static function booted(): void

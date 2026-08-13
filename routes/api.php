@@ -114,6 +114,14 @@ Route::middleware('auth:sanctum')
         Route::delete('delete-account', 'destroy');
     });
 
+// V2 checkout confirmation: "Start my listing immediately" must be actively
+// confirmed before a listing/extension is charged. Additive only — V1's
+// publish/extend endpoints take no such field and stay untouched.
+Route::middleware('auth:sanctum')->prefix('v2')->group(function () {
+    Route::post('ads/{id}/publish', [\App\Http\Controllers\Api\V2\AdController::class, 'publish']);
+    Route::post('my-ads/{id}/extend', [\App\Http\Controllers\Api\V2\MyAdController::class, 'extend']);
+});
+
 Route::prefix('admin')->controller(AdminAuthController::class)->group(function () {
     Route::post('login', 'login');
     Route::middleware('auth:sanctum')->post('logout', 'logout');
