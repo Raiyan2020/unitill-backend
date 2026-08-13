@@ -11,14 +11,14 @@ use Illuminate\Support\Facades\DB;
 
 trait HandlesListingPayments
 {
-    protected function startPublication(Ad $ad, ?string $couponCode = null): array
+    protected function startPublication(Ad $ad, ?string $couponCode = null, ?float $feeOverride = null): array
     {
         // Where to return the ad if Stripe setup fails: a posted ad goes back to
         // "pending", a draft being published goes back to "draft". Hardcoding one
         // of them would turn the other into something it never was.
         $originalStatus = $ad->status;
 
-        $result = DB::transaction(function () use ($ad, $couponCode) {
+        $result = DB::transaction(function () use ($ad, $couponCode, $feeOverride) {
             $lockedAd = Ad::query()->lockForUpdate()->findOrFail($ad->id);
             // Serialize a user's quota checks so two concurrent publish calls
             // cannot both consume the final free listing.
@@ -29,7 +29,7 @@ trait HandlesListingPayments
 
             $limit = max(0, (int) setting('free_ads_per_user', '0'));
             $used = Ad::withTrashed()->where('user_id', $lockedAd->user_id)->where('is_free_listing', true)->count();
-            $fee = $lockedAd->mainCategory?->resolvedListingFee() ?? (float) setting('post_price', '0.99');
+            $fee = $feeOverride ?? ($lockedAd->mainCategory?->resolvedListingFee() ?? (float) setting('post_price', '0.99'));
             if ($used < $limit || $fee <= 0) {
                 $publishedAt = now();
                 $lockedAd->update([

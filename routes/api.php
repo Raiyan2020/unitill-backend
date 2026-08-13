@@ -289,6 +289,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('my-ads/{id}/mark-sold', [MyAdController::class, 'markAsSold']);
     Route::post('my-ads/{id}/pause', [MyAdController::class, 'pause']);
     Route::post('my-ads/{id}/activate', [MyAdController::class, 'activate']);
+    Route::post('my-ads/{id}/extend', [MyAdController::class, 'extend']);
     // "Sell again" — copies a sold ad into a new listing and charges for it.
     Route::post('my-ads/{id}/sell-again', [MyAdController::class, 'sellAgain']);
     Route::delete('my-ads/{id}', [MyAdController::class, 'destroy']);

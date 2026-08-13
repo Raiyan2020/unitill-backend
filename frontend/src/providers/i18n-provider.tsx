@@ -73,6 +73,8 @@ export type Dictionary = {
   code: string;
   slug: string;
   sort: string;
+  listingFee: string;
+  listingFeeStandard: string;
   state: string;
   section: string;
   isDefault: string;
@@ -388,6 +390,8 @@ const dictionaries: Record<Locale, Dictionary> = {
     code: 'Code',
     slug: 'Slug',
     sort: 'Sort',
+    listingFee: 'Listing fee (£)',
+    listingFeeStandard: 'Standard price',
     state: 'State',
     section: 'Section',
     isDefault: 'Default',
@@ -698,6 +702,8 @@ const dictionaries: Record<Locale, Dictionary> = {
     code: 'الرمز',
     slug: 'المعرّف النصي',
     sort: 'الترتيب',
+    listingFee: 'سعر الإعلان (£)',
+    listingFeeStandard: 'السعر القياسي',
     state: 'الحالة',
     section: 'القسم',
     isDefault: 'افتراضي',

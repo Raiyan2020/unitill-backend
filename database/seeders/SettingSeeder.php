@@ -43,6 +43,15 @@ class SettingSeeder extends Seeder
         ]);
 
         Setting::create([
+            'key_id' => 'listing_extension_price',
+            'title_en' => 'Listing Extension Price',
+            'title_ar' => 'سعر تمديد الإعلان',
+            'value' => '0.99',
+            'set_group' => 'app',
+            'is_object' => '1',
+        ]);
+
+        Setting::create([
             'key_id' => 'app_name',
             'title_en' => 'App Name',
             'title_ar' => 'اسم التطبيق',

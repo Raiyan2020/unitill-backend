@@ -15,10 +15,6 @@ use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
-/**
- * Listing fees must follow the category (£0.99 standard, £2.99 for Cars and
- * Accommodation) instead of the old flat rate.
- */
 class CategoryListingFeeTest extends TestCase
 {
     use DatabaseTransactions;
@@ -27,6 +23,7 @@ class CategoryListingFeeTest extends TestCase
     {
         parent::setUp();
         Setting::updateOrCreate(['key_id' => 'post_price'], ['value' => '0.99']);
+        Setting::updateOrCreate(['key_id' => 'listing_extension_price'], ['value' => '0.99']);
         Setting::updateOrCreate(['key_id' => 'free_ads_per_user'], ['value' => '0']);
     }
 
@@ -39,7 +36,7 @@ class CategoryListingFeeTest extends TestCase
         $this->assertSame(2.99, $cars->resolvedListingFee());
     }
 
-    public function test_reactivating_an_expired_car_listing_charges_the_car_fee(): void
+    public function test_extending_an_expired_car_listing_charges_the_flat_extension_price_not_the_category_price(): void
     {
         $cars = Category::create(['status' => 'active', 'sort' => 1, 'listing_fee' => 2.99]);
         [$user, $ad] = $this->expiredAd($cars);
@@ -56,12 +53,12 @@ class CategoryListingFeeTest extends TestCase
 
         $this->postJson("/api/my-ads/{$ad->id}/activate")
             ->assertOk()
-            ->assertJsonPath('data.publication.amount', 2.99);
+            ->assertJsonPath('data.publication.amount', 0.99);
 
-        $this->assertSame('2.99', (string) $ad->fresh()->listing_fee);
+        $this->assertSame('0.99', (string) $ad->fresh()->listing_fee);
     }
 
-    public function test_reactivating_an_expired_standard_listing_charges_the_standard_fee(): void
+    public function test_extending_an_expired_standard_listing_charges_the_extension_price(): void
     {
         $standard = Category::create(['status' => 'active', 'sort' => 0]);
         [$user, $ad] = $this->expiredAd($standard);
@@ -81,6 +78,55 @@ class CategoryListingFeeTest extends TestCase
             ->assertJsonPath('data.publication.amount', 0.99);
 
         $this->assertSame('0.99', (string) $ad->fresh()->listing_fee);
+    }
+
+    public function test_extending_pushes_expiry_30_days_from_payment_confirmation(): void
+    {
+        $standard = Category::create(['status' => 'active', 'sort' => 0]);
+        [$user, $ad] = $this->expiredAd($standard);
+
+        Sanctum::actingAs($user);
+
+        Http::fake([
+            'api.stripe.com/*' => Http::response([
+                'id' => 'pi_extend_expiry_intent',
+                'client_secret' => 'pi_extend_expiry_intent_secret',
+                'status' => 'requires_payment_method',
+            ]),
+        ]);
+
+        $this->postJson("/api/my-ads/{$ad->id}/activate")->assertOk();
+
+        $intentId = $ad->fresh()->stripe_payment_intent_id;
+
+        $published = app(\App\Services\ListingPaymentService::class)->publishPaidListing($intentId, 99, 'gbp');
+
+        $this->assertSame('published', $published->status);
+        $this->assertTrue($published->expires_at->isBetween(now()->addDays(29), now()->addDays(31)));
+    }
+
+    public function test_new_car_listing_charges_the_category_price_not_the_extension_price(): void
+    {
+        Setting::updateOrCreate(['key_id' => 'listing_extension_price'], ['value' => '5.00']);
+        $cars = Category::create(['status' => 'active', 'sort' => 1, 'listing_fee' => 2.99]);
+        [$user, $ad] = $this->expiredAd($cars);
+        // sellAgain never goes through the extension branch — it always starts a
+        // brand new listing, so it must still use the category price.
+        $ad->update(['status' => 'sold']);
+
+        Sanctum::actingAs($user);
+
+        Http::fake([
+            'api.stripe.com/*' => Http::response([
+                'id' => 'pi_sell_again_intent',
+                'client_secret' => 'pi_sell_again_intent_secret',
+                'status' => 'requires_payment_method',
+            ]),
+        ]);
+
+        $this->postJson("/api/my-ads/{$ad->id}/sell-again")
+            ->assertOk()
+            ->assertJsonPath('data.publication.amount', 2.99);
     }
 
     /** @return array{0: User, 1: Ad} */

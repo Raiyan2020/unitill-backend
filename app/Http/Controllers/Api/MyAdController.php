@@ -234,18 +234,7 @@ class MyAdController extends Controller
             );
         }
 
-        // Otherwise the period is over, so this starts a new paid one. The old
-        // intent must be cleared first — startPublication treats an existing one
-        // as "payment in progress" and would let the ad go live without paying.
-        $ad->update([
-            'paused_at' => null,
-            'inactive_reason' => null,
-            'listing_fee' => null,
-            'payment_status' => 'not_required',
-            'stripe_payment_intent_id' => null,
-        ]);
-
-        $publication = $this->startPublication($ad->fresh(), $request->input('coupon_code'));
+        $publication = $this->startExtension($ad, $request->input('coupon_code'));
 
         if (isset($publication['coupon_error'])) {
             return sendError(
@@ -261,6 +250,58 @@ class MyAdController extends Controller
                 'publication' => $publication,
             ],
             __('api.ad.activated')
+        );
+    }
+
+    public function extend(Request $request, string $id)
+    {
+        $ad = $this->findOwnedAd($id);
+
+        if (! $ad || ! in_array($ad->status, ['paused', 'expired'], true)) {
+            return sendError(__('api.ad.only_expired_extend'), [], 422);
+        }
+
+        if ($this->hasUnexpiredPaidPeriod($ad)) {
+            return sendError(__('api.ad.not_yet_eligible_extend'), [], 422);
+        }
+
+        $publication = $this->startExtension($ad, $request->input('coupon_code'));
+
+        if (isset($publication['coupon_error'])) {
+            return sendError(
+                __('api.ad.coupon_failed'),
+                ['coupon_code' => $publication['coupon_error']],
+                422
+            );
+        }
+
+        return sendResponse(
+            [
+                'ad' => new MyAdResource($ad->fresh()),
+                'publication' => $publication,
+            ],
+            __('api.ad.extended')
+        );
+    }
+
+    /**
+     * Clears any prior intent, then starts a new paid period at the flat
+     * extension price rather than the category listing price.
+     */
+    protected function startExtension(Ad $ad, ?string $couponCode): array
+    {
+        $ad->update([
+            'paused_at' => null,
+            'inactive_reason' => null,
+            'listing_fee' => null,
+            'payment_status' => 'not_required',
+            'stripe_payment_intent_id' => null,
+        ]);
+
+        return $this->startPublication(
+            $ad->fresh(),
+            $couponCode,
+            (float) setting('listing_extension_price', '0.99')
         );
     }
 
