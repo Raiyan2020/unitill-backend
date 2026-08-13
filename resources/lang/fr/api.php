@@ -73,6 +73,10 @@ return [
         'sold_cannot_delete' => 'Une annonce vendue ne peut pas être supprimée',
         'deleted' => 'Annonce supprimée avec succès',
         'coupon_failed' => 'Le code promo n\'a pas pu être appliqué.',
+        'refund_not_available' => 'Cette annonce n\'a aucun paiement réglé pour lequel demander un remboursement.',
+        'refund_already_decided' => 'Une demande de remboursement existe déjà pour cette annonce.',
+        'refund_reason_required' => 'Merci d\'indiquer la raison de votre demande de remboursement.',
+        'refund_requested' => 'Votre demande de remboursement a été envoyée à UniTill.',
         'cannot_publish_in_status' => 'Cette annonce ne peut pas être publiée dans son état actuel.',
         'payment_unsettled' => 'Cette annonce ne peut pas être publiée tant que les frais de publication ne sont pas réglés. Vous pouvez toutefois la passer en rejetée, brouillon ou expirée.',
         'status_updated' => 'Statut de l\'annonce mis à jour',
@@ -238,6 +242,12 @@ return [
         'expired' => 'Expirée',
         'draft' => 'Brouillon',
         'sold' => 'Vendue',
+    ],
+    'refund' => [
+        'accepted_title' => 'Remboursement émis',
+        'accepted_body' => 'Le remboursement de votre annonce ":title" a été émis.',
+        'declined_title' => 'Demande de remboursement refusée',
+        'declined_body' => 'Votre demande de remboursement pour ":title" a été refusée. Motif : :reason',
     ],
     'account' => [
         'identifier_required' => 'L\'e-mail universitaire ou personnel est obligatoire',

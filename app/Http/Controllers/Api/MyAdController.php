@@ -253,35 +253,58 @@ class MyAdController extends Controller
         );
     }
 
-    public function extend(Request $request, string $id)
+    public function requestRefund(Request $request, string $id)
     {
         $ad = $this->findOwnedAd($id);
 
-        if (! $ad || ! in_array($ad->status, ['paused', 'expired'], true)) {
-            return sendError(__('api.ad.only_expired_extend'), [], 422);
+        if (! $ad || $ad->payment_status !== 'paid' || ! $ad->stripe_payment_intent_id) {
+            return sendError(__('api.ad.refund_not_available'), [], 422);
         }
 
-        if ($this->hasUnexpiredPaidPeriod($ad)) {
-            return sendError(__('api.ad.not_yet_eligible_extend'), [], 422);
+        if ($ad->refund_status !== null) {
+            return sendError(__('api.ad.refund_already_decided'), [], 422);
         }
 
-        $publication = $this->startExtension($ad, $request->input('coupon_code'));
+        $validated = $request->validate([
+            'reason' => 'required|string|max:1000',
+        ], [
+            'reason.required' => __('api.ad.refund_reason_required'),
+        ]);
 
-        if (isset($publication['coupon_error'])) {
-            return sendError(
-                __('api.ad.coupon_failed'),
-                ['coupon_code' => $publication['coupon_error']],
-                422
-            );
-        }
+        $ad->update([
+            'refund_status' => 'requested',
+            'refund_requested_at' => now(),
+            'refund_request_reason' => $validated['reason'],
+        ]);
 
-        return sendResponse(
-            [
-                'ad' => new MyAdResource($ad->fresh()),
-                'publication' => $publication,
-            ],
-            __('api.ad.extended')
-        );
+        return sendResponse(new MyAdResource($ad->fresh()), __('api.ad.refund_requested'));
+    }
+
+    public function refundRequests(Request $request)
+    {
+        $perPage = (int) ($request->input('per_page', 20));
+
+        $ads = Ad::query()
+            ->where('user_id', Auth::id())
+            ->whereNotNull('refund_status')
+            ->orderByDesc('refund_requested_at')
+            ->paginate($perPage);
+
+        $ads->through(fn (Ad $ad) => [
+            'id' => $ad->id,
+            'public_id' => $ad->public_id,
+            'title' => $ad->title,
+            'listing_fee' => $ad->listing_fee,
+            'currency' => $ad->currency,
+            'refund_status' => $ad->refund_status,
+            'refund_requested_at' => optional($ad->refund_requested_at)->toIso8601String(),
+            'refund_request_reason' => $ad->refund_request_reason,
+            'refund_reason' => $ad->refund_reason,
+            'refunded_at' => optional($ad->refunded_at)->toIso8601String(),
+            'refund_declined_at' => optional($ad->refund_declined_at)->toIso8601String(),
+        ]);
+
+        return sendResponse($ads);
     }
 
     /**

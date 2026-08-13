@@ -75,6 +75,27 @@ export type Dictionary = {
   sort: string;
   listingFee: string;
   listingFeeStandard: string;
+  paymentStatus: string;
+  refund: string;
+  refundStatus: string;
+  refundReason: string;
+  refundReasonPlaceholder: string;
+  issueRefund: string;
+  declineRefund: string;
+  refunded: string;
+  refundDeclined: string;
+  refundRequested: string;
+  refundRequests: string;
+  manageInRefundRequests: string;
+  notRefunded: string;
+  confirmRefund: string;
+  confirmDeclineRefund: string;
+  refundConfirmation: string;
+  declineRefundConfirmation: string;
+  refundIssued: string;
+  refundDeclinedNotice: string;
+  noPaidPayment: string;
+  userNotifiedNote: string;
   state: string;
   section: string;
   isDefault: string;
@@ -392,6 +413,27 @@ const dictionaries: Record<Locale, Dictionary> = {
     sort: 'Sort',
     listingFee: 'Listing fee (£)',
     listingFeeStandard: 'Standard price',
+    paymentStatus: 'Payment status',
+    refund: 'Refund',
+    refundStatus: 'Refund status',
+    refundReason: 'Refund reason',
+    refundReasonPlaceholder: 'Why is this refund being issued?',
+    issueRefund: 'Issue refund',
+    declineRefund: 'Decline',
+    refunded: 'Refunded',
+    refundDeclined: 'Declined',
+    refundRequested: 'Requested',
+    refundRequests: 'Refund Requests',
+    manageInRefundRequests: 'Manage this from',
+    notRefunded: 'Not refunded',
+    confirmRefund: 'Confirm refund',
+    confirmDeclineRefund: 'Decline refund request',
+    refundConfirmation: 'This will refund the seller through Stripe and cannot be undone. Continue?',
+    declineRefundConfirmation: 'The seller will be told their refund request was declined, with this reason. Continue?',
+    refundIssued: 'Refund issued.',
+    refundDeclinedNotice: 'Refund request declined.',
+    noPaidPayment: 'This ad has no paid Stripe payment to refund.',
+    userNotifiedNote: 'The seller is notified automatically (push + in-app) as soon as you confirm.',
     state: 'State',
     section: 'Section',
     isDefault: 'Default',
@@ -704,6 +746,27 @@ const dictionaries: Record<Locale, Dictionary> = {
     sort: 'الترتيب',
     listingFee: 'سعر الإعلان (£)',
     listingFeeStandard: 'السعر القياسي',
+    paymentStatus: 'حالة الدفع',
+    refund: 'استرداد',
+    refundStatus: 'حالة الاسترداد',
+    refundReason: 'سبب الاسترداد',
+    refundReasonPlaceholder: 'ما سبب إصدار هذا الاسترداد؟',
+    issueRefund: 'إصدار استرداد',
+    declineRefund: 'رفض',
+    refunded: 'تم الاسترداد',
+    refundDeclined: 'مرفوض',
+    refundRequested: 'مطلوب',
+    refundRequests: 'طلبات الاسترداد',
+    manageInRefundRequests: 'يمكنك إدارة هذا من صفحة',
+    notRefunded: 'لم يتم الاسترداد',
+    confirmRefund: 'تأكيد الاسترداد',
+    confirmDeclineRefund: 'رفض طلب الاسترداد',
+    refundConfirmation: 'سيتم استرداد المبلغ للبائع عبر Stripe ولا يمكن التراجع عن هذا الإجراء. هل تريد المتابعة؟',
+    declineRefundConfirmation: 'سيتم إبلاغ البائع برفض طلب الاسترداد مع هذا السبب. هل تريد المتابعة؟',
+    refundIssued: 'تم إصدار الاسترداد.',
+    refundDeclinedNotice: 'تم رفض طلب الاسترداد.',
+    noPaidPayment: 'لا يوجد دفع مسدد عبر Stripe لهذا الإعلان لاستراده.',
+    userNotifiedNote: 'سيتم إشعار البائع تلقائياً (إشعار فوري وداخل التطبيق) فور التأكيد.',
     state: 'الحالة',
     section: 'القسم',
     isDefault: 'افتراضي',

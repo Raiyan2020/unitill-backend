@@ -73,6 +73,10 @@ return [
         'sold_cannot_delete' => 'A sold ad cannot be deleted',
         'deleted' => 'Ad deleted successfully',
         'coupon_failed' => 'The coupon code could not be applied.',
+        'refund_not_available' => 'This ad has no paid payment to request a refund for.',
+        'refund_already_decided' => 'A refund request for this ad already exists.',
+        'refund_reason_required' => 'Please tell us why you are requesting a refund.',
+        'refund_requested' => 'Your refund request was sent to UniTill.',
         'cannot_publish_in_status' => 'This listing cannot be published in its current state.',
         'payment_unsettled' => 'This ad cannot be published until its listing fee is paid. You can still set it to rejected, draft or expired.',
         'status_updated' => 'Ad status updated',
@@ -240,6 +244,12 @@ return [
         'expired' => 'Expired',
         'draft' => 'Draft',
         'sold' => 'Sold',
+    ],
+    'refund' => [
+        'accepted_title' => 'Refund issued',
+        'accepted_body' => 'Your refund for ":title" has been issued.',
+        'declined_title' => 'Refund request declined',
+        'declined_body' => 'Your refund request for ":title" was declined. Reason: :reason',
     ],
     'account' => [
         'identifier_required' => 'student_email or email is required',

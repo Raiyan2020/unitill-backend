@@ -9191,7 +9191,7 @@
                     ]
                 },
                 {
-                    "name": "Extend Ad",
+                    "name": "Request Refund",
                     "request": {
                         "auth": {
                             "type": "bearer",
@@ -9219,23 +9219,21 @@
                             "mode": "formdata",
                             "formdata": [
                                 {
-                                    "key": "coupon_code",
-                                    "value": "STUDENT50",
-                                    "type": "text",
-                                    "description": "Optional. Applied to the extension fee; single use per user.",
-                                    "disabled": true
+                                    "key": "reason",
+                                    "value": "Item sold outside the app before it went live",
+                                    "type": "text"
                                 }
                             ]
                         },
                         "url": {
-                            "raw": "{{base_url}}/my-ads/:id/extend",
+                            "raw": "{{base_url}}/my-ads/:id/refund-request",
                             "host": [
                                 "{{base_url}}"
                             ],
                             "path": [
                                 "my-ads",
                                 ":id",
-                                "extend"
+                                "refund-request"
                             ],
                             "variable": [
                                 {
@@ -9243,11 +9241,50 @@
                                 }
                             ]
                         },
-                        "description": "Extends an expired (or paused-past-expiry) ad for another posting period.\n\nAlways charges the flat listing_extension_price setting, regardless of the ad's category price — 422 if the ad is not eligible (still published, or paused within its unexpired paid period; use Activate Ad for that case instead).\n\nResponse carries the usual publication block: payment_required = true with a fresh client_secret, since an extension is never free."
+                        "description": "Requests a refund/cancellation for a paid listing. 422 if the ad has no paid Stripe payment, or if a request already exists.\n\nUniTill admin reviews it and either issues the refund through Stripe or declines it — the seller is notified (push + in-app) either way. Check refund_status on GET /my-ads/refund-requests or on the ad itself for the outcome."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "My Refund Requests",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/my-ads/refund-requests",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "my-ads",
+                                "refund-requests"
+                            ]
+                        },
+                        "description": "Lists the current user's refund requests (paginated), most recent first. refund_status is one of requested, refunded, declined."
                     },
                     "response": [
                         {
-                            "name": "Extend Ad — Example",
+                            "name": "My Refund Requests — Example",
                             "originalRequest": {
                                 "auth": {
                                     "type": "bearer",
@@ -9259,32 +9296,15 @@
                                         }
                                     ]
                                 },
-                                "method": "POST",
-                                "header": [
-                                    {
-                                        "key": "Accept",
-                                        "value": "application/json"
-                                    },
-                                    {
-                                        "key": "lang",
-                                        "value": "en",
-                                        "description": "Set to \"ar\" for Arabic messages"
-                                    }
-                                ],
+                                "method": "GET",
                                 "url": {
-                                    "raw": "{{base_url}}/my-ads/:id/extend",
+                                    "raw": "{{base_url}}/my-ads/refund-requests",
                                     "host": [
                                         "{{base_url}}"
                                     ],
                                     "path": [
                                         "my-ads",
-                                        ":id",
-                                        "extend"
-                                    ],
-                                    "variable": [
-                                        {
-                                            "key": "id"
-                                        }
+                                        "refund-requests"
                                     ]
                                 }
                             },
@@ -9298,7 +9318,7 @@
                                 }
                             ],
                             "cookie": [],
-                            "body": "{\n    \"status\": true,\n    \"message\": \"Listing extended successfully\",\n    \"data\": {\n        \"publication\": {\n            \"published\": false,\n            \"payment_required\": true,\n            \"amount\": 0.99,\n            \"currency\": \"GBP\",\n            \"payment_status\": \"requires_payment\",\n            \"payment_intent_id\": \"pi_...\",\n            \"client_secret\": \"pi_..._secret_...\"\n        }\n    }\n}"
+                            "body": "{\n    \"status\": true,\n    \"data\": {\n        \"current_page\": 1,\n        \"data\": [\n            {\n                \"id\": 101,\n                \"public_id\": \"ABCD12345Z\",\n                \"title\": \"North Face jacket\",\n                \"listing_fee\": 0.99,\n                \"currency\": \"GBP\",\n                \"refund_status\": \"requested\",\n                \"refund_requested_at\": \"2026-08-13T09:00:00+00:00\",\n                \"refund_request_reason\": \"Item sold outside the app before it went live\",\n                \"refund_reason\": null,\n                \"refunded_at\": null,\n                \"refund_declined_at\": null\n            }\n        ],\n        \"per_page\": 20,\n        \"total\": 1\n    }\n}"
                         }
                     ]
                 },

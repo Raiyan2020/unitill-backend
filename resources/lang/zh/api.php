@@ -73,6 +73,10 @@ return [
         'sold_cannot_delete' => '已售出的广告无法删除',
         'deleted' => '广告已删除',
         'coupon_failed' => '优惠码无法使用。',
+        'refund_not_available' => '此广告没有可申请退款的已付款项。',
+        'refund_already_decided' => '该广告已存在一个退款申请。',
+        'refund_reason_required' => '请说明您申请退款的原因。',
+        'refund_requested' => '您的退款申请已发送给 UniTill。',
         'cannot_publish_in_status' => '该广告在当前状态下无法发布。',
         'payment_unsettled' => '该广告在发布费用结清前无法上线。你仍可将其设为已拒绝、草稿或已过期。',
         'status_updated' => '广告状态已更新',
@@ -238,6 +242,12 @@ return [
         'expired' => '已过期',
         'draft' => '草稿',
         'sold' => '已售出',
+    ],
+    'refund' => [
+        'accepted_title' => '退款已发放',
+        'accepted_body' => '您的广告「:title」退款已发放。',
+        'declined_title' => '退款申请已被拒绝',
+        'declined_body' => '您对「:title」的退款申请已被拒绝。原因：:reason',
     ],
     'account' => [
         'identifier_required' => '请填写学校邮箱或个人邮箱',

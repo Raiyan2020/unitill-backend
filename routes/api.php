@@ -139,8 +139,11 @@ Route::middleware('auth:sanctum')->prefix('admin')->controller(AdminUserControll
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(AdAdminController::class)->group(function () {
     Route::get('ads', 'index')->middleware('permission:categories.view');
+    Route::get('refund-requests', 'refundRequests')->middleware('permission:categories.view');
     Route::get('ads/{id}', 'show')->middleware('permission:categories.view');
     Route::put('ads/{id}', 'update')->middleware('permission:categories.update');
+    Route::post('ads/{id}/refund', 'refund')->middleware('permission:categories.update');
+    Route::post('ads/{id}/refund/decline', 'declineRefund')->middleware('permission:categories.update');
     Route::delete('ads/{id}', 'destroy')->middleware('permission:categories.delete');
 });
 
@@ -297,7 +300,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('my-ads/{id}/mark-sold', [MyAdController::class, 'markAsSold']);
     Route::post('my-ads/{id}/pause', [MyAdController::class, 'pause']);
     Route::post('my-ads/{id}/activate', [MyAdController::class, 'activate']);
-    Route::post('my-ads/{id}/extend', [MyAdController::class, 'extend']);
+    Route::get('my-ads/refund-requests', [MyAdController::class, 'refundRequests']);
+    Route::post('my-ads/{id}/refund-request', [MyAdController::class, 'requestRefund']);
     // "Sell again" — copies a sold ad into a new listing and charges for it.
     Route::post('my-ads/{id}/sell-again', [MyAdController::class, 'sellAgain']);
     Route::delete('my-ads/{id}', [MyAdController::class, 'destroy']);

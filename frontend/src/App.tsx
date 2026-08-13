@@ -19,6 +19,7 @@ import { LoginPage } from './pages/LoginPage';
 import { PaymentMethodsPage } from './pages/PaymentMethodsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { PushNotificationsPage } from './pages/PushNotificationsPage';
+import { RefundRequestsPage } from './pages/RefundRequestsPage';
 import { RolesPage } from './pages/RolesPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { SubCategoriesPage } from './pages/SubCategoriesPage';
@@ -64,6 +65,7 @@ export default function App() {
         <Route path="ads" element={<PermissionRoute permission="categories.view"><AdsPage /></PermissionRoute>} />
         <Route path="ads/:id" element={<PermissionRoute permission="categories.view"><AdDetailsPage /></PermissionRoute>} />
         <Route path="ads/user/:userId" element={<PermissionRoute permission="categories.view"><UserAdsPage /></PermissionRoute>} />
+        <Route path="refund-requests" element={<PermissionRoute permission="categories.view"><RefundRequestsPage /></PermissionRoute>} />
         <Route path="ad-reports" element={<PermissionRoute permission="ad_reports.view"><AdReportsPage /></PermissionRoute>} />
         <Route path="chat-reports" element={<PermissionRoute permission="chat_reports.view"><ChatReportsPage /></PermissionRoute>} />
         <Route path="coupons" element={<PermissionRoute permission="coupons.view"><CouponsPage /></PermissionRoute>} />

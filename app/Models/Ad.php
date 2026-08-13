@@ -36,6 +36,13 @@ class Ad extends Model
         'payment_status',
         'stripe_payment_intent_id',
         'publish_confirmed_at',
+        'refund_status',
+        'refund_requested_at',
+        'refund_request_reason',
+        'refund_reference',
+        'refund_reason',
+        'refunded_at',
+        'refund_declined_at',
         'is_free_listing',
         'currency',
         'is_negotiable',
@@ -65,6 +72,9 @@ class Ad extends Model
         'paused_at' => 'datetime',
         'sold_at' => 'datetime',
         'publish_confirmed_at' => 'datetime',
+        'refunded_at' => 'datetime',
+        'refund_declined_at' => 'datetime',
+        'refund_requested_at' => 'datetime',
     ];
 
     protected static function booted(): void

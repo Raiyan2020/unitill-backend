@@ -73,6 +73,10 @@ return [
         'sold_cannot_delete' => 'Un anuncio vendido no se puede eliminar',
         'deleted' => 'Anuncio eliminado correctamente',
         'coupon_failed' => 'No se ha podido aplicar el código de descuento.',
+        'refund_not_available' => 'Este anuncio no tiene ningún pago realizado para solicitar un reembolso.',
+        'refund_already_decided' => 'Ya existe una solicitud de reembolso para este anuncio.',
+        'refund_reason_required' => 'Indícanos por qué solicitas el reembolso.',
+        'refund_requested' => 'Tu solicitud de reembolso se ha enviado a UniTill.',
         'cannot_publish_in_status' => 'Este anuncio no se puede publicar en su estado actual.',
         'payment_unsettled' => 'Este anuncio no se puede publicar hasta que se abone la tarifa de publicación. Aun así puedes marcarlo como rechazado, borrador o caducado.',
         'status_updated' => 'Estado del anuncio actualizado',
@@ -238,6 +242,12 @@ return [
         'expired' => 'Caducado',
         'draft' => 'Borrador',
         'sold' => 'Vendido',
+    ],
+    'refund' => [
+        'accepted_title' => 'Reembolso emitido',
+        'accepted_body' => 'Se ha emitido el reembolso de tu anuncio ":title".',
+        'declined_title' => 'Solicitud de reembolso rechazada',
+        'declined_body' => 'Tu solicitud de reembolso para ":title" fue rechazada. Motivo: :reason',
     ],
     'account' => [
         'identifier_required' => 'Se requiere el correo universitario o el personal',

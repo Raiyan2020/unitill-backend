@@ -73,6 +73,10 @@ return [
         'sold_cannot_delete' => 'لا يمكن حذف إعلان مباع',
         'deleted' => 'تم حذف الإعلان',
         'coupon_failed' => 'تعذّر تطبيق كود الخصم',
+        'refund_not_available' => 'لا يوجد دفع مسدد لهذا الإعلان لطلب استرداده.',
+        'refund_already_decided' => 'يوجد بالفعل طلب استرداد لهذا الإعلان.',
+        'refund_reason_required' => 'يرجى ذكر سبب طلب الاسترداد.',
+        'refund_requested' => 'تم إرسال طلب الاسترداد إلى UniTill.',
         'cannot_publish_in_status' => 'لا يمكن نشر هذا الإعلان في حالته الحالية.',
         'payment_unsettled' => 'لا يمكن نشر هذا الإعلان قبل سداد رسوم النشر. يمكنك مع ذلك تعيينه كمرفوض أو مسودة أو منتهٍ.',
         'status_updated' => 'تم تحديث حالة الإعلان',
@@ -238,6 +242,12 @@ return [
         'expired' => 'منتهي',
         'draft' => 'مسودة',
         'sold' => 'مباع',
+    ],
+    'refund' => [
+        'accepted_title' => 'تم إصدار الاسترداد',
+        'accepted_body' => 'تم إصدار استرداد مبلغ إعلانك ":title".',
+        'declined_title' => 'تم رفض طلب الاسترداد',
+        'declined_body' => 'تم رفض طلب استرداد إعلانك ":title". السبب: :reason',
     ],
     'account' => [
         'identifier_required' => 'بريد الطالب أو البريد الشخصي مطلوب',

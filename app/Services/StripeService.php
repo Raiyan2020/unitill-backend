@@ -36,6 +36,30 @@ class StripeService
         return $response->json();
     }
 
+    public function refund(string $paymentIntentId, ?int $amount = null): array
+    {
+        $secret = config('services.stripe.secret');
+        if (! $secret) {
+            throw new RuntimeException('Stripe is not configured. Set STRIPE_SECRET in the environment.');
+        }
+
+        $payload = ['payment_intent' => $paymentIntentId];
+        if ($amount !== null) {
+            $payload['amount'] = $amount;
+        }
+
+        $response = Http::asForm()
+            ->withBasicAuth($secret, '')
+            ->withHeaders(['Idempotency-Key' => "refund-{$paymentIntentId}"])
+            ->post('https://api.stripe.com/v1/refunds', $payload);
+
+        if (! $response->successful()) {
+            throw new RuntimeException($response->json('error.message') ?: 'Unable to refund the Stripe payment.');
+        }
+
+        return $response->json();
+    }
+
     public function paymentIntent(string $id): array
     {
         $secret = config('services.stripe.secret');
