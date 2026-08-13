@@ -1,9 +1,23 @@
 # Backend updates for mobile — 2026-08-13
 
-Everything below is on `feature/transactions-restructuring`. All of it is **additive** —
-no existing V1 endpoint, request field, or response field was removed or renamed. Where
-something is genuinely new behaviour on a V1 route (student re-verification blocking new
-listings), it reuses an error shape the app already handles.
+Everything below is on `feature/transactions-restructuring`. No existing V1 request or
+response **field** was removed, renamed, or retyped — every field your app already
+parses is still there, unchanged. Three existing V1 endpoints do have new **behaviour**
+though — read this box before anything else:
+
+> **Changed on existing endpoints (no new fields, but different behaviour in specific cases):**
+> - `POST /login` — a lapsed, locked-out student now gets a different response shape
+>   than before in that one scenario (see §7). Not new fields you haven't seen — the same
+>   shape your registration flow already uses — but different from what `/login` used to
+>   return here.
+> - `POST /ads`, `POST /ads/draft`, `POST /my-ads/{id}/sell-again` — can now return a 403
+>   (`needs_reverify`) they never returned before, for students past their annual
+>   re-verification date (see §7). Same error shape messaging already uses.
+> - Listing prices changed value (not shape): £5 flat → £0.99 standard / £2.99 Cars &
+>   Accommodation (see §1).
+>
+> Everything else in this document is a brand-new endpoint or an added (never removed)
+> field — safe to ignore until you want to build against it.
 
 ---
 
@@ -167,14 +181,20 @@ just corrected logic:
   Now it only resets when it's genuinely bringing a lapsed (logged-out, see below) account
   back, not on an ordinary login.
 - **During the 60-day grace period**, the account stays fully active (login, existing
-  listings, existing conversations all keep working) — the only thing blocked is
-  creating a **new** listing (next point). The user gets a push/in-app notification when
-  the due date arrives.
-- **After the 60-day grace period**, the account is fully logged out — same as before:
-  `status` flips to the existing "verification required" state and every token
-  (access/refresh/biometric) is revoked. The user must go through re-verification to log
-  in again, exactly like the existing "verify your student email" flow you already have
-  for new registrations. No new response shape here.
+  listings, existing conversations, and **messaging is not restricted at all** — sending
+  and starting conversations both work regardless of verification status) — the only
+  thing blocked is creating a **new** listing (next point). The user gets a push/in-app
+  notification when the due date arrives.
+- **After the 60-day grace period**, the account is fully logged out: `status` flips to
+  the existing "verification required" state and every token (access/refresh/biometric)
+  is revoked. The user must go through re-verification to log in again. **This changes
+  what `POST /login` returns for this specific scenario** — previously a lapsed,
+  locked-out user got a plain error (`needs_verification` in an error response, no code
+  sent); now they get the same *shape* your app already handles from registration
+  (`needs_verification`, `user_id`, `student_email_masked`, `activation_expires_at`, in a
+  success-shaped response), with a fresh OTP sent to their student email automatically.
+  If your login-error handling doesn't already recognize `needs_verification` the way
+  your registration flow does, this is the one spot to double check.
 
 **New:** `POST /ads`, `POST /ads/draft`, and `POST /my-ads/{id}/sell-again` can now
 return a 403 you haven't seen from those endpoints before, starting from the moment
@@ -186,10 +206,10 @@ logout above kicks in):
   "data": { "needs_reverify": true } }
 ```
 
-This is the **exact same shape** `POST /conversations` and `POST /conversations/{id}/messages`
-already return when `needs_reverify` is true — if you already handle that error there
-(prompting the user to the re-verify screen), the same handler covers these three new
-call sites.
+**Note:** messaging (`POST /conversations`, `POST /conversations/{id}/messages`) does
+**not** enforce this — a lapsed student can message freely, only creating a new listing
+is blocked. If you already have a `needs_reverify` handler from an older build of this
+API, it's now only triggered by the three listing-creation endpoints above.
 
 ---
 
