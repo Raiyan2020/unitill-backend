@@ -6,10 +6,13 @@ parses is still there, unchanged. Three existing V1 endpoints do have new **beha
 though — read this box before anything else:
 
 > **Changed on existing endpoints (no new fields, but different behaviour in specific cases):**
-> - `POST /login` — a lapsed, locked-out student now gets a different response shape
->   than before in that one scenario (see §7). Not new fields you haven't seen — the same
->   shape your registration flow already uses — but different from what `/login` used to
->   return here.
+> - **`POST /v2/login` no longer requires an OTP step for a normal login** — if you've
+>   started integrating the old two-step flow (send code → verify code), that second step
+>   is gone for the common case. See §8, this is the biggest change in this update.
+> - `POST /login` (v1) and `POST /v2/login` — a lapsed, locked-out student now gets a
+>   different response shape than before in that one scenario (see §7/§8). Not new fields
+>   you haven't seen — the same shape your registration flow already uses — but different
+>   from what `/login` used to return here.
 > - `POST /ads`, `POST /ads/draft`, `POST /my-ads/{id}/sell-again` — can now return a 403
 >   (`needs_reverify`) they never returned before, for students past their annual
 >   re-verification date (see §7). Same error shape messaging already uses.
@@ -33,6 +36,7 @@ though — read this box before anything else:
 | Report priority | **No** — admin-side only |
 | Moderation (warn/suspend/appeal) | **Yes** — suspended-account error now carries an appeal ID you need to keep |
 | Student re-verification changes | **No new fields**, but one behaviour fix + one new restriction — read carefully |
+| V2 login no longer needs an OTP step | **Yes, if** you've built against the old two-step V2 flow — see §8 |
 | New-listing blocked for lapsed students | **Yes** — a 403 you may now see on `POST /ads`, `POST /ads/draft`, `POST /my-ads/{id}/sell-again` |
 
 ---
@@ -213,8 +217,52 @@ API, it's now only triggered by the three listing-creation endpoints above.
 
 ---
 
+## 8. V2 login — OTP step removed for normal logins
+
+The two-step flow (`POST /v2/login` → sends a code → `POST /v2/login/verify-otp` →
+issues tokens) is **gone for the common case**. `POST /v2/login` now issues tokens
+directly after a successful password or fingerprint check — same request, same
+`access_token`/`refresh_token` response shape you already get from `verify-otp` today,
+just one step instead of two:
+
+```json
+// POST /v2/login  (unchanged request body)
+// response — tokens straight away, no "needs_otp" step
+{ "status": true, "message": "...", "data": {
+    "user": {...}, "access_token": "...", "refresh_token": "...", ... } }
+```
+
+An OTP is now only ever sent for two reasons, neither of which is a normal login:
+
+1. **Initial registration** — unchanged, same as always.
+2. **Recovering a fully logged-out account** (past the 60-day grace period, see §7). If
+   you hit `POST /v2/login` for an account in that state, you get the same
+   `needs_verification` response described in §7 instead of tokens — a fresh code goes
+   to the student email automatically. **Complete it with the existing
+   `POST /verify-student-email` endpoint** (the same one your registration screen
+   already calls) — there's no `/v2/`-specific recovery endpoint, this reuses what you
+   have.
+
+**The once-a-year re-verification itself is not part of login at all** — while an
+account is still within its 60-day grace window (logged in, just blocked from new
+listings per §7), trigger re-verification with the existing
+`POST /reverify/send-otp` + `POST /reverify/confirm` endpoints whenever you want to
+prompt the user, e.g. from the push notification they receive when it comes due.
+
+`POST /v2/login/verify-otp` and `POST /v2/login/resend-otp` **still exist and still
+work** — nothing was deleted — they're just no longer part of the normal login path.
+Leave your integration of them as-is if you've already built it; it simply won't be
+exercised by an ordinary login anymore.
+
+---
+
 ## Verify
 
+- Log in via `POST /v2/login` with a normal active account — confirm tokens come back
+  immediately, no OTP step.
+- Log in via `POST /v2/login` for an account past its 60-day grace period — confirm you
+  get `needs_verification` (not tokens), then complete recovery via
+  `POST /verify-student-email` with the code that arrives.
 - Post a listing in each of Standard/Cars/Accommodation categories, confirm the charged
   amount.
 - Extend an expired ad via `/v2/my-ads/{id}/extend`, confirm it charges £0.99 regardless

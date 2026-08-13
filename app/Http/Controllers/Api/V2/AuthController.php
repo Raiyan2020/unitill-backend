@@ -19,10 +19,15 @@ use Illuminate\Support\Facades\Mail;
 /**
  * V2 login flow.
  *
- * Unlike v1 (which returns tokens straight from the credentials/biometric
- * check), v2 is a two-step flow: every login first sends a one-time code to
- * the student email, and tokens are only issued after that code is verified.
- * The issued access token also lives for 30 days instead of the v1 60 minutes.
+ * A normal login (password or fingerprint) issues tokens directly, same as
+ * v1 — no OTP on every login. An OTP is only ever sent for (a) initial
+ * registration (unchanged, handled elsewhere) and (b) recovering an account
+ * that was fully logged out after its 12-month student re-verification plus
+ * 60-day grace period elapsed — see startForcedReverification() below, which
+ * mirrors v1's recovery flow and reuses the existing /verify-student-email
+ * endpoint to complete it. The annual re-verification itself, while the
+ * account is still within its grace period, uses the existing
+ * /reverify/send-otp + /reverify/confirm endpoints, not login.
  */
 class AuthController extends Controller
 {
@@ -39,10 +44,6 @@ class AuthController extends Controller
         return $visible.'***@'.$domain;
     }
 
-    /**
-     * Step 1 — authenticate the user (password or fingerprint) and send an OTP
-     * to their student email. No tokens are issued here.
-     */
     public function login(ApiLoginRequest $request)
     {
         $lang = $request->header('lang') === 'ar';
@@ -54,12 +55,13 @@ class AuthController extends Controller
             $result = $this->resolveCredentialUser($request, $lang);
         }
 
-        // resolve* helpers return a JSON error response when they fail.
+        // resolve* helpers return a JSON error (or recovery) response when
+        // they can't hand back a ready-to-log-in user.
         if (! $result instanceof User) {
             return $result;
         }
 
-        return $this->startOtpChallenge($result, $lang);
+        return $this->completeLogin($result, $request, $lang);
     }
 
     protected function resolveCredentialUser(ApiLoginRequest $request, bool $lang)
@@ -87,6 +89,17 @@ class AuthController extends Controller
             app(AccountDeletionService::class)->restore($user);
         }
 
+        // A previously verified student locked out after their grace period
+        // needs the password checked before we send a recovery code, so a
+        // guessed email can't be used to spam their inbox. Mirrors v1.
+        if ($user->status === '2' && $user->student_verified_at !== null) {
+            if (! Hash::check($request->password, $user->password)) {
+                return sendError(__('api.auth.wrong_password'), [], 400);
+            }
+
+            return $this->startForcedReverification($user);
+        }
+
         $statusError = $this->validateActiveUser($user, $lang);
         if ($statusError) {
             return $statusError;
@@ -97,6 +110,46 @@ class AuthController extends Controller
         }
 
         return $user;
+    }
+
+    /**
+     * Sends a fresh verification code and returns the same shape v1 uses for
+     * both registration and its own forced-reverification recovery. The
+     * client completes this with the existing /verify-student-email
+     * endpoint — no v2-specific recovery endpoint needed.
+     */
+    protected function startForcedReverification(User $user)
+    {
+        if (! $user->student_email) {
+            return sendError(__('api.auth.no_student_email'), [], 422);
+        }
+
+        $fixed = app()->environment('testing')
+            ? config('mobile_auth.login_otp_test_code')
+            : null;
+        $otp = (int) ($fixed ?: random_int(100000, 999999));
+
+        $user->forceFill([
+            'activation_code' => (string) $otp,
+            'activation_code_expires_at' => now()->addMinutes(15),
+            'activation_sent_at' => now(),
+        ])->save();
+
+        try {
+            Mail::to($user->student_email)->send(new OtpMail($otp));
+        } catch (\Throwable $e) {
+            Log::error('V2 forced reverification OTP mail failed', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return sendResponse([
+            'needs_verification' => true,
+            'user_id' => $user->id,
+            'student_email_masked' => $this->maskEmail($user->student_email),
+            'activation_expires_at' => $user->activation_code_expires_at?->toIso8601String(),
+        ], __('api.auth.code_sent_student_email'));
     }
 
     protected function resolveFingerprintUser(ApiLoginRequest $request, bool $lang)
@@ -424,8 +477,11 @@ class AuthController extends Controller
         }
 
         if ($user->status === '2') {
+            // Locked-out-after-grace case: fingerprint already proves device
+            // possession, so no password gate is needed here (the credential
+            // path intercepts this earlier, before checking the password).
             if ($user->student_verified_at !== null) {
-                return null;
+                return $this->startForcedReverification($user);
             }
 
             return sendError(
