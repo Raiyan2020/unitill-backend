@@ -105,18 +105,6 @@ class ConversationController extends Controller
         $lang = $request->header('lang') === 'ar';
         $user = Auth::user();
 
-        // The annual verification date starts a 60-day grace period. Only
-        // after that period ends are student-gated actions blocked.
-        if ($user->isReverificationBlocked()) {
-            return sendError(
-                $lang
-                    ? 'يجب إعادة تأكيد حالتك كطالب قبل بدء محادثة'
-                    : 'Please re-verify your student status before messaging',
-                ['needs_reverify' => true],
-                403
-            );
-        }
-
         $ad = Ad::query()
             ->published()
             ->where(function ($query) use ($validated) {
@@ -268,16 +256,6 @@ class ConversationController extends Controller
         ]);
 
         $lang = $request->header('lang') === 'ar';
-
-        if (Auth::user()->isReverificationBlocked()) {
-            return sendError(
-                $lang
-                    ? 'يجب إعادة تأكيد حالتك كطالب قبل إرسال رسالة'
-                    : 'Please re-verify your student status before messaging',
-                ['needs_reverify' => true],
-                403
-            );
-        }
 
         $conversation = $this->findParticipantConversation($id);
 
