@@ -4,6 +4,7 @@ import { AppLayout } from './layouts/AppLayout';
 import { AdDetailsPage } from './pages/AdDetailsPage';
 import { AdReportsPage } from './pages/AdReportsPage';
 import { ChatReportsPage } from './pages/ChatReportsPage';
+import { UserReportsPage } from './pages/UserReportsPage';
 import { ModerationAppealsPage } from './pages/ModerationAppealsPage';
 import { CouponsPage } from './pages/CouponsPage';
 import { AdsPage } from './pages/AdsPage';
@@ -32,6 +33,8 @@ import { UserDetailsPage } from './pages/UserDetailsPage';
 import { UserFavoritesPage } from './pages/UserFavoritesPage';
 import { UserVerificationDetailsPage } from './pages/UserVerificationDetailsPage';
 import { UsersPage } from './pages/UsersPage';
+import { TermsVersionsPage } from './pages/TermsVersionsPage';
+import { AccountDeletionRequestsPage } from './pages/AccountDeletionRequestsPage';
 import { hasPermission, isAuthenticated } from './lib/auth';
 
 function PrivateRoute({ children }: { children: ReactElement }) {
@@ -69,6 +72,7 @@ export default function App() {
         <Route path="refund-requests" element={<PermissionRoute permission="categories.view"><RefundRequestsPage /></PermissionRoute>} />
         <Route path="ad-reports" element={<PermissionRoute permission="ad_reports.view"><AdReportsPage /></PermissionRoute>} />
         <Route path="chat-reports" element={<PermissionRoute permission="chat_reports.view"><ChatReportsPage /></PermissionRoute>} />
+        <Route path="user-reports" element={<PermissionRoute permission="chat_reports.view"><UserReportsPage /></PermissionRoute>} />
         <Route path="moderation-appeals" element={<PermissionRoute permission="users.view"><ModerationAppealsPage /></PermissionRoute>} />
         <Route path="coupons" element={<PermissionRoute permission="coupons.view"><CouponsPage /></PermissionRoute>} />
         <Route path="user-verifications" element={<PermissionRoute permission="users.view"><TrustedSellerApplicationsPage /></PermissionRoute>} />
@@ -83,6 +87,8 @@ export default function App() {
         <Route path="categories/:categoryId/subcategories" element={<PermissionRoute permission="subcategories.view"><SubCategoriesPage /></PermissionRoute>} />
         <Route path="languages" element={<PermissionRoute permission="languages.view"><LanguagesPage /></PermissionRoute>} />
         <Route path="legal-affairs" element={<PermissionRoute permission="legal_affairs.view"><LegalAffairsPage /></PermissionRoute>} />
+        <Route path="terms-versions" element={<PermissionRoute permission="legal_affairs.view"><TermsVersionsPage /></PermissionRoute>} />
+        <Route path="account-deletion-requests" element={<PermissionRoute permission="users.view"><AccountDeletionRequestsPage /></PermissionRoute>} />
         <Route path="contact-reasons" element={<PermissionRoute permission="contact_reasons.view"><ContactReasonsPage /></PermissionRoute>} />
         <Route path="contact-us" element={<PermissionRoute permission="contact_us.view"><ContactUsPage /></PermissionRoute>} />
         <Route path="push-notifications" element={<PermissionRoute permission="dashboard.view"><PushNotificationsPage /></PermissionRoute>} />

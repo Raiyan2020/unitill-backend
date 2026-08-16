@@ -10,16 +10,21 @@ use App\Http\Resources\UserResource;
 use App\Mail\OtpMail;
 use App\Models\User;
 use App\Models\UserLoginLog;
+use App\Models\UserModerationAction;
 use App\Services\AccountDeletionService;
-use App\Services\TwilioService;
 use App\Services\PushNotificationService;
+use App\Services\TermsAcceptanceService;
+use App\Services\TwilioService;
+use App\Services\UserModerationService;
 use App\Support\LoginLogger;
 use App\Support\MobileAuthTokenService;
+use App\Support\StudentVerificationPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -226,10 +231,10 @@ class AuthController extends Controller
 
     protected function validateActiveUser(User $user, bool $lang)
     {
-        app(\App\Services\UserModerationService::class)->restoreExpiredSuspension($user);
+        app(UserModerationService::class)->restoreExpiredSuspension($user);
 
         if ($user->status === '3') {
-            $latestAction = \App\Models\UserModerationAction::query()
+            $latestAction = UserModerationAction::query()
                 ->where('user_id', $user->id)
                 ->whereIn('action', ['temporary_suspension', 'permanent_suspension'])
                 ->latest('id')
@@ -295,6 +300,13 @@ class AuthController extends Controller
         $data = $request->validated();
         $lang = $request->header('lang') === 'ar';
 
+        if (isset($data['terms_version'])
+            && $data['terms_version'] !== app(TermsAcceptanceService::class)->current()->version) {
+            throw ValidationException::withMessages([
+                'terms_version' => ['The selected terms version is no longer current.'],
+            ]);
+        }
+
         $base = [
             'first_name' => $data['first_name'],
             'last_name' => $data['last_name'],
@@ -317,6 +329,12 @@ class AuthController extends Controller
             'activation_sent_at' => now(),
             'terms_accepted_at' => now(),
         ]));
+        app(TermsAcceptanceService::class)->accept(
+            $user,
+            $request,
+            $data['terms_version'] ?? null,
+            'registration'
+        );
         try {
             // OTP must be sent to the UNIVERSITY email (.ac.uk) — that is what
             // proves the user owns a valid student account.
@@ -391,7 +409,7 @@ class AuthController extends Controller
         $verifiedAt = now();
         $user->status = '1';
         $user->student_verified_at = $verifiedAt;
-        $user->student_reverify_due_at = \App\Support\StudentVerificationPeriod::dueAt($verifiedAt);
+        $user->student_reverify_due_at = StudentVerificationPeriod::dueAt($verifiedAt);
         $user->reverify_notified_at = null;
         $user->save();
 
@@ -555,7 +573,7 @@ class AuthController extends Controller
         $user->activation_code_expires_at = null;
         $verifiedAt = now();
         $user->student_verified_at = $verifiedAt;
-        $user->student_reverify_due_at = \App\Support\StudentVerificationPeriod::dueAt($verifiedAt);
+        $user->student_reverify_due_at = StudentVerificationPeriod::dueAt($verifiedAt);
         $user->reverify_notified_at = null;
         $user->save();
 

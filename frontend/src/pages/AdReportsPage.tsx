@@ -13,6 +13,12 @@ import { useI18n } from '../providers/i18n-provider';
 type ReportStatus = 'pending' | 'reviewed' | 'dismissed';
 type ReportPriority = 'normal' | 'urgent' | 'critical';
 
+function priorityLabel(priority: string | null | undefined, t: ReturnType<typeof useI18n>['t']): string {
+  if (priority === 'critical') return t.priorityCritical;
+  if (priority === 'urgent') return t.priorityUrgent;
+  return t.priorityNormal;
+}
+
 type ReportedAd = { id: number; public_id: string | null; title: string | null; status: string };
 type Reporter = { id: number; name: string; email: string | null };
 
@@ -154,7 +160,7 @@ export function AdReportsPage() {
     try {
       await api.post(`/admin/users/${details.ad_owner.id}/moderation-actions`, payload);
       setActionReason('');
-      notify.success('Moderation action recorded');
+      notify.success(t.moderationActionRecorded);
     } catch (error) { notify.errorFrom(error, t.actionFailed); }
   };
 
@@ -164,7 +170,7 @@ export function AdReportsPage() {
         <h2 className="text-2xl font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">{t.adReports}</h2>
         <div className="flex flex-wrap items-center gap-2">
           <select value={priorityFilter} onChange={(e) => { setPage(1); setPriorityFilter(e.target.value); }} className="h-9 rounded-lg border border-[#dbdbe8] bg-white px-2 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]">
-            <option value="">All priorities</option><option value="critical">Critical</option><option value="urgent">Urgent</option><option value="normal">Normal</option>
+            <option value="">{t.allPriorities}</option><option value="critical">{t.priorityCritical}</option><option value="urgent">{t.priorityUrgent}</option><option value="normal">{t.priorityNormal}</option>
           </select>
           <select
             value={statusFilter}
@@ -233,7 +239,7 @@ export function AdReportsPage() {
                   <th className="px-4 py-3 text-start">{t.id}</th>
                   <th className="px-4 py-3 text-start">{t.ad}</th>
                   <th className="px-4 py-3 text-start">{t.reason}</th>
-                  <th className="px-4 py-3 text-start">Priority</th>
+                  <th className="px-4 py-3 text-start">{t.priority}</th>
                   <th className="px-4 py-3 text-start">{t.reporter}</th>
                   <th className="px-4 py-3 text-start">{t.date}</th>
                   <th className="px-4 py-3 text-start">{t.status}</th>
@@ -259,7 +265,7 @@ export function AdReportsPage() {
                         )}
                       </td>
                       <td className="px-4 py-3">{row.reason_label || row.reason}</td>
-                      <td className="px-4 py-3"><span className={`rounded-full px-2 py-1 text-xs font-semibold ${row.priority === 'critical' ? 'bg-rose-500/15 text-rose-600' : row.priority === 'urgent' ? 'bg-amber-500/15 text-amber-600' : 'bg-slate-500/15 text-slate-600'}`}>{row.priority || 'normal'}</span></td>
+                      <td className="px-4 py-3"><span className={`rounded-full px-2 py-1 text-xs font-semibold ${row.priority === 'critical' ? 'bg-rose-500/15 text-rose-600' : row.priority === 'urgent' ? 'bg-amber-500/15 text-amber-600' : 'bg-slate-500/15 text-slate-600'}`}>{priorityLabel(row.priority, t)}</span></td>
                       <td className="px-4 py-3">{row.reporter?.name || '-'}</td>
                       <td className="px-4 py-3 whitespace-nowrap">{row.created_at || '-'}</td>
                       <td className="px-4 py-3">
@@ -338,13 +344,13 @@ export function AdReportsPage() {
               </div>
 
               {details.ad_owner ? <div className="space-y-3 rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                <p className="text-sm font-semibold">Moderation action for ad owner</p>
+                <p className="text-sm font-semibold">{t.moderationAction}</p>
                 <div className="grid gap-2 sm:grid-cols-2">
-                  <select value={action} onChange={(e) => setAction(e.target.value)} className="h-10 rounded-lg border bg-white px-3 text-sm dark:bg-[#2f3349]"><option value="warning">Warning</option><option value="temporary_suspension">Temporary suspension</option><option value="permanent_suspension">Permanent suspension</option><option value="reactivated">Reactivate</option></select>
-                  {action === 'temporary_suspension' ? <Input type="number" min="1" max="365" value={durationDays} onChange={(e) => setDurationDays(e.target.value)} /> : null}
+                  <select value={action} onChange={(e) => setAction(e.target.value)} className="h-10 rounded-lg border bg-white px-3 text-sm dark:bg-[#2f3349]"><option value="warning">{t.modWarning}</option><option value="temporary_suspension">{t.modTemporarySuspension}</option><option value="permanent_suspension">{t.modPermanentSuspension}</option><option value="reactivated">{t.modReactivated}</option></select>
+                  {action === 'temporary_suspension' ? <Input type="number" min="1" max="365" value={durationDays} onChange={(e) => setDurationDays(e.target.value)} placeholder={t.durationInDays} /> : null}
                 </div>
-                <textarea rows={3} value={actionReason} onChange={(e) => setActionReason(e.target.value)} placeholder="Decision reason" className="w-full rounded-lg border bg-white px-3 py-2 text-sm dark:bg-[#2f3349]" />
-                <Button disabled={!actionReason.trim()} onClick={applyModeration}>Apply action</Button>
+                <textarea rows={3} value={actionReason} onChange={(e) => setActionReason(e.target.value)} placeholder={t.decisionReason} className="w-full rounded-lg border bg-white px-3 py-2 text-sm dark:bg-[#2f3349]" />
+                <Button disabled={!actionReason.trim()} onClick={applyModeration}>{t.applyAction}</Button>
               </div> : null}
 
               <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">

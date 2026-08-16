@@ -11,6 +11,8 @@ class PushNotification extends Model
 
     public const AUDIENCE_USER = 'user';
 
+    public const AUDIENCE_MARKETING = 'marketing';
+
     public const STATUS_SENT = 'sent';
 
     public const STATUS_FAILED = 'failed';

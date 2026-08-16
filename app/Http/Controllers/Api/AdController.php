@@ -352,6 +352,26 @@ class AdController extends Controller
         }
 
         $data = $request->validated();
+
+        // Spam guard: block an accidental double-submit or repost of the same
+        // listing content instead of silently creating a near-duplicate ad.
+        $isDuplicate = Ad::query()
+            ->where('user_id', $user->id)
+            ->where('title', $data['title'])
+            ->where('price', $data['price'])
+            ->where('created_at', '>=', now()->subDay())
+            ->exists();
+
+        if ($isDuplicate) {
+            return sendError(
+                $lang
+                    ? 'قمت بنشر إعلان بنفس العنوان والسعر خلال آخر 24 ساعة'
+                    : 'You already posted an ad with this title and price in the last 24 hours',
+                ['duplicate_listing' => true],
+                422
+            );
+        }
+
         $attributes = (array) ($data['attributes'] ?? []);
         // Attribute definitions live on the main category; resolve from both.
         $specCategoryIds = array_values(array_filter([

@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Support\StudentVerificationPeriod;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -46,6 +47,8 @@ class User extends Authenticatable
         'notify_system',
         'notify_chat',
         'notify_ads',
+        'notify_marketing',
+        'marketing_consent_at',
         'student_email',
         'student_verified_at',
         'student_reverify_due_at',
@@ -56,7 +59,7 @@ class User extends Authenticatable
         'login_otp',
         'login_otp_expires_at',
         'login_otp_sent_at',
-        ];
+    ];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -75,17 +78,16 @@ class User extends Authenticatable
      *
      * @var array<string, string>
      */
-
-
     public static $rules = [
         'first_name' => 'required|string|max:255',
         'last_name' => 'required|string|max:255',
         'phone' => 'required|max:191',
         'email' => 'nullable|email|max:255|unique:users,email',
         'password' => 'required|string|min:6|confirmed',
-//        'country_code' => 'required|string|max:5',
+        //        'country_code' => 'required|string|max:5',
 
     ];
+
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
@@ -97,6 +99,8 @@ class User extends Authenticatable
         'notify_system' => 'boolean',
         'notify_chat' => 'boolean',
         'notify_ads' => 'boolean',
+        'notify_marketing' => 'boolean',
+        'marketing_consent_at' => 'datetime',
         'is_trusted_seller' => 'boolean',
         'trusted_seller_verified_at' => 'datetime',
         'activation_code_expires_at' => 'datetime',
@@ -120,7 +124,7 @@ class User extends Authenticatable
     }
 
     /** The end of the 60-day period in which the user may still use the app. */
-    public function reverificationGraceEndsAt(): ?\Carbon\Carbon
+    public function reverificationGraceEndsAt(): ?Carbon
     {
         if ($this->student_reverify_due_at === null) {
             return null;
@@ -151,15 +155,13 @@ class User extends Authenticatable
         });
     }
 
-    //city
+    // city
     public function city()
     {
         return $this->belongsTo(City::class, 'city_id');
     }
 
-
-
-    //notifications
+    // notifications
     public function notifications()
     {
         return $this->hasMany(UserNotification::class);
@@ -173,6 +175,21 @@ class User extends Authenticatable
     public function moderationAppeals()
     {
         return $this->hasMany(ModerationAppeal::class);
+    }
+
+    public function termsAcceptances()
+    {
+        return $this->hasMany(TermsAcceptance::class);
+    }
+
+    public function featureRestrictions()
+    {
+        return $this->hasMany(UserFeatureRestriction::class);
+    }
+
+    public function activeFeatureRestriction(string $feature): ?UserFeatureRestriction
+    {
+        return $this->featureRestrictions()->active()->where('feature', $feature)->latest('id')->first();
     }
 
     public function userDevices()
@@ -255,5 +272,4 @@ class User extends Authenticatable
     {
         return (float) ($this->ratingsReceived()->avg('score') ?? 0);
     }
-
 }

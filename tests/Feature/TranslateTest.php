@@ -5,10 +5,9 @@ namespace Tests\Feature;
 use App\Models\City;
 use App\Models\Country;
 use App\Models\User;
+use App\Services\GoogleTranslateService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -19,17 +18,13 @@ class TranslateTest extends TestCase
 
     public function test_translates_the_exact_text_sent(): void
     {
-        Config::set('services.google_translate.api_key', 'test-key');
-
-        Http::fake([
-            'translation.googleapis.com/*' => Http::response([
-                'data' => [
-                    'translations' => [
-                        ['translatedText' => 'مرحبا', 'detectedSourceLanguage' => 'en'],
-                    ],
-                ],
-            ]),
-        ]);
+        $this->mock(GoogleTranslateService::class, function ($mock) {
+            $mock->shouldReceive('isConfigured')->andReturn(true);
+            $mock->shouldReceive('translate')
+                ->once()
+                ->with('Hello', 'ar', null)
+                ->andReturn(['translated_text' => 'مرحبا', 'detected_source_language' => 'en']);
+        });
 
         Sanctum::actingAs($this->user());
 
@@ -41,17 +36,13 @@ class TranslateTest extends TestCase
             ->assertJsonPath('data.translated_text', 'مرحبا')
             ->assertJsonPath('data.source_language', 'en')
             ->assertJsonPath('data.target_language', 'ar');
-
-        Http::assertSent(function ($request) {
-            return str_contains($request->url(), 'translation.googleapis.com')
-                && $request['q'] === 'Hello'
-                && $request['target'] === 'ar';
-        });
     }
 
     public function test_returns_503_when_google_translate_is_not_configured(): void
     {
-        Config::set('services.google_translate.api_key', null);
+        $this->mock(GoogleTranslateService::class, function ($mock) {
+            $mock->shouldReceive('isConfigured')->andReturn(false);
+        });
 
         Sanctum::actingAs($this->user());
 
@@ -71,7 +62,10 @@ class TranslateTest extends TestCase
 
     public function test_rejects_an_unsupported_target_language(): void
     {
-        Config::set('services.google_translate.api_key', 'test-key');
+        $this->mock(GoogleTranslateService::class, function ($mock) {
+            $mock->shouldReceive('isConfigured')->andReturn(true);
+        });
+
         Sanctum::actingAs($this->user());
 
         $this->postJson('/api/translate', [

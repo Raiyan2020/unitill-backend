@@ -1,13 +1,34 @@
 <?php
 
+use App\Http\Middleware\Authenticate;
+use App\Http\Middleware\EnsureFeatureIsAvailable;
+use App\Http\Middleware\PreventRequestsDuringMaintenance;
+use App\Http\Middleware\RedirectIfAuthenticated;
+use App\Http\Middleware\RedirectIfNotAdmin;
+use App\Http\Middleware\RedirectIfNotSchool;
+use App\Http\Middleware\SetApiLocale;
+use App\Http\Middleware\SetLanguage;
+use App\Http\Middleware\ValidateSignature;
+use App\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Validation\ValidationException;
+use Mcamara\LaravelLocalization\Middleware\LaravelLocalizationRedirectFilter;
+use Mcamara\LaravelLocalization\Middleware\LaravelLocalizationRoutes;
+use Mcamara\LaravelLocalization\Middleware\LaravelLocalizationViewPath;
+use Mcamara\LaravelLocalization\Middleware\LocaleCookieRedirect;
+use Mcamara\LaravelLocalization\Middleware\LocaleSessionRedirect;
+use Spatie\Permission\Middleware\PermissionMiddleware;
+use Spatie\Permission\Middleware\RoleMiddleware;
+use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -53,39 +74,40 @@ return Application::configure(basePath: dirname(__DIR__))
         // Must run before controllers and FormRequests so __() and validation
         // messages both resolve in the caller's language.
         $middleware->api(prepend: [
-            \App\Http\Middleware\SetApiLocale::class,
+            SetApiLocale::class,
         ]);
 
         $middleware->replace(
-            \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
-            \App\Http\Middleware\VerifyCsrfToken::class,
+            ValidateCsrfToken::class,
+            VerifyCsrfToken::class,
         );
 
         $middleware->replace(
-            \Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance::class,
-            \App\Http\Middleware\PreventRequestsDuringMaintenance::class,
+            Illuminate\Foundation\Http\Middleware\PreventRequestsDuringMaintenance::class,
+            PreventRequestsDuringMaintenance::class,
         );
 
         $middleware->web(append: [
-            \Mcamara\LaravelLocalization\Middleware\LaravelLocalizationRoutes::class,
-            \Mcamara\LaravelLocalization\Middleware\LocaleSessionRedirect::class,
+            LaravelLocalizationRoutes::class,
+            LocaleSessionRedirect::class,
         ]);
 
         $middleware->alias([
-            'auth' => \App\Http\Middleware\Authenticate::class,
-            'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,
-            'signed' => \App\Http\Middleware\ValidateSignature::class,
-            'localize' => \Mcamara\LaravelLocalization\Middleware\LaravelLocalizationRoutes::class,
-            'localizationRedirect' => \Mcamara\LaravelLocalization\Middleware\LaravelLocalizationRedirectFilter::class,
-            'localeSessionRedirect' => \Mcamara\LaravelLocalization\Middleware\LocaleSessionRedirect::class,
-            'localeCookieRedirect' => \Mcamara\LaravelLocalization\Middleware\LocaleCookieRedirect::class,
-            'localeViewPath' => \Mcamara\LaravelLocalization\Middleware\LaravelLocalizationViewPath::class,
-            'SetLanguage' => \App\Http\Middleware\SetLanguage::class,
-            'admin.auth' => \App\Http\Middleware\RedirectIfNotAdmin::class,
-            'school.auth' => \App\Http\Middleware\RedirectIfNotSchool::class,
-            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
-            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
-            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+            'auth' => Authenticate::class,
+            'guest' => RedirectIfAuthenticated::class,
+            'signed' => ValidateSignature::class,
+            'localize' => LaravelLocalizationRoutes::class,
+            'localizationRedirect' => LaravelLocalizationRedirectFilter::class,
+            'localeSessionRedirect' => LocaleSessionRedirect::class,
+            'localeCookieRedirect' => LocaleCookieRedirect::class,
+            'localeViewPath' => LaravelLocalizationViewPath::class,
+            'SetLanguage' => SetLanguage::class,
+            'admin.auth' => RedirectIfNotAdmin::class,
+            'school.auth' => RedirectIfNotSchool::class,
+            'role' => RoleMiddleware::class,
+            'permission' => PermissionMiddleware::class,
+            'role_or_permission' => RoleOrPermissionMiddleware::class,
+            'feature.available' => EnsureFeatureIsAvailable::class,
         ]);
     })
     ->withSchedule(function (Schedule $schedule) {
@@ -100,12 +122,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'password_confirmation',
         ]);
 
-        $exceptions->render(function (\Throwable $e, Request $request) {
+        $exceptions->render(function (Throwable $e, Request $request) {
             // HttpResponseException already carries the response the thrower
             // wants returned (throttle limits, FormRequest::failedValidation).
             // Without this it falls through to the catch-all below and every
             // such response is rewritten as a 500.
-            if ($e instanceof \Illuminate\Http\Exceptions\HttpResponseException) {
+            if ($e instanceof HttpResponseException) {
                 return $e->getResponse();
             }
 
@@ -130,7 +152,7 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             if ($request->is('api/*') || $request->expectsJson()) {
-                if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface) {
+                if ($e instanceof HttpExceptionInterface) {
                     return sendError($e->getMessage() ?: 'Error', [], $e->getStatusCode());
                 }
 

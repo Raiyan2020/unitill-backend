@@ -3820,6 +3820,159 @@
             ]
         },
         {
+            "name": "Auth · V3 (direct login)",
+            "description": "Single-step login: tokens are issued directly, no OTP on a normal login. OTP is used only for registration and for the locked-account recovery path (a previously-verified student whose grace period lapsed) — see V3\\AuthController.\n\nToken refresh is shared with v2: `POST /v2/auth/refresh` works for v3-issued tokens too, since the refresh mechanism is not version-specific.",
+            "item": [
+                {
+                    "name": "1. Login (direct, no OTP)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"type\": \"data\",\n    \"email\": \"john.personal@gmail.com\",\n    \"password\": \"secret123\",\n    \"device_id\": \"{{device_id}}\",\n    \"device_type\": \"android\",\n    \"device_token\": \"fcm-token-xyz\",\n    \"device_name\": \"Pixel 8\",\n    \"city_name\": \"Cairo\",\n    \"country_code\": \"EG\",\n    \"enable_biometric\": false\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/v3/login",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "v3",
+                                "login"
+                            ]
+                        },
+                        "description": "Single-step login: verifies the password (or `biometric_token` for fingerprint, same as v2) and issues tokens directly in this response — no OTP on a normal login.\n\nRequired: `type`, `device_id` (or `device_identifier`), and either `password` + one of `email`/`login`, or `biometric_token` when `type` is `fingerprint`.\n\nOTP is still used, but only for the locked-account recovery path (a previously-verified student whose account was locked after the reverification grace period) — a normal login never sees one.\n\nToken refresh is shared with v2: `POST {{base_url}}/v2/auth/refresh` works for v3-issued tokens too (see the \"4. Refresh Token\" request in the V2 folder)."
+                    },
+                    "response": [
+                        {
+                            "name": "Login — success",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"type\": \"data\",\n    \"email\": \"john.personal@gmail.com\",\n    \"password\": \"secret123\",\n    \"device_id\": \"{{device_id}}\",\n    \"device_type\": \"android\",\n    \"device_token\": \"fcm-token-xyz\",\n    \"device_name\": \"Pixel 8\",\n    \"city_name\": \"Cairo\",\n    \"country_code\": \"EG\",\n    \"enable_biometric\": false\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/v3/login",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "v3",
+                                        "login"
+                                    ]
+                                },
+                                "description": "Single-step login: verifies the password and issues tokens directly — no OTP on a normal login."
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"data\": {\n        \"user\": {\n            \"id\": 8,\n            \"name\": \"Ahmed nabil\",\n            \"first_name\": \"Ahmed\",\n            \"last_name\": \"nabil\",\n            \"image\": \"http://127.0.0.1:8000/storage/users/example.jpg\",\n            \"member_since\": \"July 2026\",\n            \"created_at\": \"2026-07-29T15:51:31+00:00\",\n            \"ads_count\": 0,\n            \"active_ads_count\": 0,\n            \"average_rating\": 0,\n            \"total_reviews\": 0,\n            \"is_trusted_seller\": false,\n            \"device_type\": \"android\",\n            \"city\": null,\n            \"status\": \"active\",\n            \"student_email_masked\": \"fa***@cdd.ac.uk\"\n        },\n        \"access_token\": \"191|b0cyavDVzMO6cCUUNSjqeuDVYlH7oZNcwAsz8VTT5\",\n        \"access_token_expires_at\": \"2026-08-16T08:17:37+00:00\",\n        \"refresh_token\": \"X4zziz9cePW0bS9Rc3eCkG6MNyAfdCuCnckLbydhlcCCo5xPZKxHrOJ03XAsltwVFKOFdRW2fFSeVZiu\",\n        \"refresh_token_expires_at\": \"2027-10-15T07:17:38+00:00\",\n        \"token\": \"191|b0cyavDVzMO6cCUUNSjqeuDVYlH7oZNcwAsz8VTT5\"\n    },\n    \"message\": \"login success\"\n}"
+                        },
+                        {
+                            "name": "Login — account disabled",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"type\": \"data\",\n    \"email\": \"john.personal@gmail.com\",\n    \"password\": \"secret123\",\n    \"device_id\": \"{{device_id}}\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/v3/login",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "v3",
+                                        "login"
+                                    ]
+                                },
+                                "description": "Response when the account has an active moderation suspension (temporary or permanent)."
+                            },
+                            "status": "Forbidden",
+                            "code": 403,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": false,\n    \"message\": \"Account disabled\",\n    \"data\": {\n        \"moderation_action_id\": 8,\n        \"moderation_reason\": \"ggg\",\n        \"suspended_until\": null\n    }\n}"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
             "name": "Public",
             "item": [
                 {
@@ -10537,7 +10690,7 @@
                                 "settings"
                             ]
                         },
-                        "description": "Privacy & notification toggles for the Settings screen. Returned only to the account owner.\n\nnotify_system is always true — system alerts cannot be switched off."
+                        "description": "Privacy & notification toggles for the Settings screen. Returned only to the account owner.\n\nnotify_system is always true — system alerts cannot be switched off.\n\nnotify_marketing is a separate opt-in consent, distinct from terms_accepted_at at registration — false by default. marketing_consent_at is stamped fresh every time it is switched on."
                     },
                     "response": []
                 },
@@ -10572,7 +10725,7 @@
                         },
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n  \"show_last_name\": false,\n  \"notify_chat\": true\n}",
+                            "raw": "{\n  \"show_last_name\": false,\n  \"notify_chat\": true,\n  \"notify_marketing\": true\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -10589,7 +10742,7 @@
                                 "settings"
                             ]
                         },
-                        "description": "Partial update — send only the toggles being changed.\n\nAccepted: show_last_name, show_approximate_location, trusted_users_only, notify_chat, notify_ads.\n\nNOT accepted: notify_system (always on; sending it alone returns 422).\n\nEffects:\n- show_last_name=false -> others see first name only, on the profile and on the seller block of your listings.\n- trusted_users_only=true -> only fully verified accounts (status 1) can open a NEW chat with you; existing threads are unaffected. Blocked buyers get 403 with needs_verification.\n- show_approximate_location -> stored, not yet enforced."
+                        "description": "Partial update — send only the toggles being changed.\n\nAccepted: show_last_name, show_approximate_location, trusted_users_only, notify_chat, notify_ads, notify_marketing.\n\nNOT accepted: notify_system (always on; sending it alone returns 422).\n\nEffects:\n- show_last_name=false -> others see first name only, on the profile and on the seller block of your listings.\n- trusted_users_only=true -> only fully verified accounts (status 1) can open a NEW chat with you; existing threads are unaffected. Blocked buyers get 403 with needs_verification.\n- show_approximate_location -> stored, not yet enforced.\n- notify_marketing=true -> separate marketing consent (not the same as terms_accepted_at); stamps marketing_consent_at with the current time and subscribes the device to the marketing FCM topic. Setting it false again unsubscribes but does not clear the historical consent timestamp."
                     },
                     "response": []
                 },
@@ -14962,6 +15115,950 @@
                     "response": []
                 }
             ]
+        },
+        {
+            "name": "Admin · Push Notifications",
+            "description": "Dashboard broadcast/targeted push notifications. Three audiences: all (gated by notify_system), user (a single recipient), and marketing (gated by the separate notify_marketing opt-in consent — never sent under the \"all\" audience).",
+            "item": [
+                {
+                    "name": "Get Push Notification Meta",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{admin_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/push-notifications/meta",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "push-notifications",
+                                "meta"
+                            ]
+                        },
+                        "description": "Returns both topics and estimated recipient counts: all_users_topic / estimated_all_audience (notify_system) and marketing_topic / estimated_marketing_audience (notify_marketing), plus whether Firebase is configured."
+                    },
+                    "response": [
+                        {
+                            "name": "Meta — Example",
+                            "originalRequest": {
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{base_url}}/admin/push-notifications/meta",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "admin",
+                                        "push-notifications",
+                                        "meta"
+                                    ]
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"data\": {\n        \"all_users_topic\": \"unitill_all\",\n        \"estimated_all_audience\": 128,\n        \"marketing_topic\": \"unitill_marketing\",\n        \"estimated_marketing_audience\": 41,\n        \"firebase_configured\": true\n    },\n    \"message\": \"\"\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "List Push Notification History",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{admin_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/push-notifications?per_page=10",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "push-notifications"
+                            ],
+                            "query": [
+                                {
+                                    "key": "per_page",
+                                    "value": "10"
+                                },
+                                {
+                                    "key": "search",
+                                    "value": "",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Sent-notification log. audience is one of all, user, marketing."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Send Push Notification — All",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{admin_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"audience\": \"all\",\n    \"title\": \"Scheduled maintenance tonight\",\n    \"body\": \"The app will be briefly unavailable at 2 AM UTC.\",\n    \"link\": \"\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/push-notifications",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "push-notifications"
+                            ]
+                        },
+                        "description": "audience=all is a system broadcast — every user with notify_system enabled (always true) receives it, both as a push and an in-app inbox entry. Use audience=marketing instead for promotional content, which respects the separate notify_marketing opt-in."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Send Push Notification — Marketing (opted-in only)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{admin_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"audience\": \"marketing\",\n    \"title\": \"New listings just for you\",\n    \"body\": \"Check out this week's top deals on Unitill.\",\n    \"link\": \"\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/push-notifications",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "push-notifications"
+                            ]
+                        },
+                        "description": "Sent only to users with notify_marketing=true — a separate opt-in consent captured via PUT /account/settings, distinct from terms_accepted_at and from notify_system. Both the push and the in-app inbox entry are restricted to opted-in users; nobody else receives anything."
+                    },
+                    "response": [
+                        {
+                            "name": "Marketing send — success",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"audience\": \"marketing\",\n    \"title\": \"New listings just for you\",\n    \"body\": \"Check out this week's top deals on Unitill.\"\n}"
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/admin/push-notifications",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "admin",
+                                        "push-notifications"
+                                    ]
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"data\": {\n        \"id\": 12,\n        \"audience\": \"marketing\",\n        \"topic\": \"unitill_marketing\",\n        \"status\": \"sent\",\n        \"recipients_count\": 41,\n        \"fcm_message_id\": \"projects/unitill/messages/abc123\"\n    },\n    \"message\": \"Push notification sent\"\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Send Push Notification — Single User",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{admin_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"audience\": \"user\",\n    \"user_id\": {{reported_user_id}},\n    \"title\": \"About your recent listing\",\n    \"body\": \"An admin left a note on your ad.\",\n    \"link\": \"\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/push-notifications",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "push-notifications"
+                            ]
+                        },
+                        "description": "audience=user requires user_id. Sent regardless of notify_marketing; still requires notify_system to be true for the push itself (always true today), and always creates an in-app inbox entry even if the user has no device token."
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Compliance - Terms, Deletion & Feature Restrictions",
+            "description": "Terms versioning, Google Play public account deletion workflow, and single-feature restrictions.",
+            "item": [
+                {
+                    "name": "Get Current Terms (Public)",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/terms/current",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "terms",
+                                "current"
+                            ]
+                        },
+                        "description": "Public localized terms. Read data.version before registration or acceptance. The accepted field is null for an unauthenticated request."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Current Terms (Authenticated)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/terms/current",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "terms",
+                                "current"
+                            ]
+                        },
+                        "description": "Optional-auth behaviour: accepted is true or false for the bearer-token user and current version. Without a token, the public request returns accepted=null."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Public Delete Account Page (Web)",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{web_url}}/delete-account?lang=en",
+                            "host": [
+                                "{{web_url}}"
+                            ],
+                            "path": [
+                                "delete-account"
+                            ],
+                            "query": [
+                                {
+                                    "key": "lang",
+                                    "value": "en"
+                                }
+                            ]
+                        },
+                        "description": "Google Play public, login-free HTML page. Supports ?lang=en and ?lang=ar and automatically detects Arabic browsers."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Public Delete Account Page - Arabic",
+                    "request": {
+                        "auth": {
+                            "type": "noauth"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{web_url}}/delete-account?lang=ar",
+                            "host": [
+                                "{{web_url}}"
+                            ],
+                            "path": [
+                                "delete-account"
+                            ],
+                            "query": [
+                                {
+                                    "key": "lang",
+                                    "value": "ar"
+                                }
+                            ]
+                        },
+                        "description": "Google Play public, login-free HTML page. Supports ?lang=en and ?lang=ar and automatically detects Arabic browsers."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Accept Current Terms",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"terms_version\": \"{{terms_version}}\",\n    \"accepted\": true\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/terms/accept",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "terms",
+                                "accept"
+                            ]
+                        },
+                        "description": "Records acceptance for exactly the current version. Returns 422 when the submitted version is outdated."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "My Terms Acceptance History",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/terms/history",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "terms",
+                                "history"
+                            ]
+                        },
+                        "description": "Audit trail of every terms version accepted by the authenticated user."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Admin - List Terms Versions",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{admin_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/terms-versions",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "terms-versions"
+                            ]
+                        },
+                        "description": "Requires legal_affairs.view. Includes acceptances_count and is_current."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Admin - Publish New Terms Version",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{admin_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"version\": \"2.0\",\n    \"title_en\": \"Terms and Conditions of Use\",\n    \"title_ar\": \"شروط وأحكام الاستخدام\",\n    \"content_en\": \"Replace with the complete English terms.\",\n    \"content_ar\": \"استبدل هذا النص بالشروط العربية الكاملة.\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/terms-versions",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "terms-versions"
+                            ]
+                        },
+                        "description": "Requires legal_affairs.update. Publishing makes this the current version and does not automatically accept it for existing users."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Admin - List Account Deletion Requests",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{admin_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/account-deletion-requests?status=pending&per_page=100",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "account-deletion-requests?status=pending&per_page=100"
+                            ]
+                        },
+                        "description": "Requires users.view. Lists requests submitted through the public web page."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Admin - Complete Account Deletion Request",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{admin_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"status\": \"completed\",\n    \"resolution_note\": \"Identity checked and permanent deletion approved.\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/account-deletion-requests/{{deletion_request_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "account-deletion-requests",
+                                "{{deletion_request_id}}"
+                            ]
+                        },
+                        "description": "Requires users.delete. Permanently purges the matched account. Use status=rejected to reject without deleting."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Admin - List User Feature Restrictions",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{admin_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/admin/users/{{user_id}}/feature-restrictions",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "users",
+                                "{{user_id}}",
+                                "feature-restrictions"
+                            ]
+                        },
+                        "description": "Requires users.view. Returns active, expired, and lifted restrictions."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Admin - Restrict Posting",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{admin_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"feature\": \"posting\",\n    \"reason\": \"Repeated prohibited listings.\",\n    \"duration_days\": 7\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/users/{{user_id}}/feature-restrictions",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "users",
+                                "{{user_id}}",
+                                "feature-restrictions"
+                            ]
+                        },
+                        "description": "Requires users.update. feature may be posting or messaging. Omit duration_days for an indefinite restriction."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Admin - Restrict Messaging",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{admin_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"feature\": \"messaging\",\n    \"reason\": \"Messaging abuse investigation.\",\n    \"duration_days\": 3\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/users/{{user_id}}/feature-restrictions",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "users",
+                                "{{user_id}}",
+                                "feature-restrictions"
+                            ]
+                        },
+                        "description": "Restricts only starting conversations and sending messages; login and posting remain available."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Admin - Lift Feature Restriction",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{admin_token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"reason\": \"Review completed.\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/admin/users/{{user_id}}/feature-restrictions/{{restriction_id}}",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "admin",
+                                "users",
+                                "{{user_id}}",
+                                "feature-restrictions",
+                                "{{restriction_id}}"
+                            ]
+                        },
+                        "description": "Requires users.update. Marks the restriction as lifted and preserves its audit history."
+                    },
+                    "response": []
+                }
+            ]
         }
     ],
     "auth": {
@@ -15023,6 +16120,26 @@
         },
         {
             "key": "appeal_id",
+            "value": "1",
+            "type": "string"
+        },
+        {
+            "key": "terms_version",
+            "value": "1.0",
+            "type": "string"
+        },
+        {
+            "key": "user_id",
+            "value": "1",
+            "type": "string"
+        },
+        {
+            "key": "restriction_id",
+            "value": "1",
+            "type": "string"
+        },
+        {
+            "key": "deletion_request_id",
             "value": "1",
             "type": "string"
         }

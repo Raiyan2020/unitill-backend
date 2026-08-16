@@ -20,4 +20,12 @@ return [
     */
     'all_users_topic' => env('FCM_ALL_USERS_TOPIC', 'unitill_all'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | FCM topic for marketing broadcasts — only users who opted in via
+    | notify_marketing are subscribed to this topic.
+    |--------------------------------------------------------------------------
+    */
+    'marketing_topic' => env('FCM_MARKETING_TOPIC', 'unitill_marketing'),
+
 ];

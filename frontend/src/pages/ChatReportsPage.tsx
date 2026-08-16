@@ -14,6 +14,12 @@ type ReportStatus = 'pending' | 'reviewed' | 'dismissed';
 type ReportType = 'user' | 'chat';
 type ReportPriority = 'normal' | 'urgent' | 'critical';
 
+function priorityLabel(priority: string | null | undefined, t: ReturnType<typeof useI18n>['t']): string {
+  if (priority === 'critical') return t.priorityCritical;
+  if (priority === 'urgent') return t.priorityUrgent;
+  return t.priorityNormal;
+}
+
 type Party = { id: number; name: string; email: string | null };
 type ReportedAd = { id: number; public_id: string | null; title: string | null };
 
@@ -71,7 +77,6 @@ export function ChatReportsPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [reasonFilter, setReasonFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -93,7 +98,7 @@ export function ChatReportsPage() {
           search: search || undefined,
           status: statusFilter || undefined,
           reason: reasonFilter || undefined,
-          type: typeFilter || undefined,
+          type: 'chat',
           priority: priorityFilter || undefined,
         },
       });
@@ -112,7 +117,7 @@ export function ChatReportsPage() {
   useEffect(() => {
     fetchRows();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, statusFilter, reasonFilter, typeFilter, priorityFilter]);
+  }, [page, pageSize, statusFilter, reasonFilter, priorityFilter]);
 
   useEffect(() => {
     if (!didInitSearch.current) {
@@ -170,7 +175,7 @@ export function ChatReportsPage() {
       if (moderationAction === 'temporary_suspension') payload.duration_days = Number(suspensionDays);
       await api.post(`/admin/users/${details.reported_user.id}/moderation-actions`, payload);
       setModerationReason('');
-      notify.success('Moderation action recorded');
+      notify.success(t.moderationActionRecorded);
     } catch (error) {
       notify.errorFrom(error, t.actionFailed);
     } finally {
@@ -186,26 +191,14 @@ export function ChatReportsPage() {
         <h2 className="text-2xl font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">{t.chatReports}</h2>
         <div className="flex flex-wrap items-center gap-2">
           <select
-            value={typeFilter}
-            onChange={(e) => {
-              setPage(1);
-              setTypeFilter(e.target.value);
-            }}
-            className="h-9 rounded-lg border border-[#dbdbe8] bg-white px-2 text-sm text-[#2f2b3d] dark:border-[#4a4f68] dark:bg-[#2f3349] dark:text-[#d7d8ea]"
-          >
-            <option value="">{t.allTypes}</option>
-            <option value="user">{t.reportedUser}</option>
-            <option value="chat">{t.reportedConversation}</option>
-          </select>
-          <select
             value={priorityFilter}
             onChange={(e) => { setPage(1); setPriorityFilter(e.target.value); }}
             className="h-9 rounded-lg border border-[#dbdbe8] bg-white px-2 text-sm text-[#2f2b3d] dark:border-[#4a4f68] dark:bg-[#2f3349] dark:text-[#d7d8ea]"
           >
-            <option value="">All priorities</option>
-            <option value="critical">Critical</option>
-            <option value="urgent">Urgent</option>
-            <option value="normal">Normal</option>
+            <option value="">{t.allPriorities}</option>
+            <option value="critical">{t.priorityCritical}</option>
+            <option value="urgent">{t.priorityUrgent}</option>
+            <option value="normal">{t.priorityNormal}</option>
           </select>
           <select
             value={statusFilter}
@@ -272,9 +265,8 @@ export function ChatReportsPage() {
               <thead className="bg-[#f8f7fb] text-[#6f6b7d] dark:bg-[#383d56] dark:text-[#b6b8cc]">
                 <tr>
                   <th className="px-4 py-3 text-start">{t.id}</th>
-                  <th className="px-4 py-3 text-start">{t.type}</th>
                   <th className="px-4 py-3 text-start">{t.reason}</th>
-                  <th className="px-4 py-3 text-start">Priority</th>
+                  <th className="px-4 py-3 text-start">{t.priority}</th>
                   <th className="px-4 py-3 text-start">{t.reporter}</th>
                   <th className="px-4 py-3 text-start">{t.reportedUser}</th>
                   <th className="px-4 py-3 text-start">{t.date}</th>
@@ -284,22 +276,17 @@ export function ChatReportsPage() {
               </thead>
               <tbody>
                 {loading ? (
-                  <TableLoadingRow colSpan={9} />
+                  <TableLoadingRow colSpan={8} />
                 ) : rows.length === 0 ? (
-                  <tr><td className="px-4 py-6 text-center text-sm text-[#8a8da8]" colSpan={9}>{t.noDataFound}</td></tr>
+                  <tr><td className="px-4 py-6 text-center text-sm text-[#8a8da8]" colSpan={8}>{t.noDataFound}</td></tr>
                 ) : (
                   rows.map((row) => (
                     <tr key={row.id} className="border-t border-[#ececf3] dark:border-[#44485f]">
                       <td className="px-4 py-3">{row.id}</td>
-                      <td className="px-4 py-3">
-                        <span className="rounded-full bg-[#f1f0fb] px-2 py-1 text-xs font-medium text-[#6f6b7d] dark:bg-[#3d4260] dark:text-[#b6b8cc]">
-                          {row.type === 'user' ? 'User' : 'Conversation'}
-                        </span>
-                      </td>
                       <td className="px-4 py-3">{row.reason_label || row.reason}</td>
                       <td className="px-4 py-3">
                         <span className={`rounded-full px-2 py-1 text-xs font-semibold ${row.priority === 'critical' ? 'bg-rose-500/15 text-rose-600' : row.priority === 'urgent' ? 'bg-amber-500/15 text-amber-600' : 'bg-slate-500/15 text-slate-600'}`}>
-                          {row.priority || 'normal'}
+                          {priorityLabel(row.priority, t)}
                         </span>
                       </td>
                       <td className="px-4 py-3">{row.reporter?.name || '-'}</td>
@@ -388,21 +375,21 @@ export function ChatReportsPage() {
 
               {details.reported_user ? (
                 <div className="space-y-3 rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                  <p className="text-sm font-semibold">Moderation action</p>
+                  <p className="text-sm font-semibold">{t.moderationAction}</p>
                   <div className="grid gap-2 sm:grid-cols-2">
                     <select value={moderationAction} onChange={(e) => setModerationAction(e.target.value)} className="h-10 rounded-lg border border-[#dbdbe8] bg-white px-3 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]">
-                      <option value="warning">Warning</option>
-                      <option value="temporary_suspension">Temporary suspension</option>
-                      <option value="permanent_suspension">Permanent suspension</option>
-                      <option value="reactivated">Reactivate</option>
+                      <option value="warning">{t.modWarning}</option>
+                      <option value="temporary_suspension">{t.modTemporarySuspension}</option>
+                      <option value="permanent_suspension">{t.modPermanentSuspension}</option>
+                      <option value="reactivated">{t.modReactivated}</option>
                     </select>
                     {moderationAction === 'temporary_suspension' ? (
-                      <Input type="number" min="1" max="365" value={suspensionDays} onChange={(e) => setSuspensionDays(e.target.value)} placeholder="Duration in days" />
+                      <Input type="number" min="1" max="365" value={suspensionDays} onChange={(e) => setSuspensionDays(e.target.value)} placeholder={t.durationInDays} />
                     ) : null}
                   </div>
-                  <textarea value={moderationReason} onChange={(e) => setModerationReason(e.target.value)} rows={3} placeholder="Decision reason" className="w-full rounded-lg border border-[#dbdbe8] bg-white px-3 py-2 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]" />
+                  <textarea value={moderationReason} onChange={(e) => setModerationReason(e.target.value)} rows={3} placeholder={t.decisionReason} className="w-full rounded-lg border border-[#dbdbe8] bg-white px-3 py-2 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]" />
                   <Button disabled={moderationSaving || !moderationReason.trim()} onClick={applyModeration}>
-                    {moderationSaving ? 'Saving…' : 'Apply action'}
+                    {moderationSaving ? t.saving : t.applyAction}
                   </Button>
                 </div>
               ) : null}

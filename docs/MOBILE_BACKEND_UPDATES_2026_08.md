@@ -294,6 +294,11 @@ re-reading the list from the server) is exactly right and stays correct.
 
 ## Deployment (backend) — safe on the existing production database
 
+> **16 August compliance addition:** versioned Terms acceptance, independent
+> posting/messaging restrictions, and the public Google Play deletion page are
+> documented in
+> [`MOBILE_COMPLIANCE_UPDATES_2026_08_16.md`](MOBILE_COMPLIANCE_UPDATES_2026_08_16.md).
+
 ```bash
 git pull
 composer install --no-dev --optimize-autoloader

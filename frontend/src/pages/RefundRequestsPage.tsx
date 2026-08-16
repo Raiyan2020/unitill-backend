@@ -41,7 +41,7 @@ export function RefundRequestsPage() {
   const didInit = useRef(false);
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<'' | RefundStatus>('requested');
+  const [statusFilter, setStatusFilter] = useState<'' | RefundStatus>('');
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [total, setTotal] = useState(0);
@@ -109,10 +109,10 @@ export function RefundRequestsPage() {
           onChange={(e) => setStatusFilter(e.target.value as '' | RefundStatus)}
           className="h-9 rounded-lg border border-[#dbdbe8] bg-white px-2 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]"
         >
+          <option value="">{t.allStatuses}</option>
           <option value="requested">{t.refundRequested}</option>
           <option value="refunded">{t.refunded}</option>
           <option value="declined">{t.refundDeclined}</option>
-          <option value="">{t.allStatuses}</option>
         </select>
       </div>
 

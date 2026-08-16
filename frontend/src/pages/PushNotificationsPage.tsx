@@ -11,7 +11,7 @@ import { useI18n } from '../providers/i18n-provider';
 
 type HistoryRow = {
   id: number;
-  audience: 'all' | 'user';
+  audience: 'all' | 'user' | 'marketing';
   topic: string | null;
   title: string;
   body: string;
@@ -28,6 +28,8 @@ type HistoryRow = {
 type Meta = {
   all_users_topic: string;
   estimated_all_audience: number;
+  marketing_topic: string;
+  estimated_marketing_audience: number;
   firebase_configured: boolean;
 };
 
@@ -46,7 +48,7 @@ export function PushNotificationsPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
-  const [audience, setAudience] = useState<'all' | 'user'>('all');
+  const [audience, setAudience] = useState<'all' | 'user' | 'marketing'>('all');
   const [userId, setUserId] = useState('');
   const [users, setUsers] = useState<UserOption[]>([]);
   const [userSearch, setUserSearch] = useState('');
@@ -170,8 +172,17 @@ export function PushNotificationsPage() {
         <CardContent className="space-y-4">
           {meta ? (
             <div className="rounded-lg border border-[#ececf3] bg-[#fafafe] p-3 text-sm dark:border-[#44485f] dark:bg-[#383d56]">
-              <p><strong>{t.topic}:</strong> {meta.all_users_topic}</p>
-              <p><strong>{t.estimatedAudience}:</strong> {meta.estimated_all_audience}</p>
+              {audience === 'marketing' ? (
+                <>
+                  <p><strong>{t.topic}:</strong> {meta.marketing_topic}</p>
+                  <p><strong>{t.estimatedAudience}:</strong> {meta.estimated_marketing_audience}</p>
+                </>
+              ) : (
+                <>
+                  <p><strong>{t.topic}:</strong> {meta.all_users_topic}</p>
+                  <p><strong>{t.estimatedAudience}:</strong> {meta.estimated_all_audience}</p>
+                </>
+              )}
               <p><strong>{t.firebase}:</strong> {meta.firebase_configured ? t.yes : t.no}</p>
             </div>
           ) : null}
@@ -181,11 +192,12 @@ export function PushNotificationsPage() {
               <span className="font-medium">{t.audience}</span>
               <select
                 value={audience}
-                onChange={(e) => setAudience(e.target.value as 'all' | 'user')}
+                onChange={(e) => setAudience(e.target.value as 'all' | 'user' | 'marketing')}
                 className="h-10 w-full rounded-lg border border-[#dbdbe8] bg-white px-3 dark:border-[#4a4f68] dark:bg-[#2f3349]"
               >
                 <option value="all">{t.sendToAll}</option>
                 <option value="user">{t.sendToUser}</option>
+                <option value="marketing">{t.sendToMarketing}</option>
               </select>
             </label>
 
@@ -284,7 +296,7 @@ export function PushNotificationsPage() {
                   rows.map((row) => (
                     <tr key={row.id} className="border-t border-[#ececf3] dark:border-[#44485f]">
                       <td className="px-4 py-3">{row.id}</td>
-                      <td className="px-4 py-3">{row.audience === 'all' ? `${t.topic}: ${row.topic || '-'}` : t.user}</td>
+                      <td className="px-4 py-3">{row.audience === 'user' ? t.user : `${t.topic}: ${row.topic || '-'}`}</td>
                       <td className="px-4 py-3">{row.title}</td>
                       <td className="px-4 py-3">{row.user_name ? `${row.user_name} (#${row.user_id})` : '-'}</td>
                       <td className="px-4 py-3">{row.status}</td>

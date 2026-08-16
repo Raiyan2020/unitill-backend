@@ -20,6 +20,7 @@ class AccountSettingsController extends Controller
         'trusted_users_only',
         'notify_chat',
         'notify_ads',
+        'notify_marketing',
     ];
 
     public function show(Request $request)
@@ -49,6 +50,12 @@ class AccountSettingsController extends Controller
         foreach ($validated as $key => $value) {
             $user->{$key} = (bool) $value;
         }
+        // Marketing consent must be its own timestamped record, separate from
+        // the general terms-of-use acceptance — stamped fresh every time the
+        // user opts back in, not just the first time.
+        if (($validated['notify_marketing'] ?? null) === true) {
+            $user->marketing_consent_at = now();
+        }
         $user->save();
 
         return sendResponse(
@@ -69,6 +76,8 @@ class AccountSettingsController extends Controller
                 'notify_chat' => (bool) $user->notify_chat,
                 'notify_ads' => (bool) $user->notify_ads,
                 'notify_system' => true,
+                'notify_marketing' => (bool) $user->notify_marketing,
+                'marketing_consent_at' => $user->marketing_consent_at?->toIso8601String(),
             ],
         ];
     }

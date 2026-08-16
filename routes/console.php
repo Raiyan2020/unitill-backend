@@ -40,3 +40,19 @@ Schedule::command('students:require-reverification')
     ->dailyAt('06:00')
     ->withoutOverlapping()
     ->runInBackground();
+
+// Temporary suspensions carry a suspended_until instead of expiring on their
+// own; without this scheduled, restoreExpiredSuspension() only ever runs
+// opportunistically when the user themselves next attempts to log in.
+Schedule::command('moderation:expire-suspensions')
+    ->hourly()
+    ->withoutOverlapping()
+    ->runInBackground();
+
+// Enforces the data-protection retention schedule (login logs, expired ads,
+// closed moderation/report/appeal cases, support messages, deleted-user
+// records, closed conversations). See PruneRetainedData for the periods.
+Schedule::command('data:prune')
+    ->dailyAt('03:00')
+    ->withoutOverlapping()
+    ->runInBackground();

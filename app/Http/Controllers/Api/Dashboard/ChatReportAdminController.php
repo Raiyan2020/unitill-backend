@@ -71,7 +71,7 @@ class ChatReportAdminController extends Controller
 
         return sendResponse([
             'reports' => $rows,
-            'counts' => $this->statusCounts(),
+            'counts' => $this->statusCounts($type),
             'reasons' => ChatReportReason::options($request->header('lang', 'en')),
         ], 'Chat reports fetched');
     }
@@ -158,9 +158,14 @@ class ChatReportAdminController extends Controller
             ->orWhere('email', 'like', "%{$search}%");
     }
 
-    private function statusCounts(): array
+    private function statusCounts(string $type = ''): array
     {
-        $counts = ChatReport::query()
+        $query = ChatReport::query();
+        if (in_array($type, ['user', 'chat'], true)) {
+            $query->where('type', $type);
+        }
+
+        $counts = $query
             ->selectRaw('status, COUNT(*) as total')
             ->groupBy('status')
             ->pluck('total', 'status');

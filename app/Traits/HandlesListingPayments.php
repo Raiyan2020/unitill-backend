@@ -100,7 +100,7 @@ trait HandlesListingPayments
         try {
             $intent = $paymentAd->stripe_payment_intent_id
                 ? app(StripeService::class)->paymentIntent($paymentAd->stripe_payment_intent_id)
-                : app(StripeService::class)->createListingPaymentIntent($paymentAd);
+                : app(StripeService::class)->createListingPaymentIntent($paymentAd, $type);
             if (! $paymentAd->stripe_payment_intent_id) {
                 $paymentAd->update(['stripe_payment_intent_id' => $intent['id']]);
             }

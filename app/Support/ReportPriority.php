@@ -12,6 +12,7 @@ class ReportPriority
     {
         return match ($reason) {
             ChatReportReason::THREATS_OR_VIOLENCE => self::CRITICAL,
+            ChatReportReason::HARASSMENT_OR_ABUSE,
             ChatReportReason::SPAM_OR_SCAM,
             ChatReportReason::PAYMENT_OUTSIDE_APP,
             AdReportReason::SCAM_OR_FRAUDULENT,

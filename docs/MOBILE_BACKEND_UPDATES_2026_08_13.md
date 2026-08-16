@@ -36,6 +36,9 @@ though — read this box before anything else:
 | New-listing blocked for lapsed students | **Yes** — a 403 you may now see on `POST /ads`, `POST /ads/draft`, `POST /my-ads/{id}/sell-again` |
 | New `/v3/login` (no OTP on normal login) | **Yes, if** you want this — brand-new endpoint, `/v2/login` is untouched and still works exactly as it does today |
 | Translation | **Yes, if** you want the "Translate" button to actually work — new endpoint, replaces any unofficial in-app translator package |
+| Marketing consent (`notify_marketing`) | **Yes** — new opt-in field on `GET`/`PUT /account/settings`, separate from Terms acceptance |
+| Duplicate-listing block | **No new field**, but `POST /ads` can now return a 422 it never returned before |
+| Extending an expired ad | **No**, but a real bug is now fixed — retest this flow |
 
 ---
 
@@ -287,6 +290,60 @@ If the app currently has its own in-app translation (the unofficial Flutter pack
 compliance notes flag), this endpoint is meant to replace that — swap the "Translate"
 button's implementation to call this instead of the local package.
 
+`503` now specifically means the server-side Google Cloud service-account credentials
+aren't in place yet — same condition as before, just authenticated differently on our end
+(no change to what you send or receive).
+
+---
+
+## 10. Marketing consent — new field, separate from Terms acceptance
+
+Per the compliance notes: marketing/promotional notifications need their own opt-in,
+never bundled with Terms-of-use acceptance.
+
+`GET /account/settings` → `data.notifications` now also includes:
+
+```json
+{ "notify_chat": true, "notify_ads": true, "notify_system": true,
+  "notify_marketing": false, "marketing_consent_at": null }
+```
+
+`PUT /account/settings` now accepts `notify_marketing` (boolean) alongside the existing
+toggles. Turning it **on** stamps `marketing_consent_at` with the current time — every
+time it's switched back on, not just the first time. It defaults to `false`; nothing
+opts a user in automatically.
+
+Admin marketing broadcasts (a new "marketing" audience on the dashboard's push tool) are
+sent — both the push and the in-app inbox entry — only to users with
+`notify_marketing = true`. A user who never opts in receives nothing from marketing
+sends, while still getting ordinary system/chat/ad notifications as before.
+
+---
+
+## 11. Duplicate-listing protection — new possible error on `POST /ads`
+
+Per the compliance notes on spam protection: posting an ad with the same `title` and
+`price` as one you already posted **in the last 24 hours** is now blocked:
+
+```json
+{ "status": false, "message": "You already posted an ad with this title and price in the last 24 hours",
+  "data": { "duplicate_listing": true } }
+```
+
+`422`. Check `data.duplicate_listing` if you want to show a specific message rather than
+a generic form error. This only compares your own prior listings, not other sellers'.
+
+---
+
+## 12. Bug fix: extending an expired ad could fail with a Stripe error
+
+`POST /v2/my-ads/{id}/extend` (see §2) could return a Stripe error —
+*"Keys for idempotent requests can only be used with the same parameters..."* — because
+the payment idempotency key was scoped to the ad ID alone, colliding with the ad's
+original listing payment (same ad, different amount). Fixed: the key now also factors in
+the payment type and amount, so listing payments and extension payments never collide.
+No request/response shape changed — just retest the extend flow if you hit this before.
+
 ---
 
 ## Verify
@@ -320,3 +377,24 @@ button's implementation to call this instead of the local package.
 - Log in normally a few times as an active, already-verified student and confirm
   `student_reverify_due_at` does **not** move — only a genuine re-verification (or
   recovering a logged-out account) should push it forward.
+- Toggle `notify_marketing` on via `PUT /account/settings`, confirm `marketing_consent_at`
+  is stamped; toggle it off and back on and confirm the timestamp updates again.
+- Post an ad, then immediately try posting another with the same title and price —
+  confirm the second one is rejected with `duplicate_listing: true`.
+- Let an ad expire, then extend it via `/v2/my-ads/{id}/extend` — confirm it succeeds
+  without a Stripe idempotency error, even for an ad that was previously paid for at a
+  different amount.
+
+---
+
+## 13. Compliance update — 16 August 2026
+
+Three additional mobile contracts are available:
+
+- versioned Terms: `GET /terms/current`, `POST /terms/accept`, `GET /terms/history`;
+- independent `posting` / `messaging` restrictions, exposed in own-profile
+  `capabilities` and enforced with `403 data.error_code=feature_restricted`;
+- public Google Play deletion page at `{{web_url}}/delete-account`.
+
+See [`MOBILE_COMPLIANCE_UPDATES_2026_08_16.md`](MOBILE_COMPLIANCE_UPDATES_2026_08_16.md)
+for complete payloads, app behaviour, and the verification checklist.

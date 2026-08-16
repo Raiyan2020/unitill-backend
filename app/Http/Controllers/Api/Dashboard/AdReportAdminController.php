@@ -70,7 +70,7 @@ class AdReportAdminController extends Controller
         ], 'Ad reports fetched');
     }
 
-    public function show(int $id)
+    public function show(Request $request, int $id)
     {
         $report = AdReport::with([
             'user:id,name,first_name,last_name,email',
