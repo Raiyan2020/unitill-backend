@@ -38,7 +38,18 @@ class UserModerationService
             $this->tokens->revokeAllForUser($user);
         } elseif ($action === 'reactivated') {
             $user->forceFill(['status' => '1', 'suspended_until' => null])->save();
+            UserModerationAction::query()
+                ->where('user_id', $user->id)
+                ->whereIn('action', ['temporary_suspension', 'permanent_suspension'])
+                ->whereNull('resolved_at')
+                ->update(['resolved_at' => now()]);
         }
+
+        $resolvedAt = match ($action) {
+            'temporary_suspension' => $endsAt,
+            'permanent_suspension' => null,
+            default => now(),
+        };
 
         $record = UserModerationAction::create([
             'user_id' => $user->id,
@@ -49,6 +60,7 @@ class UserModerationService
             'source_id' => $sourceId,
             'starts_at' => $startsAt,
             'ends_at' => $endsAt,
+            'resolved_at' => $resolvedAt,
         ]);
 
         $this->notify($user, $record);
@@ -63,11 +75,17 @@ class UserModerationService
         }
 
         $user->forceFill(['status' => '1', 'suspended_until' => null])->save();
+        UserModerationAction::query()
+            ->where('user_id', $user->id)
+            ->where('action', 'temporary_suspension')
+            ->whereNull('resolved_at')
+            ->update(['resolved_at' => now()]);
         UserModerationAction::create([
             'user_id' => $user->id,
             'action' => 'suspension_expired',
             'reason' => 'Temporary suspension period ended automatically.',
             'starts_at' => now(),
+            'resolved_at' => now(),
         ]);
 
         return true;

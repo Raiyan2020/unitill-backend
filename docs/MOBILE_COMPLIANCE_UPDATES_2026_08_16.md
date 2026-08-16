@@ -121,3 +121,30 @@ The page creates a pending request. An administrator reviews it in the React das
 - Restrict messaging: listings work, while starting/sending chat returns `feature_restricted`.
 - Lift a restriction and refresh the own profile; the capability becomes available.
 - Open the public deletion URL from a logged-out device and submit a request.
+# API response versioning for the published Flutter build
+
+The unversioned mobile endpoints keep the response shapes used by the already-published application. New compliance fields and structured feature-restriction details are exposed through `/api/v2` routes.
+
+| Legacy endpoint | Versioned endpoint |
+| --- | --- |
+| `GET /show-profile/{user_id?}` | `GET /v2/show-profile/{user_id?}` |
+| `POST /update-profile` | `POST /v2/update-profile` |
+| `POST /reverify/confirm` | `POST /v2/reverify/confirm` |
+| `GET /account/settings` | `GET /v2/account/settings` |
+| `PUT /account/settings` | `PUT /v2/account/settings` |
+| `POST /ads` | `POST /v2/ads` |
+| `POST /ads/draft` | `POST /v2/ads/draft` |
+| `POST /my-ads/{id}/activate` | `POST /v2/my-ads/{id}/activate` |
+| `POST /my-ads/{id}/sell-again` | `POST /v2/my-ads/{id}/sell-again` |
+| `POST /conversations` | `POST /v2/conversations` |
+| `POST /conversations/{id}/messages` | `POST /v2/conversations/{id}/messages` |
+| `GET /chat-report-reasons` | `GET /v2/chat-report-reasons` |
+| `POST /conversations/{id}/report` | `POST /v2/conversations/{id}/report` |
+
+V2 owner-profile responses add `terms`, `capabilities`, and `feature_restrictions`. V2 account-settings responses add `notify_marketing` and `marketing_consent_at`. When a feature is restricted, legacy routes return the standard legacy `403` envelope and V2 routes return the structured restriction metadata.
+
+The V2 chat-report reason list additionally exposes the serious-safety values
+`child_sexual_abuse_or_exploitation`, `immediate_danger`, `terrorism_related`,
+`serious_violence`, and `credible_threat`. The legacy list is unchanged for the
+published Flutter build. V2 conversation reports and V2 direct-user reports accept
+these values and the backend assigns them critical priority.

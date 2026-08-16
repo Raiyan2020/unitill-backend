@@ -275,6 +275,7 @@ class AuthController extends Controller
         }
         if ($request->filled('device_token')) {
             $deviceUpdates['device_token'] = $request->device_token;
+            $deviceUpdates['device_token_updated_at'] = now();
         }
         if ($deviceUpdates) {
             $user->update($deviceUpdates);
@@ -317,6 +318,7 @@ class AuthController extends Controller
             'city_id' => $data['city_id'] ?? null,
             'password' => $data['password'],
             'device_token' => $data['device_token'] ?? null,
+            'device_token_updated_at' => ! empty($data['device_token']) ? now() : null,
             'device_type' => $data['device_type'] ?? null,
         ];
 
@@ -416,6 +418,7 @@ class AuthController extends Controller
         $user->update([
             'device_type' => $request->device_type,
             'device_token' => $request->device_token,
+            'device_token_updated_at' => $request->filled('device_token') ? now() : $user->device_token_updated_at,
         ]);
 
         return sendResponse(array_merge([

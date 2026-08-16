@@ -108,13 +108,20 @@ class ChatReportAdminController extends Controller
 
         $validator = Validator::make($request->all(), [
             'status' => ['required', Rule::in(self::STATUSES)],
+            'decision_reason' => [Rule::requiredIf(fn () => $request->input('status') !== 'pending'), 'nullable', 'string', 'max:3000'],
         ]);
 
         if ($validator->fails()) {
             return sendError($validator->errors()->first(), $validator->errors()->toArray(), 422);
         }
 
-        $report->update(['status' => $request->input('status')]);
+        $isResolved = $request->input('status') !== 'pending';
+        $report->update([
+            'status' => $request->input('status'),
+            'decision_reason' => $isResolved ? $validator->validated()['decision_reason'] : null,
+            'resolved_by' => $isResolved ? $request->user()?->id : null,
+            'resolved_at' => $isResolved ? now() : null,
+        ]);
 
         return sendResponse(
             $this->present($report->fresh(['reporter', 'reportedUser', 'conversation.ad']), (string) $request->header('lang', 'en')),
@@ -188,6 +195,9 @@ class ChatReportAdminController extends Controller
             'description' => $report->description,
             'status' => $report->status,
             'priority' => $report->priority,
+            'decision_reason' => $report->decision_reason,
+            'resolved_by' => $report->resolved_by,
+            'resolved_at' => optional($report->resolved_at)->toDateTimeString(),
             'created_at' => optional($report->created_at)->toDateTimeString(),
             'conversation_id' => $report->conversation_id,
             'ad' => $report->conversation?->ad ? [

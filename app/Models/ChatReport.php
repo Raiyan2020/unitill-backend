@@ -16,7 +16,12 @@ class ChatReport extends Model
         'description',
         'status',
         'priority',
+        'decision_reason',
+        'resolved_by',
+        'resolved_at',
     ];
+
+    protected $casts = ['resolved_at' => 'datetime'];
 
     public function reporter(): BelongsTo
     {
@@ -31,5 +36,10 @@ class ChatReport extends Model
     public function conversation(): BelongsTo
     {
         return $this->belongsTo(Conversation::class);
+    }
+
+    public function resolvedBy(): BelongsTo
+    {
+        return $this->belongsTo(Admin::class, 'resolved_by');
     }
 }

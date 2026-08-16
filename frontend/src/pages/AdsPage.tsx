@@ -56,6 +56,7 @@ export function AdsPage() {
   const [total, setTotal] = useState(0);
   const [deleting, setDeleting] = useState<AdRow | null>(null);
   const [savingDelete, setSavingDelete] = useState(false);
+  const [deleteReason, setDeleteReason] = useState('');
   const [statusSavingId, setStatusSavingId] = useState<number | null>(null);
 
   const backendOrigin = ((import.meta.env.VITE_BACKEND_ORIGIN as string | undefined) || 'http://127.0.0.1:8000').replace(/\/+$/, '');
@@ -102,9 +103,10 @@ export function AdsPage() {
     if (!deleting) return;
     setSavingDelete(true);
     try {
-      const res = await api.delete(`/admin/ads/${deleting.id}`);
+      const res = await api.delete(`/admin/ads/${deleting.id}`, { data: { reason: deleteReason } });
       ensureApiSuccess(res, t.actionFailed);
       setDeleting(null);
+      setDeleteReason('');
       await fetchRows();
       notify.success(t.deletedSuccessfully);
     } catch (error) {
@@ -115,9 +117,12 @@ export function AdsPage() {
   };
 
   const updateStatus = async (row: AdRow, status: AdStatus) => {
+    if (status === row.status) return;
+    const reason = window.prompt(t.reason);
+    if (!reason?.trim()) return;
     setStatusSavingId(row.id);
     try {
-      const res = await api.put(`/admin/ads/${row.id}`, { status });
+      const res = await api.put(`/admin/ads/${row.id}`, { status, reason: reason.trim(), source_type: 'manual' });
       ensureApiSuccess(res, t.actionFailed);
       setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, status } : r)));
       notify.success(t.statusUpdatedSuccessfully);
@@ -248,9 +253,15 @@ export function AdsPage() {
               <p className="mb-4 mt-1 text-sm font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">
                 {deleting.title || deleting.public_id || `#${deleting.id}`}
               </p>
+              <textarea
+                value={deleteReason}
+                onChange={(event) => setDeleteReason(event.target.value)}
+                placeholder={t.reason}
+                className="mb-4 min-h-24 w-full rounded-lg border border-[#dbdbe8] bg-white p-3 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]"
+              />
               <div className="flex justify-end gap-2">
-                <Button variant="secondary" onClick={() => setDeleting(null)}>{t.cancel}</Button>
-                <Button variant="destructive" onClick={deleteAd} disabled={savingDelete}>{t.delete}</Button>
+                <Button variant="secondary" onClick={() => { setDeleting(null); setDeleteReason(''); }}>{t.cancel}</Button>
+                <Button variant="destructive" onClick={deleteAd} disabled={savingDelete || !deleteReason.trim()}>{t.delete}</Button>
               </div>
             </CardContent>
           </Card>
@@ -259,4 +270,3 @@ export function AdsPage() {
     </div>
   );
 }
-

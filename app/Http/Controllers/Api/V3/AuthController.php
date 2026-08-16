@@ -8,7 +8,10 @@ use App\Http\Resources\UserResource;
 use App\Mail\OtpMail;
 use App\Models\User;
 use App\Models\UserLoginLog;
+use App\Models\UserModerationAction;
 use App\Services\AccountDeletionService;
+use App\Services\PushNotificationService;
+use App\Services\UserModerationService;
 use App\Support\LoginLogger;
 use App\Support\MobileAuthTokenService;
 use Illuminate\Http\Request;
@@ -187,6 +190,7 @@ class AuthController extends Controller
         }
         if ($request->filled('device_token')) {
             $deviceUpdates['device_token'] = $request->device_token;
+            $deviceUpdates['device_token_updated_at'] = now();
         }
         if ($deviceUpdates) {
             $user->update($deviceUpdates);
@@ -202,7 +206,7 @@ class AuthController extends Controller
         );
 
         if ($request->filled('device_token')) {
-            app(\App\Services\PushNotificationService::class)
+            app(PushNotificationService::class)
                 ->syncUserTopicSubscription($user->fresh(), $request->input('device_token'));
         }
 
@@ -213,10 +217,10 @@ class AuthController extends Controller
 
     protected function validateActiveUser(User $user, bool $lang)
     {
-        app(\App\Services\UserModerationService::class)->restoreExpiredSuspension($user);
+        app(UserModerationService::class)->restoreExpiredSuspension($user);
 
         if ($user->status === '3') {
-            $latestAction = \App\Models\UserModerationAction::query()
+            $latestAction = UserModerationAction::query()
                 ->where('user_id', $user->id)
                 ->whereIn('action', ['temporary_suspension', 'permanent_suspension'])
                 ->latest('id')

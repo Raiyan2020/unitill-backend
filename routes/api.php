@@ -87,6 +87,7 @@ Route::get('ads', [AdController::class, 'index']);
 Route::get('ads/{id}', [AdController::class, 'show']);
 Route::get('ad-report-reasons', [AdReportController::class, 'reasons']);
 Route::get('chat-report-reasons', [ConversationController::class, 'reportReasons']);
+Route::get('v2/chat-report-reasons', [ConversationController::class, 'reportReasons']);
 Route::get('legal-affairs', [App\Http\Controllers\Api\LegalAffairController::class, 'index']);
 Route::get('terms/current', [TermsController::class, 'current']);
 
@@ -138,8 +139,22 @@ Route::middleware('auth:sanctum')
 // confirmed before a listing/extension is charged. Additive only — V1's
 // publish/extend endpoints take no such field and stay untouched.
 Route::middleware('auth:sanctum')->prefix('v2')->group(function () {
+    // Versioned mobile contracts. The unversioned endpoints retain the exact
+    // response shape used by the already-published Flutter application.
+    Route::get('account/settings', [AccountSettingsController::class, 'show']);
+    Route::put('account/settings', [AccountSettingsController::class, 'update']);
+    Route::get('show-profile/{user_id?}', [UserController::class, 'show']);
+    Route::post('update-profile', [UserController::class, 'update']);
+    Route::post('reverify/confirm', [AuthController::class, 'confirmReverify']);
+    Route::post('ads', [AdController::class, 'store'])->middleware('feature.available:posting');
+    Route::post('ads/draft', [AdController::class, 'storeDraft'])->middleware('feature.available:posting');
     Route::post('ads/{id}/publish', [App\Http\Controllers\Api\V2\AdController::class, 'publish'])->middleware('feature.available:posting');
+    Route::post('my-ads/{id}/activate', [MyAdController::class, 'activate'])->middleware('feature.available:posting');
+    Route::post('my-ads/{id}/sell-again', [MyAdController::class, 'sellAgain'])->middleware('feature.available:posting');
     Route::post('my-ads/{id}/extend', [App\Http\Controllers\Api\V2\MyAdController::class, 'extend'])->middleware('feature.available:posting');
+    Route::post('conversations', [ConversationController::class, 'store'])->middleware('feature.available:messaging');
+    Route::post('conversations/{id}/messages', [ConversationController::class, 'sendMessage'])->middleware('feature.available:messaging');
+    Route::post('conversations/{id}/report', [ConversationController::class, 'report']);
     Route::post('users/{id}/reports', [UserReportController::class, 'store']);
 });
 
@@ -301,6 +316,7 @@ Route::middleware('auth:sanctum')->prefix('admin')->controller(ContactReasonAdmi
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(ContactUsAdminController::class)->group(function () {
     Route::get('contact-us', 'index')->middleware('permission:contact_us.view');
+    Route::put('contact-us/{id}', 'update')->middleware('permission:contact_us.view');
 });
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(TrustedSellerApplicationAdminController::class)->group(function () {

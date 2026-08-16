@@ -11,14 +11,16 @@ use App\Models\AdAttributeValue;
 use App\Models\AdImage;
 use App\Models\Category;
 use App\Models\CategoryAttributeDefinition;
+use App\Models\City;
 use App\Services\CouponRedemptionService;
-use App\Services\StripeService;
 use App\Services\ListingPaymentService;
 use App\Services\PostcodeService;
-use App\Traits\HandlesListingPayments;
+use App\Services\StripeService;
 use App\Support\AdFilters;
 use App\Support\AdSort;
+use App\Traits\HandlesListingPayments;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -27,6 +29,7 @@ use Illuminate\Validation\Rule;
 class AdController extends Controller
 {
     use HandlesListingPayments;
+
     public function index(Request $request)
     {
         $validated = $request->validate([
@@ -262,7 +265,7 @@ class AdController extends Controller
      * makes keyBy() keep it, so the value binds to the more specific definition
      * instead of whichever row happened to have the lower id.
      */
-    protected function definitionsForCategories(array $specCategoryIds, int $subCategoryId): \Illuminate\Support\Collection
+    protected function definitionsForCategories(array $specCategoryIds, int $subCategoryId): Collection
     {
         return CategoryAttributeDefinition::query()
             ->whereIn('category_id', $specCategoryIds)
@@ -355,12 +358,13 @@ class AdController extends Controller
 
         // Spam guard: block an accidental double-submit or repost of the same
         // listing content instead of silently creating a near-duplicate ad.
-        $isDuplicate = Ad::query()
-            ->where('user_id', $user->id)
-            ->where('title', $data['title'])
-            ->where('price', $data['price'])
-            ->where('created_at', '>=', now()->subDay())
-            ->exists();
+        $isDuplicate = $request->is('api/v2/*')
+            && Ad::query()
+                ->where('user_id', $user->id)
+                ->where('title', $data['title'])
+                ->where('price', $data['price'])
+                ->where('created_at', '>=', now()->subDay())
+                ->exists();
 
         if ($isDuplicate) {
             return sendError(
@@ -465,7 +469,7 @@ class AdController extends Controller
                 [
                     'coupon' => $appliedCoupon,
                     'total_amount' => (float) ($publication['amount'] ?? 0),
-                    'formatted_total_amount' => '£' . number_format((float) ($publication['amount'] ?? 0), 2),
+                    'formatted_total_amount' => '£'.number_format((float) ($publication['amount'] ?? 0), 2),
                 ]
             )
                 + ['publication' => $publication]
@@ -547,12 +551,12 @@ class AdController extends Controller
         }
 
         $cityId = $request->input('city_id');
-        if ($cityId == 1 && !\App\Models\City::where('id', 1)->exists()) {
+        if ($cityId == 1 && ! City::where('id', 1)->exists()) {
             $userCity = $user->city_id;
-            if ($userCity && \App\Models\City::where('id', $userCity)->exists()) {
+            if ($userCity && City::where('id', $userCity)->exists()) {
                 $cityId = $userCity;
             } else {
-                $cityId = \App\Models\City::first()?->id ?? 1;
+                $cityId = City::first()?->id ?? 1;
             }
         }
 
@@ -564,8 +568,8 @@ class AdController extends Controller
             'license_plate' => [
                 'nullable',
                 'string',
-                'regex:/^[A-Z]{2}[0-9]{2}[A-Z]{3}$/', 
-                'max:7'
+                'regex:/^[A-Z]{2}[0-9]{2}[A-Z]{3}$/',
+                'max:7',
             ],
             'description' => 'required|string|max:5000',
             'price' => 'required|numeric|min:0',
@@ -629,7 +633,7 @@ class AdController extends Controller
                 'subtitle' => $validated['subtitle'] ?? null,
                 'license_plate' => $validated['license_plate'] ?? null,
                 'description' => $validated['description'] ?? null,
-                'country_id' => \App\Models\City::find($cityId)?->country_id ?? 1,
+                'country_id' => City::find($cityId)?->country_id ?? 1,
                 'city_id' => $cityId,
                 'main_category_id' => $validated['main_category_id'],
                 'sub_category_id' => $validated['sub_category_id'] ?? null,
@@ -682,9 +686,9 @@ class AdController extends Controller
     {
         $lang = $request->header('lang') === 'ar';
         $user = Auth::user();
-        
+
         $ad = Ad::where('id', $id)->orWhere('public_id', $id)->first();
-        if (!$ad || $ad->user_id !== $user->id) {
+        if (! $ad || $ad->user_id !== $user->id) {
             return sendError(__('api.ad.not_found'), [], 404);
         }
 
@@ -694,7 +698,7 @@ class AdController extends Controller
 
         $path = uploader($request->file('image'), 'ads');
         $cleanPath = ltrim(str_replace('/storage/', '', $path), '/');
-        
+
         $sortOrder = $ad->images()->max('sort_order') + 1;
 
         AdImage::create([
@@ -703,7 +707,7 @@ class AdController extends Controller
             'sort_order' => $sortOrder,
         ]);
 
-        if (!$ad->cover_image) {
+        if (! $ad->cover_image) {
             $ad->update(['cover_image' => $cleanPath]);
         }
 
@@ -714,9 +718,9 @@ class AdController extends Controller
     {
         $lang = $request->header('lang') === 'ar';
         $user = Auth::user();
-        
+
         $ad = Ad::where('id', $id)->orWhere('public_id', $id)->first();
-        if (!$ad || $ad->user_id !== $user->id) {
+        if (! $ad || $ad->user_id !== $user->id) {
             return sendError(__('api.ad.not_found'), [], 404);
         }
 

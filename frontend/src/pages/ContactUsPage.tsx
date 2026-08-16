@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { TableFooter, TableLoadingRow } from '../components/table/TableHelpers';
 import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
+import { Button } from '../components/ui/button';
 import { api } from '../lib/api';
 import { ensureApiSuccess } from '../lib/api-response';
 import { useNotify } from '../lib/notify';
@@ -14,6 +15,8 @@ type Row = {
   reason: string;
   message: string;
   created_at: string | null;
+  status: 'open' | 'closed';
+  closed_at: string | null;
 };
 
 type PaginatedResponse<T> = { data: T[]; total: number };
@@ -27,12 +30,13 @@ export function ContactUsPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
+  const [status, setStatus] = useState('');
   const didInitSearch = useRef(false);
 
   const fetchRows = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/admin/contact-us', { params: { page, per_page: pageSize, search: search || undefined } });
+      const res = await api.get('/admin/contact-us', { params: { page, per_page: pageSize, search: search || undefined, status: status || undefined } });
       const payload = ensureApiSuccess<PaginatedResponse<Row>>(res, t.actionFailed);
       setRows(payload?.data || []);
       setTotal(payload?.total || 0);
@@ -45,7 +49,8 @@ export function ContactUsPage() {
 
   useEffect(() => {
     fetchRows();
-  }, [page, pageSize]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, pageSize, status]);
 
   useEffect(() => {
     if (!didInitSearch.current) {
@@ -57,15 +62,37 @@ export function ContactUsPage() {
       fetchRows();
     }, 350);
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
   const pagesCount = Math.max(1, Math.ceil(total / pageSize));
+
+  const updateStatus = async (row: Row) => {
+    const nextStatus = row.status === 'closed' ? 'open' : 'closed';
+    try {
+      const res = await api.put(`/admin/contact-us/${row.id}`, { status: nextStatus });
+      ensureApiSuccess(res, t.actionFailed);
+      setRows((current) => current.map((item) => item.id === row.id ? {
+        ...item,
+        status: nextStatus,
+        closed_at: nextStatus === 'closed' ? new Date().toISOString() : null,
+      } : item));
+      notify.success(t.statusUpdatedSuccessfully);
+    } catch (error) {
+      notify.errorFrom(error, t.actionFailed);
+    }
+  };
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-2xl font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">{t.contactUs}</h2>
         <div className="flex items-center gap-2">
+          <select value={status} onChange={(e) => { setPage(1); setStatus(e.target.value); }} className="h-9 rounded-lg border border-[#dbdbe8] bg-white px-2 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]">
+            <option value="">{t.allStatuses}</option>
+            <option value="open">Open</option>
+            <option value="closed">Closed</option>
+          </select>
           <select value={pageSize} onChange={(e) => { setPage(1); setPageSize(Number(e.target.value)); }} className="h-9 rounded-lg border border-[#dbdbe8] bg-white px-2 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]">
             {[10, 25, 50, 100].map((size) => <option key={size} value={size}>{size}</option>)}
           </select>
@@ -85,13 +112,15 @@ export function ContactUsPage() {
                   <th className="px-4 py-3 text-start">{t.reason}</th>
                   <th className="px-4 py-3 text-start">{t.message}</th>
                   <th className="px-4 py-3 text-start">{t.createdAt}</th>
+                  <th className="px-4 py-3 text-start">{t.status}</th>
+                  <th className="px-4 py-3 text-start">{t.actions}</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <TableLoadingRow colSpan={6} />
+                  <TableLoadingRow colSpan={8} />
                 ) : rows.length === 0 ? (
-                  <tr><td className="px-4 py-6 text-center text-sm text-[#8a8da8]" colSpan={6}>{t.noDataFound}</td></tr>
+                  <tr><td className="px-4 py-6 text-center text-sm text-[#8a8da8]" colSpan={8}>{t.noDataFound}</td></tr>
                 ) : rows.map((row) => (
                   <tr key={row.id} className="border-t border-[#ececf3] dark:border-[#44485f]">
                     <td className="px-4 py-3">{row.id}</td>
@@ -100,6 +129,8 @@ export function ContactUsPage() {
                     <td className="px-4 py-3">{row.reason}</td>
                     <td className="px-4 py-3 max-w-[420px] whitespace-pre-wrap break-words">{row.message}</td>
                     <td className="px-4 py-3">{row.created_at || '-'}</td>
+                    <td className="px-4 py-3">{row.status}</td>
+                    <td className="px-4 py-3"><Button size="sm" variant="secondary" onClick={() => updateStatus(row)}>{row.status === 'closed' ? 'Reopen' : 'Close'}</Button></td>
                   </tr>
                 ))}
               </tbody>

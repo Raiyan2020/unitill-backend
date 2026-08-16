@@ -38,6 +38,8 @@ type ReportRow = {
   description: string | null;
   status: ReportStatus;
   priority: ReportPriority;
+  decision_reason: string | null;
+  resolved_at: string | null;
   created_at: string | null;
   conversation_id: number | null;
   ad: ReportedAd | null;
@@ -147,10 +149,12 @@ export function UserReportsPage() {
   };
 
   const updateStatus = async (row: ReportRow, status: ReportStatus) => {
+    const decisionReason = status === 'pending' ? null : window.prompt(t.reason);
+    if (status !== 'pending' && !decisionReason?.trim()) return;
     const previous = row.status;
     setStatusSavingId(row.id);
     try {
-      const res = await api.put(`/admin/chat-reports/${row.id}`, { status });
+      const res = await api.put(`/admin/chat-reports/${row.id}`, { status, decision_reason: decisionReason?.trim() || null });
       ensureApiSuccess(res, t.actionFailed);
       setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, status } : r)));
       setCounts((prev) => ({
@@ -372,6 +376,12 @@ export function UserReportsPage() {
                 <p className="text-xs text-[#8a8da8]">{t.reporterExplanation}</p>
                 <p className="mt-1 whitespace-pre-wrap text-sm">{details.description || '-'}</p>
               </div>
+
+              {details.decision_reason ? <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
+                <p className="text-xs text-[#8a8da8]">{t.decisionReason}</p>
+                <p className="mt-1 whitespace-pre-wrap text-sm">{details.decision_reason}</p>
+                <p className="mt-1 text-xs text-[#8a8da8]">{details.resolved_at || '-'}</p>
+              </div> : null}
 
               {details.reported_user ? (
                 <div className="space-y-3 rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">

@@ -7,14 +7,15 @@ use App\Models\AdReport;
 use App\Models\ChatReport;
 use App\Models\ContactReason;
 use App\Models\ContactUsMessage;
+use App\Models\ContentModerationAction;
 use App\Models\Conversation;
 use App\Models\ModerationAppeal;
 use App\Models\User;
 use App\Models\UserDevice;
+use App\Models\UserFeatureRestriction;
 use App\Models\UserLoginLog;
 use App\Models\UserModerationAction;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -44,6 +45,8 @@ class PruneRetainedData extends Command
             'Ad reports (3 years after closed)' => $this->pruneAdReports($dryRun),
             'Chat reports (3 years after closed)' => $this->pruneChatReports($dryRun),
             'Moderation actions (3 years)' => $this->pruneModerationActions($dryRun),
+            'Content moderation actions (3 years after resolved)' => $this->pruneContentModerationActions($dryRun),
+            'Feature restrictions (3 years after ended)' => $this->pruneFeatureRestrictions($dryRun),
             'Moderation appeals (3 years after resolved)' => $this->pruneModerationAppeals($dryRun),
             'Routine support requests (12 months)' => $this->pruneSupportMessages($dryRun),
             'Complaints/privacy requests (3 years)' => $this->pruneComplaintMessages($dryRun),
@@ -71,10 +74,30 @@ class PruneRetainedData extends Command
 
     private function pruneInactiveDevices(bool $dryRun): int
     {
-        $query = UserDevice::where('is_active', false)
+        $devices = UserDevice::where('is_active', false)
             ->where('updated_at', '<', now()->subDays(90));
 
-        return $dryRun ? $query->count() : $query->delete();
+        $tokens = User::query()
+            ->whereNotNull('device_token')
+            ->where(function ($query) {
+                $query->where('device_token_updated_at', '<', now()->subDays(90))
+                    ->orWhere(function ($missingTimestamp) {
+                        $missingTimestamp->whereNull('device_token_updated_at')
+                            ->where('updated_at', '<', now()->subDays(90));
+                    });
+            });
+
+        $count = $devices->count() + $tokens->count();
+
+        if (! $dryRun) {
+            $devices->delete();
+            $tokens->update([
+                'device_token' => null,
+                'device_token_updated_at' => null,
+            ]);
+        }
+
+        return $count;
     }
 
     /**
@@ -111,7 +134,7 @@ class PruneRetainedData extends Command
     private function pruneAdReports(bool $dryRun): int
     {
         $query = AdReport::whereIn('status', ['reviewed', 'dismissed'])
-            ->where('updated_at', '<', now()->subYears(3));
+            ->where('resolved_at', '<', now()->subYears(3));
 
         return $dryRun ? $query->count() : $query->delete();
     }
@@ -119,14 +142,37 @@ class PruneRetainedData extends Command
     private function pruneChatReports(bool $dryRun): int
     {
         $query = ChatReport::whereIn('status', ['reviewed', 'dismissed'])
-            ->where('updated_at', '<', now()->subYears(3));
+            ->where('resolved_at', '<', now()->subYears(3));
 
         return $dryRun ? $query->count() : $query->delete();
     }
 
     private function pruneModerationActions(bool $dryRun): int
     {
-        $query = UserModerationAction::where('created_at', '<', now()->subYears(3));
+        $query = UserModerationAction::whereNotNull('resolved_at')
+            ->where('resolved_at', '<', now()->subYears(3));
+
+        return $dryRun ? $query->count() : $query->delete();
+    }
+
+    private function pruneContentModerationActions(bool $dryRun): int
+    {
+        $query = ContentModerationAction::whereNotNull('resolved_at')
+            ->where('resolved_at', '<', now()->subYears(3));
+
+        return $dryRun ? $query->count() : $query->delete();
+    }
+
+    private function pruneFeatureRestrictions(bool $dryRun): int
+    {
+        $cutoff = now()->subYears(3);
+        $query = UserFeatureRestriction::query()
+            ->where(function ($ended) use ($cutoff) {
+                $ended->where('lifted_at', '<', $cutoff)
+                    ->orWhere(function ($expired) use ($cutoff) {
+                        $expired->whereNull('lifted_at')->where('ends_at', '<', $cutoff);
+                    });
+            });
 
         return $dryRun ? $query->count() : $query->delete();
     }
@@ -144,7 +190,8 @@ class PruneRetainedData extends Command
         $complaintReasonIds = ContactReason::where('sort_order', 2)->pluck('id');
 
         $query = ContactUsMessage::whereNotIn('contact_reason_id', $complaintReasonIds)
-            ->where('created_at', '<', now()->subMonths(12));
+            ->where('status', 'closed')
+            ->where('closed_at', '<', now()->subMonths(12));
 
         return $dryRun ? $query->count() : $query->delete();
     }
@@ -154,7 +201,8 @@ class PruneRetainedData extends Command
         $complaintReasonIds = ContactReason::where('sort_order', 2)->pluck('id');
 
         $query = ContactUsMessage::whereIn('contact_reason_id', $complaintReasonIds)
-            ->where('created_at', '<', now()->subYears(3));
+            ->where('status', 'closed')
+            ->where('closed_at', '<', now()->subYears(3));
 
         return $dryRun ? $query->count() : $query->delete();
     }

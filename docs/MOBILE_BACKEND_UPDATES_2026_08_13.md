@@ -36,8 +36,8 @@ though — read this box before anything else:
 | New-listing blocked for lapsed students | **Yes** — a 403 you may now see on `POST /ads`, `POST /ads/draft`, `POST /my-ads/{id}/sell-again` |
 | New `/v3/login` (no OTP on normal login) | **Yes, if** you want this — brand-new endpoint, `/v2/login` is untouched and still works exactly as it does today |
 | Translation | **Yes, if** you want the "Translate" button to actually work — new endpoint, replaces any unofficial in-app translator package |
-| Marketing consent (`notify_marketing`) | **Yes** — new opt-in field on `GET`/`PUT /account/settings`, separate from Terms acceptance |
-| Duplicate-listing block | **No new field**, but `POST /ads` can now return a 422 it never returned before |
+| Marketing consent (`notify_marketing`) | **Yes, in next release** — use `GET`/`PUT /v2/account/settings`; legacy response is unchanged |
+| Duplicate-listing block | **Yes, in next release** — only `POST /v2/ads` applies the new 422 contract |
 | Extending an expired ad | **No**, but a real bug is now fixed — retest this flow |
 
 ---
@@ -165,10 +165,10 @@ instead of letting them submit twice.
 If a temporary suspension's `suspended_until` passes, the account reactivates
 automatically on the next login attempt — no separate action needed.
 
-**Backend TODO surfaced by this work, not yet done:** admin can currently warn/suspend/
-reactivate an account, but cannot yet hide/remove a specific piece of content or restrict
-a single feature (e.g. posting only) without a full suspension. Flagging so you don't
-design UI around a granularity that doesn't exist yet.
+The backend and dashboard now support content-level moderation with a required reason,
+and independent `posting` / `messaging` restrictions without suspending the account.
+Mobile consumes the latter through the V2 `capabilities` and structured 403 contract in
+§13; the published app's legacy response contract remains unchanged.
 
 ---
 
@@ -301,14 +301,18 @@ aren't in place yet — same condition as before, just authenticated differently
 Per the compliance notes: marketing/promotional notifications need their own opt-in,
 never bundled with Terms-of-use acceptance.
 
-`GET /account/settings` → `data.notifications` now also includes:
+To protect the response contract used by the already-published Flutter build,
+the new fields are returned by **`GET /v2/account/settings`**. The legacy
+`GET /account/settings` response remains unchanged.
+
+`GET /v2/account/settings` → `data.notifications` includes:
 
 ```json
 { "notify_chat": true, "notify_ads": true, "notify_system": true,
   "notify_marketing": false, "marketing_consent_at": null }
 ```
 
-`PUT /account/settings` now accepts `notify_marketing` (boolean) alongside the existing
+`PUT /v2/account/settings` accepts `notify_marketing` (boolean) alongside the existing
 toggles. Turning it **on** stamps `marketing_consent_at` with the current time — every
 time it's switched back on, not just the first time. It defaults to `false`; nothing
 opts a user in automatically.
@@ -320,9 +324,9 @@ sends, while still getting ordinary system/chat/ad notifications as before.
 
 ---
 
-## 11. Duplicate-listing protection — new possible error on `POST /ads`
+## 11. Duplicate-listing protection — new possible error on `POST /v2/ads`
 
-Per the compliance notes on spam protection: posting an ad with the same `title` and
+Per the compliance notes on spam protection: posting through `POST /v2/ads` with the same `title` and
 `price` as one you already posted **in the last 24 hours** is now blocked:
 
 ```json
@@ -332,6 +336,7 @@ Per the compliance notes on spam protection: posting an ad with the same `title`
 
 `422`. Check `data.duplicate_listing` if you want to show a specific message rather than
 a generic form error. This only compares your own prior listings, not other sellers'.
+The legacy `POST /ads` endpoint keeps its prior behaviour for the published app.
 
 ---
 
@@ -377,9 +382,9 @@ No request/response shape changed — just retest the extend flow if you hit thi
 - Log in normally a few times as an active, already-verified student and confirm
   `student_reverify_due_at` does **not** move — only a genuine re-verification (or
   recovering a logged-out account) should push it forward.
-- Toggle `notify_marketing` on via `PUT /account/settings`, confirm `marketing_consent_at`
+- Toggle `notify_marketing` on via `PUT /v2/account/settings`, confirm `marketing_consent_at`
   is stamped; toggle it off and back on and confirm the timestamp updates again.
-- Post an ad, then immediately try posting another with the same title and price —
+- Post an ad through `POST /v2/ads`, then immediately try posting another with the same title and price —
   confirm the second one is rejected with `duplicate_listing: true`.
 - Let an ad expire, then extend it via `/v2/my-ads/{id}/extend` — confirm it succeeds
   without a Stripe idempotency error, even for an ad that was previously paid for at a
@@ -392,9 +397,84 @@ No request/response shape changed — just retest the extend flow if you hit thi
 Three additional mobile contracts are available:
 
 - versioned Terms: `GET /terms/current`, `POST /terms/accept`, `GET /terms/history`;
-- independent `posting` / `messaging` restrictions, exposed in own-profile
+- independent `posting` / `messaging` restrictions, exposed in the V2 own-profile
   `capabilities` and enforced with `403 data.error_code=feature_restricted`;
 - public Google Play deletion page at `{{web_url}}/delete-account`.
 
 See [`MOBILE_COMPLIANCE_UPDATES_2026_08_16.md`](MOBILE_COMPLIANCE_UPDATES_2026_08_16.md)
 for complete payloads, app behaviour, and the verification checklist.
+
+### Response-version compatibility map
+
+The unversioned routes remain for the published Flutter application. Use these V2
+routes in the next mobile release whenever the new response or structured error is needed:
+
+| Published-app route | New mobile route | V2 addition |
+| --- | --- | --- |
+| `GET /show-profile/{user_id?}` | `GET /v2/show-profile/{user_id?}` | `terms`, `capabilities`, `feature_restrictions` |
+| `POST /update-profile` | `POST /v2/update-profile` | enriched owner profile |
+| `POST /reverify/confirm` | `POST /v2/reverify/confirm` | enriched owner profile |
+| `GET /account/settings` | `GET /v2/account/settings` | marketing consent fields |
+| `PUT /account/settings` | `PUT /v2/account/settings` | accepts and returns marketing consent |
+| `POST /ads` | `POST /v2/ads` | duplicate protection and structured restriction error |
+| `POST /ads/draft` | `POST /v2/ads/draft` | structured posting-restriction error |
+| `POST /ads/{id}/publish` | `POST /v2/ads/{id}/publish` | confirmation plus structured restriction error |
+| `POST /my-ads/{id}/activate` | `POST /v2/my-ads/{id}/activate` | structured posting-restriction error |
+| `POST /my-ads/{id}/sell-again` | `POST /v2/my-ads/{id}/sell-again` | structured posting-restriction error |
+| — | `POST /v2/my-ads/{id}/extend` | confirmation plus structured restriction error |
+| `POST /conversations` | `POST /v2/conversations` | structured messaging-restriction error |
+| `POST /conversations/{id}/messages` | `POST /v2/conversations/{id}/messages` | structured messaging-restriction error |
+| `GET /chat-report-reasons` | `GET /v2/chat-report-reasons` | five serious-safety categories |
+| `POST /conversations/{id}/report` | `POST /v2/conversations/{id}/report` | accepts serious-safety categories |
+
+The two Postman collections contain a **Mobile V2 Response Contracts** folder with
+success examples and the new `403 feature_restricted` / `422 duplicate_listing`
+examples. Completely new Terms endpoints are not aliases of an older response and
+remain at `/terms/current`, `/terms/accept`, and `/terms/history`.
+
+---
+
+## 14. Final compliance completion — 16 August 2026
+
+The remaining five audit points are now implemented. Only one requires a new mobile
+contract; it is isolated under V2.
+
+### Mobile-visible: serious-safety report reasons (V2)
+
+Use public `GET /v2/chat-report-reasons` and authenticated
+`POST /v2/conversations/{id}/report`. The V2 list adds:
+
+- `child_sexual_abuse_or_exploitation`
+- `immediate_danger`
+- `terrorism_related`
+- `serious_violence`
+- `credible_threat`
+
+These reasons are automatically `critical` in the moderation queue. The legacy
+`GET /chat-report-reasons` keeps its original seven values, so the Google Play build is
+not exposed to an unexpected enum. `POST /v2/users/{id}/reports` accepts the same new
+values.
+
+### Backend/dashboard only: no mobile response change
+
+- Changing `notify_marketing` through `PUT /v2/account/settings` now immediately
+  subscribes/unsubscribes the current FCM token from the marketing topic. The response
+  body is unchanged.
+- FCM tokens now carry `device_token_updated_at`; tokens inactive for 90 days are
+  cleared by `data:prune`. No response field was added.
+- Ad status changes and deletions require a reason in the React dashboard and are
+  recorded with acting admin, affected user/content, report source (when supplied),
+  old/new outcome, and resolution time.
+- Closing or dismissing ad/chat reports now requires `decision_reason` and records
+  `resolved_by`/`resolved_at`. Support messages can be closed/reopened in the dashboard.
+- Retention now counts from actual closure/resolution for reports, moderation actions,
+  feature restrictions, and support/complaint requests. Feature-restriction audit rows
+  survive account deletion with a nullable user reference.
+
+### New-mobile verification
+
+- Confirm legacy `/chat-report-reasons` is unchanged and V2 returns all five new values.
+- Submit `credible_threat` through both V2 report endpoints and confirm it appears as
+  `critical` in the dashboard.
+- Toggle V2 marketing consent off/on with a registered FCM token and confirm topic
+  delivery stops/resumes without waiting for a new login.

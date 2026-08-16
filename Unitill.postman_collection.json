@@ -1960,7 +1960,7 @@
                         "description": "Registers a user. student_email must belong to a registered university domain (e.g. *.ac.uk). An OTP is emailed to the student email.",
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"first_name\": \"John\",\n    \"last_name\": \"Doe\",\n    \"email\": \"john.personal@gmail.com\",\n    \"student_email\": \"john.doe@ox.ac.uk\",\n    \"password\": \"secret123\",\n    \"password_confirmation\": \"secret123\",\n    \"terms_accepted\": true,\n    \"phone\": \"5551234567\",\n    \"country_code\": \"+44\",\n    \"city_id\": 1,\n    \"device_token\": \"fcm-token-xyz\",\n    \"device_type\": \"android\"\n}",
+                            "raw": "{\n    \"first_name\": \"John\",\n    \"last_name\": \"Doe\",\n    \"email\": \"john.personal@gmail.com\",\n    \"student_email\": \"john.doe@ox.ac.uk\",\n    \"password\": \"secret123\",\n    \"password_confirmation\": \"secret123\",\n    \"terms_accepted\": true,\n    \"phone\": \"5551234567\",\n    \"country_code\": \"+44\",\n    \"city_id\": 1,\n    \"device_token\": \"fcm-token-xyz\",\n    \"device_type\": \"android\",\n    \"terms_version\": \"{{terms_version}}\"\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -15465,7 +15465,50 @@
                         },
                         "description": "Public localized terms. Read data.version before registration or acceptance. The accepted field is null for an unauthenticated request."
                     },
-                    "response": []
+                    "response": [
+                        {
+                            "name": "Current terms — guest",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "noauth"
+                                },
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/terms/current",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "terms",
+                                        "current"
+                                    ]
+                                },
+                                "description": "Public localized terms. Read data.version before registration or acceptance. The accepted field is null for an unauthenticated request."
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"data\": {\n        \"version\": \"2.0\",\n        \"title\": \"Terms and Conditions of Use\",\n        \"content\": \"Current terms content…\",\n        \"effective_at\": \"2026-08-16T00:00:00+00:00\",\n        \"accepted\": null\n    }\n}"
+                        }
+                    ]
                 },
                 {
                     "name": "Get Current Terms (Authenticated)",
@@ -15504,7 +15547,106 @@
                         },
                         "description": "Optional-auth behaviour: accepted is true or false for the bearer-token user and current version. Without a token, the public request returns accepted=null."
                     },
-                    "response": []
+                    "response": [
+                        {
+                            "name": "Current terms — accepted",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/terms/current",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "terms",
+                                        "current"
+                                    ]
+                                },
+                                "description": "Optional-auth behaviour: accepted is true or false for the bearer-token user and current version. Without a token, the public request returns accepted=null."
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"data\": {\n        \"version\": \"2.0\",\n        \"title\": \"Terms and Conditions of Use\",\n        \"content\": \"Current terms content…\",\n        \"effective_at\": \"2026-08-16T00:00:00+00:00\",\n        \"accepted\": true\n    }\n}"
+                        },
+                        {
+                            "name": "Current terms — acceptance required",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/terms/current",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "terms",
+                                        "current"
+                                    ]
+                                },
+                                "description": "Optional-auth behaviour: accepted is true or false for the bearer-token user and current version. Without a token, the public request returns accepted=null."
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"data\": {\n        \"version\": \"2.0\",\n        \"title\": \"Terms and Conditions of Use\",\n        \"content\": \"Current terms content…\",\n        \"effective_at\": \"2026-08-16T00:00:00+00:00\",\n        \"accepted\": false\n    }\n}"
+                        }
+                    ]
                 },
                 {
                     "name": "Public Delete Account Page (Web)",
@@ -15630,7 +15772,132 @@
                         },
                         "description": "Records acceptance for exactly the current version. Returns 422 when the submitted version is outdated."
                     },
-                    "response": []
+                    "response": [
+                        {
+                            "name": "Terms accepted",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"terms_version\": \"{{terms_version}}\",\n    \"accepted\": true\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/terms/accept",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "terms",
+                                        "accept"
+                                    ]
+                                },
+                                "description": "Records acceptance for exactly the current version. Returns 422 when the submitted version is outdated."
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"data\": {\n        \"version\": \"2.0\",\n        \"accepted_at\": \"2026-08-16T10:00:00+00:00\"\n    },\n    \"message\": \"Terms accepted\"\n}"
+                        },
+                        {
+                            "name": "Stale terms version",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"terms_version\": \"{{terms_version}}\",\n    \"accepted\": true\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "url": {
+                                    "raw": "{{base_url}}/terms/accept",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "terms",
+                                        "accept"
+                                    ]
+                                },
+                                "description": "Records acceptance for exactly the current version. Returns 422 when the submitted version is outdated."
+                            },
+                            "status": "Unprocessable Entity",
+                            "code": 422,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": false,\n    \"message\": \"The given data was invalid.\",\n    \"data\": {\n        \"terms_version\": [\n            \"The accepted terms version is no longer current. Refresh the terms and try again.\"\n        ]\n    }\n}"
+                        }
+                    ]
                 },
                 {
                     "name": "My Terms Acceptance History",
@@ -15669,7 +15936,57 @@
                         },
                         "description": "Audit trail of every terms version accepted by the authenticated user."
                     },
-                    "response": []
+                    "response": [
+                        {
+                            "name": "Terms acceptance history",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    }
+                                ],
+                                "url": {
+                                    "raw": "{{base_url}}/terms/history",
+                                    "host": [
+                                        "{{base_url}}"
+                                    ],
+                                    "path": [
+                                        "terms",
+                                        "history"
+                                    ]
+                                },
+                                "description": "Audit trail of every terms version accepted by the authenticated user."
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"data\": [\n        {\n            \"version\": \"2.0\",\n            \"effective_at\": \"2026-08-16T00:00:00+00:00\",\n            \"accepted_at\": \"2026-08-16T10:00:00+00:00\",\n            \"source\": \"app\"\n        },\n        {\n            \"version\": \"1.0\",\n            \"effective_at\": \"2025-01-01T00:00:00+00:00\",\n            \"accepted_at\": \"2025-02-10T08:00:00+00:00\",\n            \"source\": \"registration\"\n        }\n    ]\n}"
+                        }
+                    ]
                 },
                 {
                     "name": "Admin - List Terms Versions",
@@ -16057,6 +16374,2995 @@
                         "description": "Requires users.update. Marks the restriction as lifted and preserves its audit history."
                     },
                     "response": []
+                }
+            ]
+        },
+        {
+            "name": "Mobile V2 Response Contracts",
+            "description": "Versioned endpoints for enriched response shapes and structured feature-restriction errors.",
+            "item": [
+                {
+                    "name": "Show Profile (V2)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            }
+                        ],
+                        "url": "{{base_url}}/v2/show-profile/:user_id?",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "description": "V2 response contract. The unversioned endpoint remains compatible with the already-published mobile application."
+                    },
+                    "response": [
+                        {
+                            "name": "V2 owner profile — terms accepted",
+                            "originalRequest": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    }
+                                ],
+                                "url": "{{base_url}}/v2/show-profile/:user_id?",
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "description": "V2 response contract. The unversioned endpoint remains compatible with the already-published mobile application."
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"data\": {\n        \"id\": 12,\n        \"name\": \"John Doe\",\n        \"first_name\": \"John\",\n        \"last_name\": \"Doe\",\n        \"image\": null,\n        \"member_since\": \"August 2025\",\n        \"created_at\": \"2025-08-13T10:00:00+00:00\",\n        \"ads_count\": 3,\n        \"active_ads_count\": 3,\n        \"average_rating\": 4.8,\n        \"total_reviews\": 12,\n        \"is_trusted_seller\": true,\n        \"device_type\": \"android\",\n        \"city\": {\n            \"id\": 1,\n            \"name\": \"London\"\n        },\n        \"status\": \"active\",\n        \"phone\": \"+447700900123\",\n        \"email\": \"john@example.com\",\n        \"student_email\": \"john@university.ac.uk\",\n        \"student_verified_at\": \"2026-08-13T10:00:00+00:00\",\n        \"student_reverify_due_at\": \"2027-08-13T10:00:00+00:00\",\n        \"needs_reverification\": false,\n        \"settings\": {\n            \"privacy\": {\n                \"show_last_name\": true,\n                \"show_approximate_location\": true,\n                \"trusted_users_only\": false\n            },\n            \"notifications\": {\n                \"notify_chat\": true,\n                \"notify_ads\": true,\n                \"notify_system\": true\n            }\n        },\n        \"terms\": {\n            \"current_version\": \"2.0\",\n            \"accepted\": true,\n            \"accepted_at\": \"2026-08-16T10:00:00+00:00\"\n        },\n        \"capabilities\": {\n            \"can_post\": true,\n            \"can_message\": true\n        },\n        \"feature_restrictions\": []\n    }\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Update Profile (V2)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": "{{base_url}}/v2/update-profile",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "description": "V2 response contract. The unversioned endpoint remains compatible with the already-published mobile application.",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"first_name\": \"John\",\n    \"last_name\": \"Doe\",\n    \"city_id\": 1,\n    \"phone\": \"5551234567\",\n    \"country_code\": \"+44\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": [
+                        {
+                            "name": "V2 updated profile",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": "{{base_url}}/v2/update-profile",
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "description": "V2 response contract. The unversioned endpoint remains compatible with the already-published mobile application.",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"first_name\": \"John\",\n    \"last_name\": \"Doe\",\n    \"city_id\": 1,\n    \"phone\": \"5551234567\",\n    \"country_code\": \"+44\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"data\": {\n        \"id\": 12,\n        \"name\": \"John Doe\",\n        \"first_name\": \"John\",\n        \"last_name\": \"Doe\",\n        \"image\": null,\n        \"member_since\": \"August 2025\",\n        \"created_at\": \"2025-08-13T10:00:00+00:00\",\n        \"ads_count\": 3,\n        \"active_ads_count\": 3,\n        \"average_rating\": 4.8,\n        \"total_reviews\": 12,\n        \"is_trusted_seller\": true,\n        \"device_type\": \"android\",\n        \"city\": {\n            \"id\": 1,\n            \"name\": \"London\"\n        },\n        \"status\": \"active\",\n        \"phone\": \"+447700900123\",\n        \"email\": \"john@example.com\",\n        \"student_email\": \"john@university.ac.uk\",\n        \"student_verified_at\": \"2026-08-13T10:00:00+00:00\",\n        \"student_reverify_due_at\": \"2027-08-13T10:00:00+00:00\",\n        \"needs_reverification\": false,\n        \"settings\": {\n            \"privacy\": {\n                \"show_last_name\": true,\n                \"show_approximate_location\": true,\n                \"trusted_users_only\": false\n            },\n            \"notifications\": {\n                \"notify_chat\": true,\n                \"notify_ads\": true,\n                \"notify_system\": true\n            }\n        },\n        \"terms\": {\n            \"current_version\": \"2.0\",\n            \"accepted\": true,\n            \"accepted_at\": \"2026-08-16T10:00:00+00:00\"\n        },\n        \"capabilities\": {\n            \"can_post\": true,\n            \"can_message\": true\n        },\n        \"feature_restrictions\": []\n    },\n    \"message\": \"Profile updated successfully.\"\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Confirm Reverification (V2)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "en | ar | fr | es | zh"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"activation_code\": \"123456\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{base_url}}/v2/reverify/confirm",
+                        "description": "V2 response contract. The unversioned endpoint remains compatible with the already-published mobile application."
+                    },
+                    "response": [
+                        {
+                            "name": "V2 reverification confirmed",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "en | ar | fr | es | zh"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"activation_code\": \"123456\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "url": "{{base_url}}/v2/reverify/confirm",
+                                "description": "V2 response contract. The unversioned endpoint remains compatible with the already-published mobile application."
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"data\": {\n        \"user\": {\n            \"id\": 12,\n            \"name\": \"John Doe\",\n            \"first_name\": \"John\",\n            \"last_name\": \"Doe\",\n            \"image\": null,\n            \"member_since\": \"August 2025\",\n            \"created_at\": \"2025-08-13T10:00:00+00:00\",\n            \"ads_count\": 3,\n            \"active_ads_count\": 3,\n            \"average_rating\": 4.8,\n            \"total_reviews\": 12,\n            \"is_trusted_seller\": true,\n            \"device_type\": \"android\",\n            \"city\": {\n                \"id\": 1,\n                \"name\": \"London\"\n            },\n            \"status\": \"active\",\n            \"phone\": \"+447700900123\",\n            \"email\": \"john@example.com\",\n            \"student_email\": \"john@university.ac.uk\",\n            \"student_verified_at\": \"2026-08-13T10:00:00+00:00\",\n            \"student_reverify_due_at\": \"2027-08-13T10:00:00+00:00\",\n            \"needs_reverification\": false,\n            \"settings\": {\n                \"privacy\": {\n                    \"show_last_name\": true,\n                    \"show_approximate_location\": true,\n                    \"trusted_users_only\": false\n                },\n                \"notifications\": {\n                    \"notify_chat\": true,\n                    \"notify_ads\": true,\n                    \"notify_system\": true\n                }\n            },\n            \"terms\": {\n                \"current_version\": \"2.0\",\n                \"accepted\": true,\n                \"accepted_at\": \"2026-08-16T10:00:00+00:00\"\n            },\n            \"capabilities\": {\n                \"can_post\": true,\n                \"can_message\": true\n            },\n            \"feature_restrictions\": []\n        }\n    }\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Account Settings (V2)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            }
+                        ],
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "url": "{{base_url}}/v2/account/settings",
+                        "description": "V2 response contract. The unversioned endpoint remains compatible with the already-published mobile application."
+                    },
+                    "response": [
+                        {
+                            "name": "V2 account settings with marketing consent",
+                            "originalRequest": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    }
+                                ],
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "url": "{{base_url}}/v2/account/settings",
+                                "description": "V2 response contract. The unversioned endpoint remains compatible with the already-published mobile application."
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"data\": {\n        \"privacy\": {\n            \"show_last_name\": true,\n            \"show_approximate_location\": true,\n            \"trusted_users_only\": false\n        },\n        \"notifications\": {\n            \"notify_chat\": true,\n            \"notify_ads\": true,\n            \"notify_system\": true,\n            \"notify_marketing\": true,\n            \"marketing_consent_at\": \"2026-08-16T10:00:00+00:00\"\n        }\n    }\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Update Account Settings (V2)",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"show_last_name\": false,\n  \"notify_chat\": true,\n  \"notify_marketing\": true\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{base_url}}/v2/account/settings",
+                        "description": "V2 response contract. The unversioned endpoint remains compatible with the already-published mobile application."
+                    },
+                    "response": [
+                        {
+                            "name": "V2 account settings with marketing consent",
+                            "originalRequest": {
+                                "method": "PUT",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"show_last_name\": false,\n  \"notify_chat\": true,\n  \"notify_marketing\": true\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "url": "{{base_url}}/v2/account/settings",
+                                "description": "V2 response contract. The unversioned endpoint remains compatible with the already-published mobile application."
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"data\": {\n        \"privacy\": {\n            \"show_last_name\": true,\n            \"show_approximate_location\": true,\n            \"trusted_users_only\": false\n        },\n        \"notifications\": {\n            \"notify_chat\": true,\n            \"notify_ads\": true,\n            \"notify_system\": true,\n            \"notify_marketing\": true,\n            \"marketing_consent_at\": \"2026-08-16T10:00:00+00:00\"\n        }\n    }\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Create Ad (V2)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            }
+                        ],
+                        "url": "{{base_url}}/v2/ads",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "description": "V2 response contract. The unversioned endpoint remains compatible with the already-published mobile application.",
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "images[]",
+                                    "type": "file",
+                                    "src": [],
+                                    "description": "Required. 1-10 files (jpeg/png/jpg/webp, max 5MB each)"
+                                },
+                                {
+                                    "key": "main_category_id",
+                                    "value": "18",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "sub_category_id",
+                                    "value": "20",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "title",
+                                    "value": "iPhone 13, 128GB",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "description",
+                                    "value": "Great condition, no scratches.",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "price",
+                                    "value": "450",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "currency",
+                                    "value": "GBP",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "city_id",
+                                    "value": "2",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "postcode",
+                                    "value": "LS2 9JT",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "confirm_publish",
+                                    "value": "true",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "coupon_code",
+                                    "value": "STUDENT50",
+                                    "type": "text",
+                                    "description": "Optional. Only consumed when confirm_publish=true. If the code turns out to be invalid the ad is still created and the fee simply comes back undiscounted (response.coupon.applied = false with a reason)."
+                                },
+                                {
+                                    "key": "attributes[item_type]",
+                                    "value": "Mobile phone",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "attributes[brand]",
+                                    "value": "Apple",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "attributes[condition]",
+                                    "value": "Used",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "attributes[storage]",
+                                    "value": "128GB",
+                                    "type": "text"
+                                }
+                            ]
+                        }
+                    },
+                    "response": [
+                        {
+                            "name": "V2 listing created",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    }
+                                ],
+                                "url": "{{base_url}}/v2/ads",
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "description": "V2 response contract. The unversioned endpoint remains compatible with the already-published mobile application.",
+                                "body": {
+                                    "mode": "formdata",
+                                    "formdata": [
+                                        {
+                                            "key": "images[]",
+                                            "type": "file",
+                                            "src": [],
+                                            "description": "Required. 1-10 files (jpeg/png/jpg/webp, max 5MB each)"
+                                        },
+                                        {
+                                            "key": "main_category_id",
+                                            "value": "18",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "sub_category_id",
+                                            "value": "20",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "title",
+                                            "value": "iPhone 13, 128GB",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "description",
+                                            "value": "Great condition, no scratches.",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "price",
+                                            "value": "450",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "currency",
+                                            "value": "GBP",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "city_id",
+                                            "value": "2",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "postcode",
+                                            "value": "LS2 9JT",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "confirm_publish",
+                                            "value": "true",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "coupon_code",
+                                            "value": "STUDENT50",
+                                            "type": "text",
+                                            "description": "Optional. Only consumed when confirm_publish=true. If the code turns out to be invalid the ad is still created and the fee simply comes back undiscounted (response.coupon.applied = false with a reason)."
+                                        },
+                                        {
+                                            "key": "attributes[item_type]",
+                                            "value": "Mobile phone",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "attributes[brand]",
+                                            "value": "Apple",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "attributes[condition]",
+                                            "value": "Used",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "attributes[storage]",
+                                            "value": "128GB",
+                                            "type": "text"
+                                        }
+                                    ]
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"data\": {\n        \"publication\": {\n            \"published\": false,\n            \"payment_required\": true,\n            \"status\": \"pending\",\n            \"amount\": 0.99,\n            \"currency\": \"gbp\"\n        },\n        \"ad\": {\n            \"id\": 501,\n            \"public_id\": \"AD-501\",\n            \"title\": \"Study desk\"\n        }\n    },\n    \"message\": \"Payment required\"\n}"
+                        },
+                        {
+                            "name": "V2 duplicate listing",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    }
+                                ],
+                                "url": "{{base_url}}/v2/ads",
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "description": "V2 response contract. The unversioned endpoint remains compatible with the already-published mobile application.",
+                                "body": {
+                                    "mode": "formdata",
+                                    "formdata": [
+                                        {
+                                            "key": "images[]",
+                                            "type": "file",
+                                            "src": [],
+                                            "description": "Required. 1-10 files (jpeg/png/jpg/webp, max 5MB each)"
+                                        },
+                                        {
+                                            "key": "main_category_id",
+                                            "value": "18",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "sub_category_id",
+                                            "value": "20",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "title",
+                                            "value": "iPhone 13, 128GB",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "description",
+                                            "value": "Great condition, no scratches.",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "price",
+                                            "value": "450",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "currency",
+                                            "value": "GBP",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "city_id",
+                                            "value": "2",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "postcode",
+                                            "value": "LS2 9JT",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "confirm_publish",
+                                            "value": "true",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "coupon_code",
+                                            "value": "STUDENT50",
+                                            "type": "text",
+                                            "description": "Optional. Only consumed when confirm_publish=true. If the code turns out to be invalid the ad is still created and the fee simply comes back undiscounted (response.coupon.applied = false with a reason)."
+                                        },
+                                        {
+                                            "key": "attributes[item_type]",
+                                            "value": "Mobile phone",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "attributes[brand]",
+                                            "value": "Apple",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "attributes[condition]",
+                                            "value": "Used",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "attributes[storage]",
+                                            "value": "128GB",
+                                            "type": "text"
+                                        }
+                                    ]
+                                }
+                            },
+                            "status": "Unprocessable Entity",
+                            "code": 422,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": false,\n    \"message\": \"You already posted an ad with this title and price in the last 24 hours\",\n    \"data\": {\n        \"duplicate_listing\": true\n    }\n}"
+                        },
+                        {
+                            "name": "V2 posting restricted",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    }
+                                ],
+                                "url": "{{base_url}}/v2/ads",
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "description": "V2 response contract. The unversioned endpoint remains compatible with the already-published mobile application.",
+                                "body": {
+                                    "mode": "formdata",
+                                    "formdata": [
+                                        {
+                                            "key": "images[]",
+                                            "type": "file",
+                                            "src": [],
+                                            "description": "Required. 1-10 files (jpeg/png/jpg/webp, max 5MB each)"
+                                        },
+                                        {
+                                            "key": "main_category_id",
+                                            "value": "18",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "sub_category_id",
+                                            "value": "20",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "title",
+                                            "value": "iPhone 13, 128GB",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "description",
+                                            "value": "Great condition, no scratches.",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "price",
+                                            "value": "450",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "currency",
+                                            "value": "GBP",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "city_id",
+                                            "value": "2",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "postcode",
+                                            "value": "LS2 9JT",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "confirm_publish",
+                                            "value": "true",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "coupon_code",
+                                            "value": "STUDENT50",
+                                            "type": "text",
+                                            "description": "Optional. Only consumed when confirm_publish=true. If the code turns out to be invalid the ad is still created and the fee simply comes back undiscounted (response.coupon.applied = false with a reason)."
+                                        },
+                                        {
+                                            "key": "attributes[item_type]",
+                                            "value": "Mobile phone",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "attributes[brand]",
+                                            "value": "Apple",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "attributes[condition]",
+                                            "value": "Used",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "attributes[storage]",
+                                            "value": "128GB",
+                                            "type": "text"
+                                        }
+                                    ]
+                                }
+                            },
+                            "status": "Forbidden",
+                            "code": 403,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": false,\n    \"message\": \"This feature is temporarily unavailable for your account.\",\n    \"data\": {\n        \"error_code\": \"feature_restricted\",\n        \"feature\": \"posting\",\n        \"reason\": \"Temporary moderation restriction\",\n        \"restricted_until\": \"2026-08-30T12:00:00+00:00\",\n        \"restriction_id\": 15\n    }\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Create Ad Draft (V2)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "images[]",
+                                    "type": "file",
+                                    "src": [],
+                                    "description": "Optional on a draft, 1-10 files (jpeg/png/jpg/webp, max 5MB each). Stored if sent; a draft may also be saved with none. POST /ads/{id}/publish is what requires at least one."
+                                },
+                                {
+                                    "key": "main_category_id",
+                                    "value": "1",
+                                    "type": "text",
+                                    "description": "Accommodation"
+                                },
+                                {
+                                    "key": "sub_category_id",
+                                    "value": "6",
+                                    "type": "text",
+                                    "description": "Long-term lets"
+                                },
+                                {
+                                    "key": "title",
+                                    "value": "2-bed flat near campus, long let",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "description",
+                                    "value": "Bright 2-bed flat, 10 min walk to campus. Bills included.",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "price",
+                                    "value": "1200",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "currency",
+                                    "value": "GBP",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "city_id",
+                                    "value": "2",
+                                    "type": "text",
+                                    "description": "Must exist in the cities table"
+                                },
+                                {
+                                    "key": "postcode",
+                                    "value": "LS2 9JT",
+                                    "type": "text",
+                                    "description": "Resolved to city/area and the approximate centroid"
+                                },
+                                {
+                                    "key": "region",
+                                    "value": "Yorkshire and The Humber",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "latitude",
+                                    "value": "53.8008",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "longitude",
+                                    "value": "-1.5491",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "is_negotiable",
+                                    "value": "false",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "attributes[property_type]",
+                                    "value": "Flat",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "attributes[bedrooms]",
+                                    "value": "2",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "attributes[bathrooms]",
+                                    "value": "1",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "attributes[furnishing]",
+                                    "value": "Furnished",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "attributes[payment_term]",
+                                    "value": "Per Month",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "attributes[available_from]",
+                                    "value": "2026-09-01",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "attributes[available_until]",
+                                    "value": "2027-08-31",
+                                    "type": "text"
+                                },
+                                {
+                                    "key": "attributes[features]",
+                                    "value": "Parking,Garden,Bills Included",
+                                    "type": "text",
+                                    "description": "multiselect — comma-separated, single value"
+                                }
+                            ]
+                        },
+                        "url": "{{base_url}}/v2/ads/draft",
+                        "description": "V2 response contract. The unversioned endpoint remains compatible with the already-published mobile application."
+                    },
+                    "response": [
+                        {
+                            "name": "V2 success",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "formdata",
+                                    "formdata": [
+                                        {
+                                            "key": "images[]",
+                                            "type": "file",
+                                            "src": [],
+                                            "description": "Optional on a draft, 1-10 files (jpeg/png/jpg/webp, max 5MB each). Stored if sent; a draft may also be saved with none. POST /ads/{id}/publish is what requires at least one."
+                                        },
+                                        {
+                                            "key": "main_category_id",
+                                            "value": "1",
+                                            "type": "text",
+                                            "description": "Accommodation"
+                                        },
+                                        {
+                                            "key": "sub_category_id",
+                                            "value": "6",
+                                            "type": "text",
+                                            "description": "Long-term lets"
+                                        },
+                                        {
+                                            "key": "title",
+                                            "value": "2-bed flat near campus, long let",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "description",
+                                            "value": "Bright 2-bed flat, 10 min walk to campus. Bills included.",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "price",
+                                            "value": "1200",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "currency",
+                                            "value": "GBP",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "city_id",
+                                            "value": "2",
+                                            "type": "text",
+                                            "description": "Must exist in the cities table"
+                                        },
+                                        {
+                                            "key": "postcode",
+                                            "value": "LS2 9JT",
+                                            "type": "text",
+                                            "description": "Resolved to city/area and the approximate centroid"
+                                        },
+                                        {
+                                            "key": "region",
+                                            "value": "Yorkshire and The Humber",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "latitude",
+                                            "value": "53.8008",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "longitude",
+                                            "value": "-1.5491",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "is_negotiable",
+                                            "value": "false",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "attributes[property_type]",
+                                            "value": "Flat",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "attributes[bedrooms]",
+                                            "value": "2",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "attributes[bathrooms]",
+                                            "value": "1",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "attributes[furnishing]",
+                                            "value": "Furnished",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "attributes[payment_term]",
+                                            "value": "Per Month",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "attributes[available_from]",
+                                            "value": "2026-09-01",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "attributes[available_until]",
+                                            "value": "2027-08-31",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "attributes[features]",
+                                            "value": "Parking,Garden,Bills Included",
+                                            "type": "text",
+                                            "description": "multiselect — comma-separated, single value"
+                                        }
+                                    ]
+                                },
+                                "url": "{{base_url}}/v2/ads/draft",
+                                "description": "V2 response contract. The unversioned endpoint remains compatible with the already-published mobile application."
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"data\": {\n        \"ad\": {\n            \"id\": 501,\n            \"public_id\": \"AD-501\"\n        },\n        \"publication\": {\n            \"published\": true,\n            \"payment_required\": false\n        }\n    }\n}"
+                        },
+                        {
+                            "name": "V2 posting restricted",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "formdata",
+                                    "formdata": [
+                                        {
+                                            "key": "images[]",
+                                            "type": "file",
+                                            "src": [],
+                                            "description": "Optional on a draft, 1-10 files (jpeg/png/jpg/webp, max 5MB each). Stored if sent; a draft may also be saved with none. POST /ads/{id}/publish is what requires at least one."
+                                        },
+                                        {
+                                            "key": "main_category_id",
+                                            "value": "1",
+                                            "type": "text",
+                                            "description": "Accommodation"
+                                        },
+                                        {
+                                            "key": "sub_category_id",
+                                            "value": "6",
+                                            "type": "text",
+                                            "description": "Long-term lets"
+                                        },
+                                        {
+                                            "key": "title",
+                                            "value": "2-bed flat near campus, long let",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "description",
+                                            "value": "Bright 2-bed flat, 10 min walk to campus. Bills included.",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "price",
+                                            "value": "1200",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "currency",
+                                            "value": "GBP",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "city_id",
+                                            "value": "2",
+                                            "type": "text",
+                                            "description": "Must exist in the cities table"
+                                        },
+                                        {
+                                            "key": "postcode",
+                                            "value": "LS2 9JT",
+                                            "type": "text",
+                                            "description": "Resolved to city/area and the approximate centroid"
+                                        },
+                                        {
+                                            "key": "region",
+                                            "value": "Yorkshire and The Humber",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "latitude",
+                                            "value": "53.8008",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "longitude",
+                                            "value": "-1.5491",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "is_negotiable",
+                                            "value": "false",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "attributes[property_type]",
+                                            "value": "Flat",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "attributes[bedrooms]",
+                                            "value": "2",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "attributes[bathrooms]",
+                                            "value": "1",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "attributes[furnishing]",
+                                            "value": "Furnished",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "attributes[payment_term]",
+                                            "value": "Per Month",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "attributes[available_from]",
+                                            "value": "2026-09-01",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "attributes[available_until]",
+                                            "value": "2027-08-31",
+                                            "type": "text"
+                                        },
+                                        {
+                                            "key": "attributes[features]",
+                                            "value": "Parking,Garden,Bills Included",
+                                            "type": "text",
+                                            "description": "multiselect — comma-separated, single value"
+                                        }
+                                    ]
+                                },
+                                "url": "{{base_url}}/v2/ads/draft",
+                                "description": "V2 response contract. The unversioned endpoint remains compatible with the already-published mobile application."
+                            },
+                            "status": "Forbidden",
+                            "code": 403,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": false,\n    \"message\": \"This feature is temporarily unavailable for your account.\",\n    \"data\": {\n        \"error_code\": \"feature_restricted\",\n        \"feature\": \"posting\",\n        \"reason\": \"Temporary moderation restriction\",\n        \"restricted_until\": \"2026-08-30T12:00:00+00:00\",\n        \"restriction_id\": 15\n    }\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Activate Ad (V2)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            }
+                        ],
+                        "url": "{{base_url}}/v2/my-ads/:id/activate",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "coupon_code",
+                                    "value": "STUDENT50",
+                                    "type": "text",
+                                    "disabled": true,
+                                    "description": "Optional. Applied to the listing fee; single use per user."
+                                }
+                            ]
+                        },
+                        "description": "V2 response contract. The unversioned endpoint remains compatible with the already-published mobile application."
+                    },
+                    "response": [
+                        {
+                            "name": "V2 success",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    }
+                                ],
+                                "url": "{{base_url}}/v2/my-ads/:id/activate",
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "formdata",
+                                    "formdata": [
+                                        {
+                                            "key": "coupon_code",
+                                            "value": "STUDENT50",
+                                            "type": "text",
+                                            "disabled": true,
+                                            "description": "Optional. Applied to the listing fee; single use per user."
+                                        }
+                                    ]
+                                },
+                                "description": "V2 response contract. The unversioned endpoint remains compatible with the already-published mobile application."
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"data\": {\n        \"ad\": {\n            \"id\": 501,\n            \"public_id\": \"AD-501\"\n        },\n        \"publication\": {\n            \"published\": true,\n            \"payment_required\": false\n        }\n    }\n}"
+                        },
+                        {
+                            "name": "V2 posting restricted",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    }
+                                ],
+                                "url": "{{base_url}}/v2/my-ads/:id/activate",
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "formdata",
+                                    "formdata": [
+                                        {
+                                            "key": "coupon_code",
+                                            "value": "STUDENT50",
+                                            "type": "text",
+                                            "disabled": true,
+                                            "description": "Optional. Applied to the listing fee; single use per user."
+                                        }
+                                    ]
+                                },
+                                "description": "V2 response contract. The unversioned endpoint remains compatible with the already-published mobile application."
+                            },
+                            "status": "Forbidden",
+                            "code": 403,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": false,\n    \"message\": \"This feature is temporarily unavailable for your account.\",\n    \"data\": {\n        \"error_code\": \"feature_restricted\",\n        \"feature\": \"posting\",\n        \"reason\": \"Temporary moderation restriction\",\n        \"restricted_until\": \"2026-08-30T12:00:00+00:00\",\n        \"restriction_id\": 15\n    }\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Sell Again (V2)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            }
+                        ],
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "coupon_code",
+                                    "value": "STUDENT50",
+                                    "type": "text",
+                                    "disabled": true,
+                                    "description": "Optional. Applied to the listing fee; single use per user."
+                                }
+                            ]
+                        },
+                        "url": "{{base_url}}/v2/my-ads/:id/sell-again",
+                        "description": "V2 response contract. The unversioned endpoint remains compatible with the already-published mobile application."
+                    },
+                    "response": [
+                        {
+                            "name": "V2 success",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    }
+                                ],
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "formdata",
+                                    "formdata": [
+                                        {
+                                            "key": "coupon_code",
+                                            "value": "STUDENT50",
+                                            "type": "text",
+                                            "disabled": true,
+                                            "description": "Optional. Applied to the listing fee; single use per user."
+                                        }
+                                    ]
+                                },
+                                "url": "{{base_url}}/v2/my-ads/:id/sell-again",
+                                "description": "V2 response contract. The unversioned endpoint remains compatible with the already-published mobile application."
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"data\": {\n        \"ad\": {\n            \"id\": 501,\n            \"public_id\": \"AD-501\"\n        },\n        \"publication\": {\n            \"published\": true,\n            \"payment_required\": false\n        }\n    }\n}"
+                        },
+                        {
+                            "name": "V2 posting restricted",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    }
+                                ],
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "formdata",
+                                    "formdata": [
+                                        {
+                                            "key": "coupon_code",
+                                            "value": "STUDENT50",
+                                            "type": "text",
+                                            "disabled": true,
+                                            "description": "Optional. Applied to the listing fee; single use per user."
+                                        }
+                                    ]
+                                },
+                                "url": "{{base_url}}/v2/my-ads/:id/sell-again",
+                                "description": "V2 response contract. The unversioned endpoint remains compatible with the already-published mobile application."
+                            },
+                            "status": "Forbidden",
+                            "code": 403,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": false,\n    \"message\": \"This feature is temporarily unavailable for your account.\",\n    \"data\": {\n        \"error_code\": \"feature_restricted\",\n        \"feature\": \"posting\",\n        \"reason\": \"Temporary moderation restriction\",\n        \"restricted_until\": \"2026-08-30T12:00:00+00:00\",\n        \"restriction_id\": 15\n    }\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Start Conversation (V2)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"ad_id\": 101,\n    \"message\": \"Is this still available?\",\n    \"client_message_id\": \"b2f1c9de-7b42-4a11-9c33-8f0d6b2a41ce\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": "{{base_url}}/v2/conversations",
+                        "description": "V2 response contract. The unversioned endpoint remains compatible with the already-published mobile application."
+                    },
+                    "response": [
+                        {
+                            "name": "V2 conversation started",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"ad_id\": 101,\n    \"message\": \"Is this still available?\",\n    \"client_message_id\": \"b2f1c9de-7b42-4a11-9c33-8f0d6b2a41ce\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "url": "{{base_url}}/v2/conversations",
+                                "description": "V2 response contract. The unversioned endpoint remains compatible with the already-published mobile application."
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"data\": {\n        \"id\": 81,\n        \"ad_id\": 501,\n        \"last_message\": \"Is this available?\"\n    }\n}"
+                        },
+                        {
+                            "name": "V2 messaging restricted",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"ad_id\": 101,\n    \"message\": \"Is this still available?\",\n    \"client_message_id\": \"b2f1c9de-7b42-4a11-9c33-8f0d6b2a41ce\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "url": "{{base_url}}/v2/conversations",
+                                "description": "V2 response contract. The unversioned endpoint remains compatible with the already-published mobile application."
+                            },
+                            "status": "Forbidden",
+                            "code": 403,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": false,\n    \"message\": \"This feature is temporarily unavailable for your account.\",\n    \"data\": {\n        \"error_code\": \"feature_restricted\",\n        \"feature\": \"messaging\",\n        \"reason\": \"Temporary moderation restriction\",\n        \"restricted_until\": \"2026-08-30T12:00:00+00:00\",\n        \"restriction_id\": 15\n    }\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Send Message (V2)",
+                    "request": {
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "body",
+                                    "value": "Hello, is it available?",
+                                    "type": "text",
+                                    "description": "Optional when an attachment is present. Max 5000 chars."
+                                },
+                                {
+                                    "key": "client_message_id",
+                                    "value": "e3f1c9de-7b42-4a11-9c33-8f0d6b2a41ce",
+                                    "type": "text",
+                                    "description": "Optional client-generated id, max 64 chars. Unique per (conversation, sender). Resending the same id returns the existing message instead of creating a second one."
+                                },
+                                {
+                                    "key": "attachment",
+                                    "type": "file",
+                                    "src": [],
+                                    "description": "Optional. jpg, jpeg, png, gif, webp, heic, heif, pdf, doc, docx, xls, xlsx, txt. Max 10 MB.",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "url": "{{base_url}}/v2/conversations/:id/messages",
+                        "description": "V2 response contract. The unversioned endpoint remains compatible with the already-published mobile application."
+                    },
+                    "response": [
+                        {
+                            "name": "V2 message sent",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "formdata",
+                                    "formdata": [
+                                        {
+                                            "key": "body",
+                                            "value": "Hello, is it available?",
+                                            "type": "text",
+                                            "description": "Optional when an attachment is present. Max 5000 chars."
+                                        },
+                                        {
+                                            "key": "client_message_id",
+                                            "value": "e3f1c9de-7b42-4a11-9c33-8f0d6b2a41ce",
+                                            "type": "text",
+                                            "description": "Optional client-generated id, max 64 chars. Unique per (conversation, sender). Resending the same id returns the existing message instead of creating a second one."
+                                        },
+                                        {
+                                            "key": "attachment",
+                                            "type": "file",
+                                            "src": [],
+                                            "description": "Optional. jpg, jpeg, png, gif, webp, heic, heif, pdf, doc, docx, xls, xlsx, txt. Max 10 MB.",
+                                            "disabled": true
+                                        }
+                                    ]
+                                },
+                                "url": "{{base_url}}/v2/conversations/:id/messages",
+                                "description": "V2 response contract. The unversioned endpoint remains compatible with the already-published mobile application."
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"data\": {\n        \"id\": 901,\n        \"body\": \"Is this available?\",\n        \"type\": \"text\",\n        \"client_message_id\": \"mobile-1700000001\"\n    }\n}"
+                        },
+                        {
+                            "name": "V2 messaging restricted",
+                            "originalRequest": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    }
+                                ],
+                                "body": {
+                                    "mode": "formdata",
+                                    "formdata": [
+                                        {
+                                            "key": "body",
+                                            "value": "Hello, is it available?",
+                                            "type": "text",
+                                            "description": "Optional when an attachment is present. Max 5000 chars."
+                                        },
+                                        {
+                                            "key": "client_message_id",
+                                            "value": "e3f1c9de-7b42-4a11-9c33-8f0d6b2a41ce",
+                                            "type": "text",
+                                            "description": "Optional client-generated id, max 64 chars. Unique per (conversation, sender). Resending the same id returns the existing message instead of creating a second one."
+                                        },
+                                        {
+                                            "key": "attachment",
+                                            "type": "file",
+                                            "src": [],
+                                            "description": "Optional. jpg, jpeg, png, gif, webp, heic, heif, pdf, doc, docx, xls, xlsx, txt. Max 10 MB.",
+                                            "disabled": true
+                                        }
+                                    ]
+                                },
+                                "url": "{{base_url}}/v2/conversations/:id/messages",
+                                "description": "V2 response contract. The unversioned endpoint remains compatible with the already-published mobile application."
+                            },
+                            "status": "Forbidden",
+                            "code": 403,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": false,\n    \"message\": \"This feature is temporarily unavailable for your account.\",\n    \"data\": {\n        \"error_code\": \"feature_restricted\",\n        \"feature\": \"messaging\",\n        \"reason\": \"Temporary moderation restriction\",\n        \"restricted_until\": \"2026-08-30T12:00:00+00:00\",\n        \"restriction_id\": 15\n    }\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Publish Ad — Confirmed (V2)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/v2/ads/:id/publish",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "v2",
+                                "ads",
+                                ":id",
+                                "publish"
+                            ]
+                        },
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "confirm_publish_immediately",
+                                    "value": "true",
+                                    "type": "text",
+                                    "description": "Required. The seller must actively select \"Start my listing immediately\" before payment."
+                                },
+                                {
+                                    "key": "coupon_code",
+                                    "value": "STUDENT50",
+                                    "type": "text",
+                                    "disabled": true,
+                                    "description": "Optional. Applied to the listing fee; single use per user."
+                                }
+                            ]
+                        },
+                        "description": "Same as POST /ads/{id}/publish, but requires confirm_publish_immediately=true before it will settle the fee — 422 if missing or not accepted.\n\nThe confirmation is stamped on the ad (publish_confirmed_at) alongside the resulting Stripe payment intent as evidence.\n\nV1's /ads/{id}/publish is unchanged and takes no such field — this is additive, for clients that have added the confirmation button."
+                    },
+                    "response": [
+                        {
+                            "name": "V2 success",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    }
+                                ],
+                                "url": "{{base_url}}/v2/ads/:id/publish",
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "formdata",
+                                    "formdata": [
+                                        {
+                                            "key": "confirm_publish_immediately",
+                                            "value": "true",
+                                            "type": "text",
+                                            "description": "Required. The seller must actively select \"Start my listing immediately\" before payment."
+                                        },
+                                        {
+                                            "key": "coupon_code",
+                                            "value": "STUDENT50",
+                                            "type": "text",
+                                            "disabled": true,
+                                            "description": "Optional. Applied to the listing fee; single use per user."
+                                        }
+                                    ]
+                                },
+                                "description": "Same as POST /ads/{id}/publish, but requires confirm_publish_immediately=true before it will settle the fee — 422 if missing or not accepted.\n\nThe confirmation is stamped on the ad (publish_confirmed_at) alongside the resulting Stripe payment intent as evidence.\n\nV1's /ads/{id}/publish is unchanged and takes no such field — this is additive, for clients that have added the confirmation button."
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"data\": {\n        \"ad\": {\n            \"id\": 501,\n            \"public_id\": \"AD-501\"\n        },\n        \"publication\": {\n            \"published\": true,\n            \"payment_required\": false\n        }\n    }\n}"
+                        },
+                        {
+                            "name": "V2 posting restricted",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    }
+                                ],
+                                "url": "{{base_url}}/v2/ads/:id/publish",
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "formdata",
+                                    "formdata": [
+                                        {
+                                            "key": "confirm_publish_immediately",
+                                            "value": "true",
+                                            "type": "text",
+                                            "description": "Required. The seller must actively select \"Start my listing immediately\" before payment."
+                                        },
+                                        {
+                                            "key": "coupon_code",
+                                            "value": "STUDENT50",
+                                            "type": "text",
+                                            "disabled": true,
+                                            "description": "Optional. Applied to the listing fee; single use per user."
+                                        }
+                                    ]
+                                },
+                                "description": "Same as POST /ads/{id}/publish, but requires confirm_publish_immediately=true before it will settle the fee — 422 if missing or not accepted.\n\nThe confirmation is stamped on the ad (publish_confirmed_at) alongside the resulting Stripe payment intent as evidence.\n\nV1's /ads/{id}/publish is unchanged and takes no such field — this is additive, for clients that have added the confirmation button."
+                            },
+                            "status": "Forbidden",
+                            "code": 403,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": false,\n    \"message\": \"This feature is temporarily unavailable for your account.\",\n    \"data\": {\n        \"error_code\": \"feature_restricted\",\n        \"feature\": \"posting\",\n        \"reason\": \"Temporary moderation restriction\",\n        \"restricted_until\": \"2026-08-30T12:00:00+00:00\",\n        \"restriction_id\": 15\n    }\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Extend Ad — Confirmed (V2)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "lang",
+                                "value": "en",
+                                "description": "Set to \"ar\" for Arabic messages"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/v2/my-ads/:id/extend",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "v2",
+                                "my-ads",
+                                ":id",
+                                "extend"
+                            ]
+                        },
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "confirm_publish_immediately",
+                                    "value": "true",
+                                    "type": "text",
+                                    "description": "Required. The seller must actively select \"Start my listing immediately\" before payment."
+                                },
+                                {
+                                    "key": "coupon_code",
+                                    "value": "STUDENT50",
+                                    "type": "text",
+                                    "disabled": true,
+                                    "description": "Optional. Applied to the extension fee; single use per user."
+                                }
+                            ]
+                        },
+                        "description": "Same as POST /my-ads/{id}/extend, but requires confirm_publish_immediately=true before it will settle the fee — 422 if missing or not accepted.\n\nV1's /my-ads/{id}/extend and /my-ads/{id}/activate are unchanged and take no such field."
+                    },
+                    "response": [
+                        {
+                            "name": "V2 success",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    }
+                                ],
+                                "url": "{{base_url}}/v2/my-ads/:id/extend",
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "formdata",
+                                    "formdata": [
+                                        {
+                                            "key": "confirm_publish_immediately",
+                                            "value": "true",
+                                            "type": "text",
+                                            "description": "Required. The seller must actively select \"Start my listing immediately\" before payment."
+                                        },
+                                        {
+                                            "key": "coupon_code",
+                                            "value": "STUDENT50",
+                                            "type": "text",
+                                            "disabled": true,
+                                            "description": "Optional. Applied to the extension fee; single use per user."
+                                        }
+                                    ]
+                                },
+                                "description": "Same as POST /my-ads/{id}/extend, but requires confirm_publish_immediately=true before it will settle the fee — 422 if missing or not accepted.\n\nV1's /my-ads/{id}/extend and /my-ads/{id}/activate are unchanged and take no such field."
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"data\": {\n        \"ad\": {\n            \"id\": 501,\n            \"public_id\": \"AD-501\"\n        },\n        \"publication\": {\n            \"published\": true,\n            \"payment_required\": false\n        }\n    }\n}"
+                        },
+                        {
+                            "name": "V2 posting restricted",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "lang",
+                                        "value": "en",
+                                        "description": "Set to \"ar\" for Arabic messages"
+                                    }
+                                ],
+                                "url": "{{base_url}}/v2/my-ads/:id/extend",
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "formdata",
+                                    "formdata": [
+                                        {
+                                            "key": "confirm_publish_immediately",
+                                            "value": "true",
+                                            "type": "text",
+                                            "description": "Required. The seller must actively select \"Start my listing immediately\" before payment."
+                                        },
+                                        {
+                                            "key": "coupon_code",
+                                            "value": "STUDENT50",
+                                            "type": "text",
+                                            "disabled": true,
+                                            "description": "Optional. Applied to the extension fee; single use per user."
+                                        }
+                                    ]
+                                },
+                                "description": "Same as POST /my-ads/{id}/extend, but requires confirm_publish_immediately=true before it will settle the fee — 422 if missing or not accepted.\n\nV1's /my-ads/{id}/extend and /my-ads/{id}/activate are unchanged and take no such field."
+                            },
+                            "status": "Forbidden",
+                            "code": 403,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": false,\n    \"message\": \"This feature is temporarily unavailable for your account.\",\n    \"data\": {\n        \"error_code\": \"feature_restricted\",\n        \"feature\": \"posting\",\n        \"reason\": \"Temporary moderation restriction\",\n        \"restricted_until\": \"2026-08-30T12:00:00+00:00\",\n        \"restriction_id\": 15\n    }\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Chat Report Reasons — Serious Safety (V2)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": "{{base_url}}/v2/chat-report-reasons",
+                        "description": "Public V2 reason list. The legacy endpoint keeps its original enum for the published Flutter build."
+                    },
+                    "response": [
+                        {
+                            "name": "Chat Report Reasons — Serious Safety (V2) example",
+                            "originalRequest": {
+                                "method": "GET",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": "{{base_url}}/v2/chat-report-reasons",
+                                "description": "Public V2 reason list. The legacy endpoint keeps its original enum for the published Flutter build."
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"data\": [\n        {\n            \"value\": \"child_sexual_abuse_or_exploitation\",\n            \"label\": \"Child sexual abuse or exploitation\"\n        },\n        {\n            \"value\": \"immediate_danger\",\n            \"label\": \"Immediate danger\"\n        },\n        {\n            \"value\": \"terrorism_related\",\n            \"label\": \"Terrorism-related content\"\n        },\n        {\n            \"value\": \"serious_violence\",\n            \"label\": \"Serious violence\"\n        },\n        {\n            \"value\": \"credible_threat\",\n            \"label\": \"Credible threat\"\n        }\n    ]\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Report Conversation — Credible Threat (V2)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": "{{base_url}}/v2/conversations/{{conversation_id}}/report",
+                        "description": "V2 accepts the serious-safety enum and stores it with critical priority.",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"type\": \"chat\",\n    \"reason\": \"credible_threat\",\n    \"description\": \"Credible threat requiring urgent review.\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": [
+                        {
+                            "name": "Report Conversation — Credible Threat (V2) example",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": "{{base_url}}/v2/conversations/{{conversation_id}}/report",
+                                "description": "V2 accepts the serious-safety enum and stores it with critical priority.",
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"type\": \"chat\",\n    \"reason\": \"credible_threat\",\n    \"description\": \"Credible threat requiring urgent review.\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"message\": \"Report submitted successfully\",\n    \"data\": {\n        \"id\": 901,\n        \"status\": \"pending\"\n    }\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Report User — Immediate Danger (V2)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": "{{base_url}}/v2/users/{{user_id}}/reports",
+                        "description": "Direct user reports accept the same V2 serious-safety values.",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"reason\": \"immediate_danger\",\n    \"description\": \"Immediate safety concern.\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": [
+                        {
+                            "name": "Report User — Immediate Danger (V2) example",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": "{{base_url}}/v2/users/{{user_id}}/reports",
+                                "description": "Direct user reports accept the same V2 serious-safety values.",
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"reason\": \"immediate_danger\",\n    \"description\": \"Immediate safety concern.\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"message\": \"Report submitted successfully\",\n    \"data\": {\n        \"id\": 902,\n        \"status\": \"pending\"\n    }\n}"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Admin · Compliance Completion",
+            "item": [
+                {
+                    "name": "Close Contact Request",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": "{{base_url}}/admin/contact-us/{{contact_message_id}}",
+                        "description": "Closes the support case and stamps closed_at/closed_by; retention starts from this closure.",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"status\": \"closed\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": [
+                        {
+                            "name": "Close Contact Request example",
+                            "originalRequest": {
+                                "method": "PUT",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": "{{base_url}}/admin/contact-us/{{contact_message_id}}",
+                                "description": "Closes the support case and stamps closed_at/closed_by; retention starts from this closure.",
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"status\": \"closed\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"message\": \"Contact us message updated\",\n    \"data\": {\n        \"id\": 55,\n        \"status\": \"closed\",\n        \"closed_at\": \"2026-08-16T12:00:00+00:00\"\n    }\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Moderate Ad Status with Audit Reason",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": "{{base_url}}/admin/ads/{{ad_id}}",
+                        "description": "Every content status decision requires a reason and creates a content_moderation_actions audit row.",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"status\": \"rejected\",\n    \"reason\": \"Prohibited item confirmed during review.\",\n    \"source_type\": \"ad_report\",\n    \"source_id\": 81\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": [
+                        {
+                            "name": "Moderate Ad Status with Audit Reason example",
+                            "originalRequest": {
+                                "method": "PUT",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": "{{base_url}}/admin/ads/{{ad_id}}",
+                                "description": "Every content status decision requires a reason and creates a content_moderation_actions audit row.",
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"status\": \"rejected\",\n    \"reason\": \"Prohibited item confirmed during review.\",\n    \"source_type\": \"ad_report\",\n    \"source_id\": 81\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"message\": \"Ad status updated\",\n    \"data\": {\n        \"id\": 101,\n        \"status\": \"rejected\"\n    }\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Delete Ad with Audit Reason",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": "{{base_url}}/admin/ads/{{ad_id}}",
+                        "description": "Soft-deletes the ad and preserves the acting admin, reason, source and outcome in the audit log.",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"reason\": \"Removed after confirmed prohibited-content report.\",\n    \"source_type\": \"ad_report\",\n    \"source_id\": 81\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": [
+                        {
+                            "name": "Delete Ad with Audit Reason example",
+                            "originalRequest": {
+                                "method": "DELETE",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": "{{base_url}}/admin/ads/{{ad_id}}",
+                                "description": "Soft-deletes the ad and preserves the acting admin, reason, source and outcome in the audit log.",
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"reason\": \"Removed after confirmed prohibited-content report.\",\n    \"source_type\": \"ad_report\",\n    \"source_id\": 81\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"message\": \"Ad deleted\",\n    \"data\": []\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Resolve Ad Report with Decision Reason",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": "{{base_url}}/admin/ad-reports/{{ad_report_id}}",
+                        "description": "Reviewed/dismissed reports require a decision reason and stamp resolved_by/resolved_at.",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"status\": \"reviewed\",\n    \"decision_reason\": \"Evidence confirmed and the listing was removed.\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": [
+                        {
+                            "name": "Resolve Ad Report with Decision Reason example",
+                            "originalRequest": {
+                                "method": "PUT",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": "{{base_url}}/admin/ad-reports/{{ad_report_id}}",
+                                "description": "Reviewed/dismissed reports require a decision reason and stamp resolved_by/resolved_at.",
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"status\": \"reviewed\",\n    \"decision_reason\": \"Evidence confirmed and the listing was removed.\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"message\": \"Report status updated\",\n    \"data\": {\n        \"id\": 81,\n        \"status\": \"reviewed\",\n        \"decision_reason\": \"Evidence confirmed and the listing was removed.\",\n        \"resolved_by\": 3,\n        \"resolved_at\": \"2026-08-16T12:00:00+00:00\"\n    }\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Resolve Chat Report with Decision Reason",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": "{{base_url}}/admin/chat-reports/{{chat_report_id}}",
+                        "description": "Reviewed/dismissed reports require a decision reason and stamp resolved_by/resolved_at.",
+                        "auth": {
+                            "type": "bearer",
+                            "bearer": [
+                                {
+                                    "key": "token",
+                                    "value": "{{token}}",
+                                    "type": "string"
+                                }
+                            ]
+                        },
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"status\": \"reviewed\",\n    \"decision_reason\": \"Credible threat escalated and account action completed.\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        }
+                    },
+                    "response": [
+                        {
+                            "name": "Resolve Chat Report with Decision Reason example",
+                            "originalRequest": {
+                                "method": "PUT",
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "url": "{{base_url}}/admin/chat-reports/{{chat_report_id}}",
+                                "description": "Reviewed/dismissed reports require a decision reason and stamp resolved_by/resolved_at.",
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"status\": \"reviewed\",\n    \"decision_reason\": \"Credible threat escalated and account action completed.\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "cookie": [],
+                            "body": "{\n    \"status\": true,\n    \"message\": \"Report status updated\",\n    \"data\": {\n        \"id\": 901,\n        \"status\": \"reviewed\",\n        \"priority\": \"critical\",\n        \"decision_reason\": \"Credible threat escalated and account action completed.\",\n        \"resolved_by\": 3,\n        \"resolved_at\": \"2026-08-16T12:00:00+00:00\"\n    }\n}"
+                        }
+                    ]
                 }
             ]
         }

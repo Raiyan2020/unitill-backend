@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Models\Ad;
 use App\Models\Category;
+use App\Models\ContentModerationAction;
 use App\Models\Payment;
 use App\Services\PushNotificationService;
+use App\Services\StripeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -169,6 +171,7 @@ class AdAdminController extends Controller
                 ->values(),
             'images' => $ad->images->map(function ($img) {
                 $path = ltrim((string) $img->path, '/');
+
                 return [
                     'id' => $img->id,
                     'path' => $img->path,
@@ -206,6 +209,9 @@ class AdAdminController extends Controller
 
         $validator = Validator::make($request->all(), [
             'status' => ['required', Rule::in(['draft', 'pending', 'published', 'rejected', 'sold', 'expired'])],
+            'reason' => ['required', 'string', 'max:3000'],
+            'source_type' => ['nullable', Rule::in(['ad_report', 'chat_report', 'manual'])],
+            'source_id' => ['nullable', 'integer'],
         ]);
 
         if ($validator->fails()) {
@@ -240,6 +246,21 @@ class AdAdminController extends Controller
         }
 
         $ad->save();
+
+        if ($oldStatus !== $newStatus) {
+            ContentModerationAction::create([
+                'admin_id' => $request->user()?->id,
+                'user_id' => $ad->user_id,
+                'content_type' => 'ad',
+                'content_id' => $ad->id,
+                'action' => 'status_changed',
+                'reason' => $validator->validated()['reason'],
+                'source_type' => $validator->validated()['source_type'] ?? 'manual',
+                'source_id' => $validator->validated()['source_id'] ?? null,
+                'metadata' => ['old_status' => $oldStatus, 'new_status' => $newStatus],
+                'resolved_at' => now(),
+            ]);
+        }
 
         if ($oldStatus !== $newStatus && $ad->user) {
             // NOTE: resolves in the acting admin's language, not the ad owner's.
@@ -304,7 +325,7 @@ class AdAdminController extends Controller
         return sendResponse($rows, 'Refund requests fetched');
     }
 
-    public function destroy(int $id)
+    public function destroy(Request $request, int $id)
     {
         $ad = Ad::find($id);
 
@@ -312,7 +333,26 @@ class AdAdminController extends Controller
             return sendError(__('api.ad.not_found'), [], 404);
         }
 
+        $validated = $request->validate([
+            'reason' => ['required', 'string', 'max:3000'],
+            'source_type' => ['nullable', Rule::in(['ad_report', 'chat_report', 'manual'])],
+            'source_id' => ['nullable', 'integer'],
+        ]);
+
         $ad->delete();
+
+        ContentModerationAction::create([
+            'admin_id' => $request->user()?->id,
+            'user_id' => $ad->user_id,
+            'content_type' => 'ad',
+            'content_id' => $ad->id,
+            'action' => 'content_removed',
+            'reason' => $validated['reason'],
+            'source_type' => $validated['source_type'] ?? 'manual',
+            'source_id' => $validated['source_id'] ?? null,
+            'metadata' => ['previous_status' => $ad->status, 'public_id' => $ad->public_id],
+            'resolved_at' => now(),
+        ]);
 
         return sendResponse([], __('api.ad.deleted'));
     }
@@ -341,7 +381,7 @@ class AdAdminController extends Controller
             return sendError($validator->errors()->first(), $validator->errors()->toArray(), 422);
         }
 
-        $refund = app(\App\Services\StripeService::class)->refund($ad->stripe_payment_intent_id);
+        $refund = app(StripeService::class)->refund($ad->stripe_payment_intent_id);
 
         $refundStatus = 'refunded';
         $refundReference = $refund['id'] ?? null;

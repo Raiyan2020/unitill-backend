@@ -4,17 +4,23 @@ namespace App\Http\Controllers\Api\V2;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ApiLoginRequest;
+use App\Http\Requests\RefreshTokenRequest;
 use App\Http\Resources\UserResource;
 use App\Mail\OtpMail;
 use App\Models\User;
 use App\Models\UserLoginLog;
+use App\Models\UserModerationAction;
 use App\Services\AccountDeletionService;
+use App\Services\PushNotificationService;
+use App\Services\UserModerationService;
 use App\Support\LoginLogger;
 use App\Support\MobileAuthTokenService;
+use App\Support\StudentVerificationPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Validator;
 
 /**
  * V2 login flow.
@@ -180,7 +186,7 @@ class AuthController extends Controller
         // Same minimal contract as v1 verify-student-email: an identifier plus
         // the code. Device fields are optional — v1 login already collects
         // them at step 1, and MobileAuthTokenService tolerates their absence.
-        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+        $validator = Validator::make($request->all(), [
             'user_id' => 'nullable|integer|exists:users,id',
             'student_email' => 'nullable|email',
             'email' => 'required_without_all:user_id,student_email|nullable|email',
@@ -247,7 +253,7 @@ class AuthController extends Controller
             $updates += [
                 'status' => '1',
                 'student_verified_at' => $verifiedAt,
-                'student_reverify_due_at' => \App\Support\StudentVerificationPeriod::dueAt($verifiedAt),
+                'student_reverify_due_at' => StudentVerificationPeriod::dueAt($verifiedAt),
                 'reverify_notified_at' => null,
             ];
         }
@@ -260,7 +266,7 @@ class AuthController extends Controller
     /**
      * Same as v1 auth/refresh, but the new access token keeps the 30-day TTL.
      */
-    public function refresh(\App\Http\Requests\RefreshTokenRequest $request)
+    public function refresh(RefreshTokenRequest $request)
     {
         $lang = $request->header('lang') === 'ar';
         $deviceId = MobileAuthTokenService::resolveDeviceId($request);
@@ -291,7 +297,7 @@ class AuthController extends Controller
     {
         $lang = $request->header('lang') === 'ar';
 
-        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+        $validator = Validator::make($request->all(), [
             'user_id' => 'nullable|integer|exists:users,id',
             'student_email' => 'nullable|email',
             'email' => 'required_without_all:user_id,student_email|nullable|email',
@@ -379,6 +385,7 @@ class AuthController extends Controller
         }
         if ($request->filled('device_token')) {
             $deviceUpdates['device_token'] = $request->device_token;
+            $deviceUpdates['device_token_updated_at'] = now();
         }
         if ($deviceUpdates) {
             $user->update($deviceUpdates);
@@ -396,7 +403,7 @@ class AuthController extends Controller
         );
 
         if ($request->filled('device_token')) {
-            app(\App\Services\PushNotificationService::class)
+            app(PushNotificationService::class)
                 ->syncUserTopicSubscription($user->fresh(), $request->input('device_token'));
         }
 
@@ -407,10 +414,10 @@ class AuthController extends Controller
 
     protected function validateActiveUser(User $user, bool $lang)
     {
-        app(\App\Services\UserModerationService::class)->restoreExpiredSuspension($user);
+        app(UserModerationService::class)->restoreExpiredSuspension($user);
 
         if ($user->status === '3') {
-            $latestAction = \App\Models\UserModerationAction::query()
+            $latestAction = UserModerationAction::query()
                 ->where('user_id', $user->id)
                 ->whereIn('action', ['temporary_suspension', 'permanent_suspension'])
                 ->latest('id')

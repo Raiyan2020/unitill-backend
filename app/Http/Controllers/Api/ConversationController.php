@@ -264,7 +264,7 @@ class ConversationController extends Controller
             return sendError(__('api.chat.not_found'), [], 404);
         }
 
-        if (empty(trim($validated['body'] ?? '')) && !$request->hasFile('attachment')) {
+        if (empty(trim($validated['body'] ?? '')) && ! $request->hasFile('attachment')) {
             return sendError(__('api.chat.message_empty'), [], 422);
         }
 
@@ -411,7 +411,10 @@ class ConversationController extends Controller
     public function reportReasons(Request $request)
     {
         return sendResponse(
-            ChatReportReason::options($request->header('lang', 'en'))
+            ChatReportReason::options(
+                $request->header('lang', 'en'),
+                $request->is('api/v2/*')
+            )
         );
     }
 

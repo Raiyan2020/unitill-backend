@@ -7,6 +7,8 @@ use App\Models\TermsAcceptance;
 use App\Models\TermsVersion;
 use App\Models\User;
 use App\Models\UserFeatureRestriction;
+use App\Support\ChatReportReason;
+use App\Support\ReportPriority;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -66,6 +68,7 @@ class ComplianceFeaturesTest extends TestCase
 
     public function test_old_terms_version_is_rejected(): void
     {
+        $acceptancesBefore = TermsAcceptance::count();
         Sanctum::actingAs($this->user());
 
         $this->postJson('/api/terms/accept', [
@@ -74,11 +77,12 @@ class ComplianceFeaturesTest extends TestCase
         ])->assertStatus(422)
             ->assertJsonPath('data.terms_version.0', 'The accepted terms version is no longer current. Refresh the terms and try again.');
 
-        $this->assertSame(0, TermsAcceptance::count());
+        $this->assertSame($acceptancesBefore, TermsAcceptance::count());
     }
 
     public function test_public_page_creates_a_deletion_request_without_login(): void
     {
+        $requestsBefore = AccountDeletionRequest::count();
         $user = $this->user();
 
         $this->get('/delete-account')->assertOk()->assertSee('Request account deletion');
@@ -93,7 +97,7 @@ class ComplianceFeaturesTest extends TestCase
             'email' => $user->email,
             'status' => 'pending',
         ]);
-        $this->assertSame(1, AccountDeletionRequest::count());
+        $this->assertSame($requestsBefore + 1, AccountDeletionRequest::count());
     }
 
     public function test_messaging_and_posting_can_be_restricted_independently(): void
@@ -109,6 +113,10 @@ class ComplianceFeaturesTest extends TestCase
         ]);
 
         $this->postJson('/api/conversations', [])->assertStatus(403)
+            ->assertJsonMissing(['error_code' => 'feature_restricted'])
+            ->assertJsonMissingPath('data');
+
+        $this->postJson('/api/v2/conversations', [])->assertStatus(403)
             ->assertJsonPath('data.error_code', 'feature_restricted')
             ->assertJsonPath('data.feature', 'messaging');
 
@@ -116,6 +124,64 @@ class ComplianceFeaturesTest extends TestCase
         // the controller and returns 422, rather than a feature restriction.
         $this->postJson('/api/ads/draft', [])->assertStatus(422)
             ->assertJsonMissing(['error_code' => 'feature_restricted']);
+    }
+
+    public function test_legacy_and_v2_account_settings_have_separate_response_contracts(): void
+    {
+        $user = $this->user();
+        Sanctum::actingAs($user);
+
+        $this->getJson('/api/account/settings')
+            ->assertOk()
+            ->assertJsonMissingPath('data.notifications.notify_marketing')
+            ->assertJsonMissingPath('data.notifications.marketing_consent_at');
+
+        $this->getJson('/api/v2/account/settings')
+            ->assertOk()
+            ->assertJsonPath('data.notifications.notify_marketing', false)
+            ->assertJsonPath('data.notifications.marketing_consent_at', null);
+
+        $this->putJson('/api/v2/account/settings', ['notify_marketing' => true])
+            ->assertOk()
+            ->assertJsonPath('data.notifications.notify_marketing', true)
+            ->assertJsonPath('data.notifications.marketing_consent_at', fn ($value) => is_string($value));
+    }
+
+    public function test_terms_and_capabilities_are_only_added_to_v2_owner_profile(): void
+    {
+        $user = $this->user();
+        Sanctum::actingAs($user);
+
+        $this->getJson('/api/show-profile')
+            ->assertOk()
+            ->assertJsonMissingPath('data.terms')
+            ->assertJsonMissingPath('data.capabilities')
+            ->assertJsonMissingPath('data.feature_restrictions');
+
+        $this->getJson('/api/v2/show-profile')
+            ->assertOk()
+            ->assertJsonPath('data.terms.accepted', false)
+            ->assertJsonPath('data.capabilities.can_post', true)
+            ->assertJsonPath('data.capabilities.can_message', true)
+            ->assertJsonPath('data.feature_restrictions', []);
+    }
+
+    public function test_serious_safety_reasons_are_exposed_only_by_v2_and_are_critical(): void
+    {
+        $this->getJson('/api/chat-report-reasons')
+            ->assertOk()
+            ->assertJsonCount(7, 'data')
+            ->assertJsonMissing(['value' => ChatReportReason::CREDIBLE_THREAT]);
+
+        $this->getJson('/api/v2/chat-report-reasons')
+            ->assertOk()
+            ->assertJsonCount(12, 'data')
+            ->assertJsonFragment(['value' => ChatReportReason::CHILD_SEXUAL_ABUSE_OR_EXPLOITATION])
+            ->assertJsonFragment(['value' => ChatReportReason::CREDIBLE_THREAT]);
+
+        foreach (ChatReportReason::seriousSafety() as $reason) {
+            $this->assertSame(ReportPriority::CRITICAL, ReportPriority::fromReason($reason));
+        }
     }
 
     private function user(): User

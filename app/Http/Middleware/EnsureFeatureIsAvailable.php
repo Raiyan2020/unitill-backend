@@ -13,6 +13,12 @@ class EnsureFeatureIsAvailable
         $restriction = $request->user()?->activeFeatureRestriction($feature);
 
         if ($restriction) {
+            // Published clients keep the legacy error envelope. V2 clients get
+            // structured restriction details so they can disable one feature.
+            if (! $request->is('api/v2/*')) {
+                return sendError('This feature is temporarily unavailable for your account.', [], 403);
+            }
+
             return sendError('This feature is temporarily unavailable for your account.', [
                 'error_code' => 'feature_restricted',
                 'feature' => $restriction->feature,
