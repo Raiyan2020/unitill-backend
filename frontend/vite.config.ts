@@ -4,9 +4,11 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  // Built files are published to public/dist and served from /dist regardless of
-  // which /admin/* URL rendered the shell, so asset URLs must be absolute /dist/*.
-  base: '/dist/',
+  // Deployed to the root of its own dedicated dashboard domain (not nested under
+  // the Laravel app's /admin/* path anymore). Root-absolute so asset URLs still
+  // resolve correctly no matter which client-side route (e.g. /users/42) the
+  // browser is currently on when index.html loads.
+  base: '/',
   build: {
     outDir: '../public/dist',
     emptyOutDir: true,
