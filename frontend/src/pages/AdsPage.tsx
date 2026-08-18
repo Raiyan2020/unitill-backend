@@ -5,7 +5,7 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { TableFooter, TableLoadingRow } from '../components/table/TableHelpers';
-import { api } from '../lib/api';
+import { api, backendOrigin } from '../lib/api';
 import { ensureApiSuccess } from '../lib/api-response';
 import { useNotify } from '../lib/notify';
 import { useI18n } from '../providers/i18n-provider';
@@ -58,8 +58,6 @@ export function AdsPage() {
   const [savingDelete, setSavingDelete] = useState(false);
   const [deleteReason, setDeleteReason] = useState('');
   const [statusSavingId, setStatusSavingId] = useState<number | null>(null);
-
-  const backendOrigin = ((import.meta.env.VITE_BACKEND_ORIGIN as string | undefined) || 'http://127.0.0.1:8000').replace(/\/+$/, '');
 
   const resolveImage = (row: AdRow) => {
     if (row.cover_image_url) return row.cover_image_url;

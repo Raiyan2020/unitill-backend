@@ -5,7 +5,7 @@ import { TableFooter, TableLoadingRow } from '../components/table/TableHelpers';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
-import { api } from '../lib/api';
+import { api, backendOrigin } from '../lib/api';
 import { ensureApiSuccess } from '../lib/api-response';
 import { digitsOnly, toInteger } from '../lib/form';
 import { useNotify } from '../lib/notify';
@@ -156,8 +156,6 @@ export function CategoriesPage() {
   };
 
   const pagesCount = Math.max(1, Math.ceil(total / pageSize));
-  const backendOrigin = (import.meta.env.VITE_BACKEND_ORIGIN as string | undefined) || 'http://127.0.0.1:8000';
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">

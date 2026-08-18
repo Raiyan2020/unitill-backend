@@ -4,11 +4,10 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  // Deployed to the root of its own dedicated dashboard domain (not nested under
-  // the Laravel app's /admin/* path anymore). Root-absolute so asset URLs still
-  // resolve correctly no matter which client-side route (e.g. /users/42) the
-  // browser is currently on when index.html loads.
-  base: '/',
+  // Laravel serves the dashboard shell at /admin/* while the compiled files live
+  // in public/dist. Keep assets on /dist so Apache can serve them directly from
+  // the same domain without colliding with Laravel's /api and public routes.
+  base: '/dist/',
   build: {
     outDir: '../public/dist',
     emptyOutDir: true,
@@ -17,6 +16,10 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
+      '/storage': {
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,
       },

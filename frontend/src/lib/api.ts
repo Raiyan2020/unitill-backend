@@ -2,11 +2,15 @@ import axios from 'axios';
 import { getAuthToken } from './auth';
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  // One origin serves both the dashboard and Laravel API. Vite proxies this
+  // relative path during development and Laravel handles it in production.
+  baseURL: '/api',
   headers: {
     Accept: 'application/json',
   },
 });
+
+export const backendOrigin = window.location.origin.replace(/\/+$/, '');
 
 api.interceptors.request.use((config) => {
   const token = getAuthToken();

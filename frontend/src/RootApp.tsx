@@ -15,9 +15,8 @@ function LocalizedApp() {
 
   return (
     <AntdApp key={locale}>
-      {/* Deployed to the root of its own dedicated dashboard domain, so routes
-          ("/login", "/users") live at the domain root — no path prefix. */}
-      <BrowserRouter>
+      {/* Laravel serves the SPA at /admin, so client routes are relative to it. */}
+      <BrowserRouter basename="/admin">
         <App />
       </BrowserRouter>
     </AntdApp>
