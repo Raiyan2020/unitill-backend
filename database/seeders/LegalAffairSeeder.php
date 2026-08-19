@@ -11,11 +11,12 @@ class LegalAffairSeeder extends Seeder
 {
     public function run(): void
     {
-
+        // Truncate existing data and translations safely
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        DB::table('legal_affair_translations')->truncate(); // Replace with your actual translation table name if different
+        DB::table('legal_affair_translations')->truncate();
         LegalAffair::query()->truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
         $languages = Language::query()->active()->get(['id', 'code'])->keyBy('code');
 
         if ($languages->isEmpty()) {
@@ -25,261 +26,311 @@ class LegalAffairSeeder extends Seeder
         $allRecords = [
             // --- File 1: General Policies ---
             [
-                ['key' => 'community_guidelines', 'section' => 'policies', 'sort_order' => 1],
+                ['key' => 'general_policies', 'section' => 'policies', 'sort_order' => 1],
                 [
-                    'en' => ['title' => 'Community Guidelines', 'subtitle' => 'Expected behavior within the UniTill student community.', 'description' => json_encode(['Respect: Treat every student with kindness and respect. Harassment, hate speech, or bullying will lead to a permanent ban.', 'Honesty: Be truthful about item conditions. Do not use stock photos; always provide real pictures of the actual item.', 'Fair Pricing: While we don\'t control prices, we encourage fair, student-friendly pricing to help the community.', 'No Spam: Do not post duplicate ads or send unsolicited marketing messages to other users.', 'Communication: Keep all business-related conversations professional and relevant to the listing.', 'Safety First: Report any suspicious behavior or users asking for off-platform payments immediately.'], JSON_UNESCAPED_UNICODE)],
-                    'ar' => ['title' => 'إرشادات المجتمع', 'subtitle' => 'السلوك المتوقع داخل مجتمع طلاب UniTill.', 'description' => json_encode(['الاحترام: عامل كل طالب بلطف واحترام. المضايقة أو خطاب الكراهية أو التنمر يؤدي إلى حظر دائم.', 'الصدق: كن صادقاً بشأن حالة المنتج. لا تستخدم صوراً جاهزة؛ قدّم دائماً صوراً حقيقية للمنتج الفعلي.', 'تسعير عادل: رغم أننا لا نتحكم في الأسعار، نشجع تسعيراً عادلاً ومناسباً للطلاب.', 'لا للرسائل المزعجة: لا تنشر إعلانات مكررة ولا ترسل رسائل تسويقية غير مرغوب فيها.', 'التواصل: اجعل المحادثات المتعلقة بالبيع مهنية ومرتبطة بالإعلان فقط.', 'السلامة أولاً: أبلغ فوراً عن أي سلوك مشبوه أو طلب دفع خارج المنصة.'], JSON_UNESCAPED_UNICODE)],
-                    'fr' => ['title' => 'Lignes directrices de la communauté', 'subtitle' => 'Comportement attendu au sein de la communauté étudiante UniTill.', 'description' => json_encode(['Respect : Traitez chaque étudiant avec gentillesse et respect. Le harcèlement, les discours haineux ou l\'intimidation entraînera une interdiction permanente.', 'Honnêteté : Soyez véridique sur l\'état des articles. N\'utilisez pas de photos génériques ; fournissez toujours de vraies photos de l\'article réel.', 'Prix équitables : Bien que nous ne contrôlions pas les prix, nous encourageons des tarifs équitables et adaptés aux étudiants pour aider la communauté.', 'Pas de spam : Ne publiez pas d\'annonces en double et n\'envoyez pas de messages marketing non sollicités à d\'autres utilisateurs.', 'Communication : Gardez toutes les conversations professionnelles et pertinentes par rapport à l\'annonce.', 'La sécurité d\'abord : Signalez immédiatement tout comportement suspect ou tout utilisateur demandant des paiements hors plateforme.'], JSON_UNESCAPED_UNICODE)],
-                    'es' => ['title' => 'Directrices de la comunidad', 'subtitle' => 'Comportamiento esperado dentro de la comunidad estudiantil de UniTill.', 'description' => json_encode(['Respeto: Trata a cada estudiante con amabilidad y respeto. El acoso, el discurso de odio o la intimidación darán lugar a una prohibición permanente.', 'Honestidad: Sé veraz sobre el estado de los artículos. No utilices fotos de stock; proporciona siempre fotos reales del artículo actual.', 'Precios justos: Aunque no controlamos los precios, fomentamos precios justos y amigables para los estudiantes.', 'Sin spam: No publiques anuncios duplicados ni envíes mensajes de marketing no solicitados a otros usuarios.', 'Comunicación: Mantén todas las conversaciones profesionales y relevantes para el anuncio.', 'La seguridad primero: Reporta inmediatamente cualquier comportamiento sospechoso o usuarios que soliciten pagos fuera de la plataforma.'], JSON_UNESCAPED_UNICODE)],
-                    'de' => ['title' => 'Community-Richtlinien', 'subtitle' => 'Erwartetes Verhalten innerhalb der UniTill-Studentencommunity.', 'description' => json_encode(['Respekt: Behandle jeden Studenten mit Freundlichkeit und Respekt. Belästigung, Hassrede oder Mobbing führen zu einer dauerhaften Sperrung.', 'Ehrlichkeit: Seien Sie ehrlich bezüglich des Artikelzustands. Verwenden Sie keine Archivfotos; stellen Sie immer echte Bilder des tatsächlichen Artikels zur Verfügung.', 'Faire Preise: Obwohl wir keine Preise kontrollieren, fördern wir faire, studentenfreundliche Preise, um der Gemeinschaft zu helfen.', 'Kein Spam: Posten Sie keine doppelten Anzeigen und senden Sie keine unerwünschten Marketingnachrichten an andere Benutzer.', 'Kommunikation: Halten Sie alle geschäftsbezogenen Gespräche professionell und relevant für das Listing.', 'Sicherheit geht vor: Melden Sie verdächtiges Verhalten oder Benutzer, die nach Zahlungen außerhalb der Plattform fragen, sofort.'], JSON_UNESCAPED_UNICODE)],
-                ],
-            ],
-            [
-                ['key' => 'terms_of_service', 'section' => 'policies', 'sort_order' => 2],
-                [
-                    'en' => ['title' => 'Terms of Service', 'subtitle' => 'Rules for using the UniTill marketplace platform.', 'description' => json_encode(['Eligibility: You must be a verified student at a UK university to list items. Non-students can browse but may have restricted access.', 'Prohibited Items: We strictly prohibit the sale of alcohol, tobacco, weapons, illegal substances, and hazardous materials.', 'Fees: Posting fees are non-refundable once an ad goes live. We do not take a commission on student-to-student transactions.', 'Safety: Meet buyers in well-lit, public campus areas. We recommend bringing a friend for high-value transactions.', 'Accuracy: All listings must accurately represent the condition of the item. Misleading ads will be removed.'], JSON_UNESCAPED_UNICODE)],
-                    'ar' => ['title' => 'شروط الخدمة', 'subtitle' => 'قواعد استخدام منصة UniTill.', 'description' => json_encode(['الأهلية: يجب أن تكون طالباً موثقاً في جامعة بريطانية لنشر الإعلانات. غير الطلاب يمكنهم التصفح مع قيود.', 'منتجات محظورة: نحظر بيع الكحول والتبغ والأسلحة والمواد غير القانونية والخطرة.', 'الرسوم: رسوم النشر غير قابلة للاسترداد بعد نشر الإعلان. لا نأخذ عمولة على المعاملات بين الطلاب.', 'السلامة: قابل المشترين في أماكن عامة ومضاءة داخل الحرم. ننصح بإحضار صديق للمعاملات عالية القيمة.', 'الدقة: يجب أن تعكس الإعلانات حالة المنتج بدقة. الإعلانات المضللة تُزال.'], JSON_UNESCAPED_UNICODE)],
-                    'fr' => ['title' => 'Conditions d\'utilisation', 'subtitle' => 'Règles d\'utilisation de la plateforme de marché UniTill.', 'description' => json_encode(['Éligibilité : Vous devez être un étudiant vérifié dans une université britannique pour publier des articles. Les non-étudiants peuvent naviguer mais peuvent avoir un accès restreint.', 'Articles interdits : Nous interdisons strictement la vente d\'alcool, de tabac, d\'armes, de substances illégales et de matières dangereuses.', 'Frais : Les frais de publication ne sont pas remboursables une fois qu\'une annonce est en ligne. Nous ne prenons pas de commission sur les transactions entre étudiants.', 'Sécurité : Rencontrez les acheteurs dans des zones de campus publiques et bien éclairées. Nous vous recommandons d\'amener un ami pour les transactions de grande valeur.', 'Précision : Toutes les annonces doivent représenter fidèlement l\'état de l\'article. Les annonces trompeuses seront supprimées.'], JSON_UNESCAPED_UNICODE)],
-                    'es' => ['title' => 'Términos de Servicio', 'subtitle' => 'Reglas para usar la plataforma de mercado UniTill.', 'description' => json_encode(['Elegibilidad: Debes ser un estudiante verificado en una universidad del Reino Unido para publicar artículos. Los no estudiantes pueden navegar pero pueden tener acceso restringido.', 'Artículos prohibidos: Prohibimos estrictamente la venta de alcohol, tabaco, armas, sustancias ilegales y materiales peligrosos.', 'Tarifas: Las tarifas de publicación no son reembolsables una vez que el anuncio está activo. No cobramos comisión en las transacciones entre estudiantes.', 'Seguridad: Reúnete con los compradores en áreas de campus públicas y bien iluminadas. Recomendamos llevar a un amigo para transacciones de alto valor.', 'Precisión: Todos los anuncios deben representar con precisión la condición del artículo. Los anuncios engañosos serán eliminados.'], JSON_UNESCAPED_UNICODE)],
-                    'de' => ['title' => 'Nutzungsbedingungen', 'subtitle' => 'Regeln für die Nutzung der UniTill-Marktplatzplattform.', 'description' => json_encode(['Berechtigung: Sie müssen ein verifizierter Student an einer britischen Universität sein, um Artikel einzustellen. Nicht-Studenten können stöbern, haben jedoch möglicherweise eingeschränkten Zugriff.', 'Verbotene Artikel: Wir verbieten strengstens den Verkauf von Alkohol, Tabak, Waffen, illegalen Substanzen und Gefahrstoffen.', 'Gebühren: Einstellungsgebühren sind nach Veröffentlichung einer Anzeige nicht erstattungsfähig. Wir erheben keine Provision auf Transaktionen von Student zu Student.', 'Sicherheit: Treffen Sie Käufer in gut beleuchteten, öffentlichen Campusbereichen. Wir empfehlen, für Transaktionen mit hohem Wert einen Freund mitzubringen.', 'Genauigkeit: Alle Angebote müssen den Zustand des Artikels genau widerspiegeln. Irreführende Anzeigen werden entfernt.'], JSON_UNESCAPED_UNICODE)],
-                ],
-            ],
-            [
-                ['key' => 'privacy_policy', 'section' => 'policies', 'sort_order' => 3],
-                [
-                    'en' => ['title' => 'Privacy Policy', 'subtitle' => 'How we collect and protect your student identity data.', 'description' => json_encode(['Data Collection: We collect your name, university email, and phone number for verification purposes.', 'Student Verification: We use your .ac.uk email to ensure a safe, student-only environment.', 'Data Sharing: We never sell your personal data to third-party advertisers.', 'Retention: Your data is kept while your account is active and for 12 months following deletion to comply with legal obligations.', 'Security: All data is encrypted using industry-standard 256-bit AES encryption.'], JSON_UNESCAPED_UNICODE)],
-                    'ar' => ['title' => 'سياسة الخصوصية', 'subtitle' => 'كيف نجمع ونحمي بيانات هويتك الطلابية.', 'description' => json_encode(['جمع البيانات: نجمع اسمك وبريدك الجامعي ورقم هاتفك لأغراض التحقق.', 'التحقق الطلابي: نستخدم بريد .ac.uk لضمان بيئة آمنة للطلاب فقط.', 'مشاركة البيانات: لا نبيع بياناتك الشخصية لمعلنين خارجيين.', 'الاحتفاظ: نحتفظ ببياناتك طالما حسابك نشط ولمدة 12 شهراً بعد الحذف للامتثال القانوني.', 'الأمان: جميع البيانات مشفرة بتشفير AES 256-bit.'], JSON_UNESCAPED_UNICODE)],
-                    'fr' => ['title' => 'Politique de confidentialité', 'subtitle' => 'Comment nous collectons et protégeons vos données d\'identité étudiante.', 'description' => json_encode(['Collecte de données : Nous collectons votre nom, votre adresse e-mail universitaire et votre numéro de téléphone à des fins de vérification.', 'Vérification étudiante : Nous utilisons votre e-mail .ac.uk pour garantir un environnement sûr et réservé aux étudiants.', 'Partage des données : Nous ne vendons jamais vos données personnelles à des publicitaires tiers.', 'Conservation : Vos données sont conservées tant que votre compte est actif et pendant 12 mois suivant la suppression pour se conformer aux obligations légales.', 'Sécurité : Toutes les données sont chiffrées à l\'aide d\'un chiffrement AES 256 bits standard de l\'industrie.'], JSON_UNESCAPED_UNICODE)],
-                    'es' => ['title' => 'Política de Privacidad', 'subtitle' => 'Cómo recopilamos y protegemos tus datos de identidad estudiantil.', 'description' => json_encode(['Recopilación de datos: Recopilamos tu nombre, correo electrónico universitario y número de teléfono con fines de verificación.', 'Verificación de estudiantes: Usamos tu correo electrónico .ac.uk para garantizar un entorno seguro exclusivo para estudiantes.', 'Compartir datos: Nunca vendemos tus datos personales a anunciantes externos.', 'Retención: Tus datos se conservan mientras tu cuenta esté activa y durante los 12 meses posteriores a la eliminación para cumplir con las obligaciones legales.', 'Seguridad: Todos los datos están encriptados utilizando cifrado AES de 256 bits estándar de la industria.'], JSON_UNESCAPED_UNICODE)],
-                    'de' => ['title' => 'Datenschutzrichtlinie', 'subtitle' => 'Wie wir Ihre studentischen Identitätsdaten erheben und schützen.', 'description' => json_encode(['Datenerhebung: Wir erheben Ihren Namen, Ihre Universitäts-E-Mail und Ihre Telefonnummer zu Verifizierungszwecken.', 'Studentenverifizierung: Wir verwenden Ihre .ac.uk-E-Mail, um eine sichere Umgebung nur für Studenten zu gewährleisten.', 'Datenweitergabe: Wir verkaufen Ihre persönlichen Daten niemals an Drittanbieter.', 'Speicherung: Ihre Daten werden aufbewahrt, solange Ihr Konto aktiv ist, und für 12 Monate nach der Löschung, um rechtliche Verpflichtungen zu erfüllen.', 'Sicherheit: Alle Daten werden mit branchenüblicher 256-Bit-AES-Verschlüsselung verschlüsselt.'], JSON_UNESCAPED_UNICODE)],
-                ],
-            ],
-            [
-                ['key' => 'refund_policy', 'section' => 'policies', 'sort_order' => 4],
-                [
-                    'en' => ['title' => 'Refund Policy', 'subtitle' => 'Guidelines for ad posting fee refunds.', 'description' => json_encode(['Ad Visibility: Once an ad is live on the marketplace, the posting fee is considered consumed and non-refundable.', 'Technical Issues: If a technical error prevents your ad from appearing, you are eligible for a full refund or a free re-post credit.', 'Sold Items: Marking an item as sold does not trigger a partial refund for the remaining ad duration.', 'Removal: Ads removed for violating our community guidelines are not eligible for refunds.'], JSON_UNESCAPED_UNICODE)],
-                    'ar' => ['title' => 'سياسة الاسترداد', 'subtitle' => 'إرشادات استرداد رسوم نشر الإعلانات.', 'description' => json_encode(['ظهور الإعلان: بعد نشر الإعلان، تُعتبر رسوم النشر مستهلكة وغير قابلة للاسترداد.', 'مشاكل تقنية: إذا منع خطأ تقني ظهور إعلانك، يحق لك استرداد كامل أو إعادة نشر مجانية.', 'المنتجات المباعة: تعليم المنتج كمباع لا يمنح استرداداً جزئياً للمدة المتبقية.', 'الإزالة: الإعلانات المزالة لمخالفة الإرشادات غير مؤهلة للاسترداد.'], JSON_UNESCAPED_UNICODE)],
-                    'fr' => ['title' => 'Politique de remboursement', 'subtitle' => 'Lignes directrices pour le remboursement des frais de publication d\'annonces.', 'description' => json_encode(['Visibilité de l\'annonce : Une fois qu\'une annonce est en ligne sur le marché, les frais de publication sont considérés comme consommés et non remboursables.', 'Problèmes techniques : Si une erreur technique empêche votre annonce d\'apparaître, vous avez droit à un remboursement complet ou à un crédit de republication gratuit.', 'Articles vendus : Marquer un article comme vendu ne déclenche pas de remboursement partiel pour la durée restante de l\'annonce.', 'Suppression : Les annonces supprimées pour violation de nos directives communautaires ne sont pas éligibles aux remboursements.'], JSON_UNESCAPED_UNICODE)],
-                    'es' => ['title' => 'Política de Reembolso', 'subtitle' => 'Pautas para el reembolso de tarifas de publicación de anuncios.', 'description' => json_encode(['Visibilidad del anuncio: Una vez que un anuncio está activo en el mercado, la tarifa de publicación se considera consumida y no es reembolsable.', 'Problemas técnicos: Si un error técnico impide que tu anuncio aparezca, tienes derecho a un reembolso completo o a un crédito de republicación gratuito.', 'Artículos vendidos: Marcar un artículo como vendido no genera un reembolso parcial por la duración restante del anuncio.', 'Eliminación: Los anuncios eliminados por violar nuestras directrices comunitarias no son elegibles para reembolsos.'], JSON_UNESCAPED_UNICODE)],
-                    'de' => ['title' => 'Rückerstattungsrichtlinie', 'subtitle' => 'Richtlinien für die Rückerstattung von Anzeigegebühren.', 'description' => json_encode(['Anzeigensichtbarkeit: Sobald eine Anzeige auf dem Marktplatz live ist, gilt die Einstellungsgebühr als verbraucht und ist nicht erstattungsfähig.', 'Technische Probleme: Wenn ein technisches Fehler das Erscheinen Ihrer Anzeige verhindert, haben Sie Anspruch auf eine vollständige Rückerstattung oder ein kostenloses Guthaben für eine erneute Veröffentlichung.', 'Verkaufte Artikel: Das Markieren eines Artikels als verkauft löst keine Teilrückerstattung für die verbleibende Anzeigenlaufzeit aus.', 'Entfernung: Anzeigen, die wegen Verstoßes gegen unsere Community-Richtlinien entfernt wurden, haben keinen Anspruch auf Rückerstattung.'], JSON_UNESCAPED_UNICODE)],
-                ],
-            ],
-            [
-                ['key' => 'cookie_policy', 'section' => 'policies', 'sort_order' => 5],
-                [
-                    'en' => ['title' => 'Cookie Policy', 'subtitle' => 'Information about local storage and preferences.', 'description' => json_encode(['Purpose: We use local storage (cookies) to keep you logged in and remember your language and search preferences.', 'Analytical Data: We collect anonymous usage data to improve the app\'s performance and fix bugs.', 'Third Parties: We do not use third-party tracking cookies for targeted advertising.', 'Management: You can clear your data at any time via your browser settings, which will log you out of UniTill.'], JSON_UNESCAPED_UNICODE)],
-                    'ar' => ['title' => 'سياسة ملفات تعريف الارتباط', 'subtitle' => 'معلومات عن التخزين المحلي والتفضيلات.', 'description' => json_encode(['الغرض: نستخدم التخزين المحلي للبقاء مسجلاً وتذكر اللغة وتفضيلات البحث.', 'بيانات تحليلية: نجمع بيانات استخدام مجهولة لتحسين الأداء وإصلاح الأخطاء.', 'أطراف ثالثة: لا نستخدم ملفات تتبع خارجية للإعلانات المستهدفة.', 'الإدارة: يمكنك مسح بياناتك من إعدادات المتصفح، مما يسجّل خروجك من UniTill.'], JSON_UNESCAPED_UNICODE)],
-                    'fr' => ['title' => 'Politique relative aux cookies', 'subtitle' => 'Informations sur le stockage local et les préférences.', 'description' => json_encode(['Objectif : Nous utilisons le stockage local (cookies) pour vous garder connecté et mémoriser vos préférences de langue et de recherche.', 'Données analytiques : Nous collectons des données d\'utilisation anonymes pour améliorer les performances de l\'application et corriger les bugs.', 'Tiers : Nous n\'utilisons pas de cookies de traçage tiers pour la publicité ciblée.', 'Gestion : Vous pouvez effacer vos données à tout moment via les paramètres de votre navigateur, ce qui vous déconnectera d\'UniTill.'], JSON_UNESCAPED_UNICODE)],
-                    'es' => ['title' => 'Política de Cookies', 'subtitle' => 'Información sobre almacenamiento local y preferencias.', 'description' => json_encode(['Propósito: Utilizamos almacenamiento local (cookies) para mantenerte conectado y recordar tu idioma y preferencias de búsqueda.', 'Datos analíticos: Recopilamos datos de uso anónimos para mejorar el rendimiento de la aplicación y corregir errores.', 'Terceros: No utilizamos cookies de seguimiento de terceros para publicidad dirigida.', 'Gestión: Puedes borrar tus datos en cualquier momento a través de la configuración de tu navegador, lo que cerrará tu sesión en UniTill.'], JSON_UNESCAPED_UNICODE)],
-                    'de' => ['title' => 'Cookie-Richtlinie', 'subtitle' => 'Informationen über lokalen Speicher und Präferenzen.', 'description' => json_encode(['Zweck: Wir verwenden lokalen Speicher (Cookies), um Sie angemeldet zu halten und Ihre Sprach- und Sucheinstellungen zu speichern.', 'Analytische Daten: Wir sammeln anonyme Nutzungsdaten, um die Leistung der App zu verbessern und Fehler zu beheben.', 'Dritte: Wir verwenden keine Tracking-Cookies von Drittanbietern für zielgerichtete Werbung.', 'Verwaltung: Sie können Ihre Daten jederzeit über Ihre Browsereinstellungen löschen, wodurch Sie von UniTill abgemeldet werden.'], JSON_UNESCAPED_UNICODE)],
+                    'en' => [
+                        'title' => 'General Policies', 
+                        'subtitle' => 'Community guidelines, terms of service, privacy, refund, and cookie policies.', 
+                        'description' => json_encode([
+                            'Community Guidelines: Respect, honesty, fair pricing, and safety first within the UniTill community.',
+                            'Terms of Service: Eligibility requirements, prohibited items, and platform transaction rules.',
+                            'Privacy Policy: Collection, protection, and encryption of student identity data.',
+                            'Refund Policy: Guidelines for ad posting fee refunds and technical error compensations.',
+                            'Cookie Policy: Use of local storage, preferences, and anonymous analytical data.'
+                        ], JSON_UNESCAPED_UNICODE)
+                    ],
+                    'ar' => [
+                        'title' => 'السياسات العامة', 
+                        'subtitle' => 'إرشادات المجتمع، شروط الخدمة، الخصوصية، الاسترداد، وسياسة ملفات الارتباط.', 
+                        'description' => json_encode([
+                            'إرشادات المجتمع: الاحترام والصدق والتسعير العادل والسلامة أولاً داخل مجتمع UniTill.',
+                            'شروط الخدمة: متطلبات الأهلية، المواد المحظورة، وقواعد المعاملات على المنصة.',
+                            'سياسة الخصوصية: جمع وحماية وتشفير بيانات هويتك الطلابية.',
+                            'سياسة الاسترداد: إرشادات استرداد رسوم نشر الإعلانات وتعويضات الأخطاء التقنية.',
+                            'سياسة ملفات تعريف الارتباط: استخدام التخزين المحلي والتفضيلات والبيانات التحليلية.'
+                        ], JSON_UNESCAPED_UNICODE)
+                    ],
+                    'fr' => [
+                        'title' => 'Politiques générales', 
+                        'subtitle' => 'Directives communautaires, conditions d\'utilisation, confidentialité et cookies.', 
+                        'description' => json_encode([
+                            'Directives communautaires : Respect, honnêteté et sécurité au sein de la communauté.',
+                            'Conditions d\'utilisation : Conditions d\'éligibilité et règles de transaction.',
+                            'Politique de confidentialité : Collecte et protection des données d\'identité étudiante.',
+                            'Politique de remboursement : Lignes directrices pour le remboursement des frais.',
+                            'Politique relative aux cookies : Utilisation du stockage local et des préférences.'
+                        ], JSON_UNESCAPED_UNICODE)
+                    ],
+                    'es' => [
+                        'title' => 'Políticas generales', 
+                        'subtitle' => 'Directrices comunitarias, términos de servicio, privacidad y cookies.', 
+                        'description' => json_encode([
+                            'Directrices de la comunidad: Respeto, honestidad y seguridad dentro de la comunidad.',
+                            'Términos de servicio: Requisitos de elegibilidad y reglas de transacción.',
+                            'Política de privacidad: Recopilación y protección de datos de identidad estudiantil.',
+                            'Política de reembolso: Pautas para el reembolso de tarifas de publicación.',
+                            'Política de cookies: Uso de almacenamiento local y preferencias de búsqueda.'
+                        ], JSON_UNESCAPED_UNICODE)
+                    ],
+                    'de' => [
+                        'title' => 'Allgemeine Richtlinien', 
+                        'subtitle' => 'Community-Richtlinien, Nutzungsbedingungen, Datenschutz und Cookies.', 
+                        'description' => json_encode([
+                            'Community-Richtlinien: Respekt, Ehrlichkeit und Sicherheit in der Gemeinschaft.',
+                            'Nutzungsbedingungen: Berechtigungsanforderungen und Transaktionsregeln.',
+                            'Datenschutzrichtlinie: Erhebung und Schutz studentischer Identitätsdaten.',
+                            'Rückerstattungsrichtlinie: Richtlinien für die Rückerstattung von Gebühren.',
+                            'Cookie-Richtlinie: Verwendung von lokalem Speicher und Präferenzen.'
+                        ], JSON_UNESCAPED_UNICODE)
+                    ],
                 ],
             ],
 
             // --- File 2: Conduct & Intellectual Property ---
             [
-                ['key' => 'student_code_of_conduct', 'section' => 'policies', 'sort_order' => 6],
+                ['key' => 'conduct_and_ip', 'section' => 'policies', 'sort_order' => 2],
                 [
-                    'en' => ['title' => 'Student Code of Conduct', 'subtitle' => 'Standards of behavior and academic integrity for UniTill users.', 'description' => json_encode(['Academic Honesty: Users must represent themselves truthfully and avoid academic fraud.', 'Respectful Interaction: Treat all peers and admins with professional courtesy.', 'Platform Integrity: Do not attempt to bypass security filters or exploit system vulnerabilities.', 'Account Security: Keep your login credentials confidential and secure.'], JSON_UNESCAPED_UNICODE)],
-                    'ar' => ['title' => 'مدونة سلوك الطالب', 'subtitle' => 'معايير السلوك والنزاهة الأكاديمية لمستخدمي منصة UniTill.', 'description' => json_encode(['النزاهة الأكاديمية: يجب على المستخدمين تقديم أنفسهم بصدق وتجنب الاحتيال.', 'التفاعل المحترم: تعامل باحترام مهني مع جميع الزملاء والإدارة.', 'سلامة المنصة: لا تحاول تجاوز مرشحات الأمان أو استغلال ثغرات النظام.', 'أمان الحساب: حافظ على سرية بيانات تسجيل الدخول الخاصة بك.'], JSON_UNESCAPED_UNICODE)],
-                    'fr' => ['title' => 'Code de conduite des étudiants', 'subtitle' => 'Normes de comportement et d\'intégrité académique pour les utilisateurs d\'UniTill.', 'description' => json_encode(['Honnêteté académique : Les utilisateurs doivent se présenter honnêtement.', 'Interaction respectueuse : Traitez tous vos pairs avec courtoisie professionnelle.', 'Intégrité de la plateforme : N\'essayez pas de contourner les filtres de sécurité.', 'Sécurité du compte : Gardez vos identifiants de connexion confidentiels.'], JSON_UNESCAPED_UNICODE)],
-                    'es' => ['title' => 'Código de conducta estudiantil', 'subtitle' => 'Estándares de comportamiento e integridad académica para usuarios de UniTill.', 'description' => json_encode(['Honestidad académica: Los usuarios deben presentarse con veracidad.', 'Interacción respetuosa: Trata a tus compañeros con cortesía profesional.', 'Integridad de la plataforma: No intentes saltarte los filtros de seguridad.', 'Seguridad de la cuenta: Mantén tus credenciales de inicio de sesión seguras.'], JSON_UNESCAPED_UNICODE)],
-                    'de' => ['title' => 'Student Verhaltenskodex', 'subtitle' => 'Verhaltensstandards und akademische Integrität für UniTill-Benutzer.', 'description' => json_encode(['Akademische Ehrlichkeit: Benutzer müssen sich wahrheitsgemäß darstellen.', 'Respektvoller Umgang: Behandeln Sie alle Kollegen mit professioneller Höflichkeit.', 'Plattformintegrität: Versuchen Sie nicht, Sicherheitsfilter zu umgehen.', 'Kontosicherheit: Halten Sie Ihre Anmeldedaten vertraulich und sicher.'], JSON_UNESCAPED_UNICODE)],
-                ],
-            ],
-            [
-                ['key' => 'intellectual_property_policy', 'section' => 'policies', 'sort_order' => 7],
-                [
-                    'en' => ['title' => 'Intellectual Property Policy', 'subtitle' => 'Guidelines regarding copyright, trademarks, and user content ownership.', 'description' => json_encode(['User Ownership: You retain ownership of any original content or photos you upload.', 'License Grant: By posting items, you grant UniTill a non-exclusive license to display the content.', 'Copyright Infringement: Do not post material that violates third-party copyright laws.', 'Takedown Requests: Rightsholders can report copyright violations for prompt removal.'], JSON_UNESCAPED_UNICODE)],
-                    'ar' => ['title' => 'سياسة الملكية الفكرية', 'subtitle' => 'إرشادات بشأن حقوق النشر، العلامات التجارية، وملكية محتوى المستخدم.', 'description' => json_encode(['ملكية المستخدم: تحتفظ بملكية أي محتوى أصلي أو صور تقوم برفعها.', 'منح الترخيص: من خلال نشر العناصر، تمنح UniTill ترخيصاً لعرض المحتوى.', 'انتهاك حقوق النشر: لا تنشر مواد تنتهك قوانين حقوق النشر لأطراف ثالثة.', 'طلبات الإزالة: يمكن لأصحاب الحقوق الإبلاغ عن انتهاكات حقوق النشر للإزالة السريعة.'], JSON_UNESCAPED_UNICODE)],
-                    'fr' => ['title' => 'Politique de propriété intellectuelle', 'subtitle' => 'Lignes directrices concernant les droits d\'auteur et le contenu utilisateur.', 'description' => json_encode(['Propriété de l\'utilisateur : Vous conservez la propriété de tout contenu original.', 'Octroi de licence : Vous accordez à UniTill une licence non exclusive pour afficher le contenu.', 'Violation du droit d\'auteur : Ne publiez pas de matériel violant les lois sur le copyright.', 'Demandes de retrait : Les détenteurs de droits peuvent signaler les infractions.'], JSON_UNESCAPED_UNICODE)],
-                    'es' => ['title' => 'Política de propiedad intelectual', 'subtitle' => 'Directrices sobre derechos de autor, marcas registradas y contenido de usuario.', 'description' => json_encode(['Propiedad del usuario: Mantienes la propiedad de cualquier contenido original o fotos.', 'Concesión de licencia: Concedes a UniTill una licencia no exclusiva para mostrar el contenido.', 'Infracción de derechos de autor: No publiques material que viole leyes de terceros.', 'Solicitudes de retirada: Los titulares de derechos pueden reportar infracciones.'], JSON_UNESCAPED_UNICODE)],
-                    'de' => ['title' => 'Richtlinie zum geistigen Eigentum', 'subtitle' => 'Richtlinien zu Urheberrecht, Marken und Eigentum an Benutzerinhalten.', 'description' => json_encode(['Benutzereigentum: Sie behalten das Eigentum an hochgeladenen Inhalten oder Fotos.', 'Lizenzgewährung: Sie gewähren UniTill eine nicht-exklusive Lizenz zur Anzeige.', 'Urheberrechtsverletzung: Posten Sie kein Material, das Rechte Dritter verletzt.', 'Entfernungsanfragen: Rechteinhaber können Urheberrechtsverletzungen melden.'], JSON_UNESCAPED_UNICODE)],
-                ],
-            ],
-            [
-                ['key' => 'safety_and_trust_guidelines', 'section' => 'policies', 'sort_order' => 8],
-                [
-                    'en' => ['title' => 'Safety & Trust Guidelines', 'subtitle' => 'Best practices for safe student transactions and secure communications.', 'description' => json_encode(['Meeting Places: Always meet in designated safe public zones on campus.', 'Payment Verification: Inspect items thoroughly before releasing payment or cash.', 'Fraud Prevention: Never share personal banking pins, passwords, or verification codes.', 'Dispute Resolution: Use platform communication tools to keep an official audit trail.'], JSON_UNESCAPED_UNICODE)],
-                    'ar' => ['title' => 'إرشادات الأمان والثقة', 'subtitle' => 'أفضل الممارسات للمعاملات الطلابية الآمنة والاتصالات الآمنة.', 'description' => json_encode(['أماكن اللقاء: احرص دائماً على اللقاء في المناطق العامة المخصصة داخل الحرم.', 'التحقق من الدفع: تفحص المنتجات جيداً قبل إتمام عملية الدفع أو تسليم النقد.', 'منع الاحتيال: لا تشارك أبداً أرقامك السرية البنكية أو رموز التحقق.', 'فض المنازعات: استخدم أدوات الاتصال الخاصة بالمنصة للحفاظ على سجل رسمي.'], JSON_UNESCAPED_UNICODE)],
-                    'fr' => ['title' => 'Directrices de sécurité et de confiance', 'subtitle' => 'Meilleures pratiques pour des transactions étudiantes sécurisées.', 'description' => json_encode(['Lieux de rendez-vous : Rencontrez-vous toujours dans des zones publiques sécurisées.', 'Vérification du paiement : Inspectez soigneusement les articles avant le paiement.', 'Prévention des fraudes : Ne partagez jamais vos codes bancaires ou mots de passe.', 'Résolution des litiges : Utilisez les outils de communication de la plateforme.'], JSON_UNESCAPED_UNICODE)],
-                    'es' => ['title' => 'Directrices de seguridad y confianza', 'subtitle' => 'Mejores prácticas para transacciones estudiantiles seguras.', 'description' => json_encode(['Lugares de encuentro: Reúnete siempre en zonas públicas designadas.', 'Verificación de pago: Inspecciona los artículos a fondo antes de pagar.', 'Prevención de fraudes: Nunca compartas contraseñas o códigos de verificación.', 'Resolución de disputas: Utiliza las herramientas de comunicación de la plataforma.'], JSON_UNESCAPED_UNICODE)],
-                    'de' => ['title' => 'Sicherheits- und Vertrauensrichtlinien', 'subtitle' => 'Best Practices für sichere Studententransaktionen.', 'description' => json_encode(['Treffpunkte: Treffen Sie sich immer in ausgewiesenen öffentlichen Bereichen.', 'Zahlungsüberprüfung: Inspizieren Sie Artikel gründlich vor der Zahlung.', 'Betrugsprävention: Teilen Sie niemals Bank-PINs oder Bestätigungscodes.', 'Streitschlichtung: Nutzen Sie die Kommunikationswerkzeuge der Plattform.'], JSON_UNESCAPED_UNICODE)],
-                ],
-            ],
-            [
-                ['key' => 'disclaimer_of_liability', 'section' => 'policies', 'sort_order' => 9],
-                [
-                    'en' => ['title' => 'Disclaimer of Liability', 'subtitle' => 'Limitations of legal responsibility for platform transactions and third-party links.', 'description' => json_encode(['As-Is Service: The platform is provided on an "as-is" and "as-available" basis.', 'Third-Party Listings: UniTill does not endorse or guarantee the quality of user listings.', 'Transaction Disputes: The platform holds no liability for financial disputes between individual users.', 'Service Interruptions: We are not liable for temporary technical downtime or data loss.'], JSON_UNESCAPED_UNICODE)],
-                    'ar' => ['title' => 'إخلاء المسؤولية القانونية', 'subtitle' => 'حدود المسؤولية القانونية لمعاملات المنصة والروابط الخارجية.', 'description' => json_encode(['خدمة كما هي: يتم توفير المنصة على أساس "كما هي" و"حسب التوافر".', 'إعلانات الأطراف الثالثة: لا تضمن UniTill جودة إعلانات المستخدمين.', 'نزاعات المعاملات: لا تتحمل المنصة أي مسؤولية عن النزاعات المالية بين المستخدمين.', 'انقطاع الخدمة: لسنا مسؤولين عن توقف النظام المؤقت أو فقدان البيانات.'], JSON_UNESCAPED_UNICODE)],
-                    'fr' => ['title' => 'Exclusion de responsabilité', 'subtitle' => 'Limites de la responsabilité légale pour les transactions.', 'description' => json_encode(['Service en l\'état : La plateforme est fournie sur une base "en l\'état".', 'Annonces tierces : UniTill ne garantit pas la qualité des annonces d\'utilisateurs.', 'Litiges : La plateforme décline toute responsabilité en cas de litige financier.', 'Interruptions : Nous ne sommes pas responsables des pannes techniques temporaires.'], JSON_UNESCAPED_UNICODE)],
-                    'es' => ['title' => 'Descargo de responsabilidad', 'subtitle' => 'Limitaciones de responsabilidad legal para transacciones.', 'description' => json_encode(['Servicio tal cual: La plataforma se proporciona "tal cual" y "según disponibilidad".', 'Anuncios de terceros: UniTill no garantiza la calidad de las publicaciones.', 'Disputas de transacciones: La plataforma no asume responsabilidad por disputas.', 'Interrupciones: No somos responsables por interrupciones técnicas temporales.'], JSON_UNESCAPED_UNICODE)],
-                    'de' => ['title' => 'Haftungsausschluss', 'subtitle' => 'Einschränkungen der rechtlichen Verantwortung.', 'description' => json_encode(['Dienst wie er ist: Die Plattform wird ohne Mängelgewähr bereitgestellt.', 'Anzeigen Dritter: UniTill übernimmt keine Garantie für Benutzeranzeigen.', 'Transaktionsstreitigkeiten: Die Plattform haftet nicht für finanzielle Streitigkeiten.', 'Serviceunterbrechungen: Wir haften nicht für technische Ausfälle.'], JSON_UNESCAPED_UNICODE)],
-                ],
-            ],
-            [
-                ['key' => 'account_suspension_policy', 'section' => 'policies', 'sort_order' => 10],
-                [
-                    'en' => ['title' => 'Account Suspension Policy', 'subtitle' => 'Conditions and procedures for disabling or banning user profiles.', 'description' => json_encode(['Violation Warnings: First-time minor offenses will result in an automated warning notice.', 'Suspension Triggers: Repeated spam, fraudulent listings, or abusive behavior causes immediate suspension.', 'Appeals Process: Users can submit an appeal ticket via support within 14 days of ban action.', 'Data Deletion: Permanently banned profiles will have their active listings removed automatically.'], JSON_UNESCAPED_UNICODE)],
-                    'ar' => ['title' => 'سياسة تعليق الحسابات', 'subtitle' => 'الشروط والإجراءات الخاصة بتعطيل أو حظر ملفات تعريف المستخدمين.', 'description' => json_encode(['تحذيرات المخالفة: المخالفات البسيطة لأول مرة تؤدي إلى إرسال إشعار تحذير تلقائي.', 'أسباب التعليق: الرسائل المزعجة المتكررة أو الإعلانات الوهمية تتسبب في تعليق فوري.', 'عملية الاستئناف: يمكن للمستخدمين تقديم تذكرة استئناف عبر الدعم خلال 14 يوماً.', 'حذف البيانات: الملفات المحظورة نهائياً ستتم إزالة إعلاناتها النشطة تلقائياً.'], JSON_UNESCAPED_UNICODE)],
-                    'fr' => ['title' => 'Politique de suspension de compte', 'subtitle' => 'Conditions et procédures de désactivation ou de bannissement.', 'description' => json_encode(['Avertissements : Les infractions mineures entraînent un avertissement automatisé.', 'Motifs de suspension : Le spam répété ou les annonces frauduleuses entraînent une suspension.', 'Processus d\'appel : Les utilisateurs peuvent soumettre un recours sous 14 jours.', 'Suppression de données : Les profils bannis verront leurs annonces retirées.'], JSON_UNESCAPED_UNICODE)],
-                    'es' => ['title' => 'Política de suspensión de cuentas', 'subtitle' => 'Condiciones y procedimientos para deshabilitar o prohibir perfiles.', 'description' => json_encode(['Advertencias: Las infracciones menores recibirán un aviso automatizado.', 'Causas de suspensión: El spam repetido o anuncios fraudulentos causan suspensión.', 'Proceso de apelación: Los usuarios pueden enviar una apelación en 14 días.', 'Eliminación de datos: Los perfiles baneados perderán sus anuncios activos.'], JSON_UNESCAPED_UNICODE)],
-                    'de' => ['title' => 'Kontosperrungsrichtlinie', 'subtitle' => 'Bedingungen und Verfahren zur Deaktivierung oder Sperrung von Profilen.', 'description' => json_encode(['Verwarnungen: Erstmalige geringfügige Verstöße führen zu einer automatischen Warnung.', 'Sperrgründe: Wiederholter Spam oder betrügerische Angebote führen zur sofortigen Sperrung.', 'Einspruchsverfahren: Benutzer können innerhalb von 14 Tagen Einspruch erheben.', 'Datenlöschung: Bei dauerhaft gesperrten Profilen werden aktive Angebote entfernt.'], JSON_UNESCAPED_UNICODE)],
+                    'en' => [
+                        'title' => 'Conduct & Intellectual Property', 
+                        'subtitle' => 'Student code of conduct, IP guidelines, safety, and liability.', 
+                        'description' => json_encode([
+                            'Student Code of Conduct: Standards of behavior and academic integrity.',
+                            'Intellectual Property Policy: Copyrights, trademarks, and user content ownership.',
+                            'Safety & Trust Guidelines: Best practices for safe student transactions.',
+                            'Disclaimer of Liability: Limitations of legal responsibility for platform transactions.',
+                            'Account Suspension Policy: Conditions for disabling or banning profiles.'
+                        ], JSON_UNESCAPED_UNICODE)
+                    ],
+                    'ar' => [
+                        'title' => 'السلوك والملكية الفكرية', 
+                        'subtitle' => 'مدونة سلوك الطالب، سياسة الملكية الفكرية، الأمان، وإخلاء المسؤولية.', 
+                        'description' => json_encode([
+                            'مدونة سلوك الطالب: معايير السلوك والنزاهة الأكاديمية.',
+                            'سياسة الملكية الفكرية: حقوق النشر، العلامات التجارية، وملكية محتوى المستخدم.',
+                            'إرشادات الأمان والثقة: أفضل الممارسات للمعاملات الطلابية الآمنة.',
+                            'إخلاء المسؤولية القانونية: حدود المسؤولية القانونية لمعاملات المنصة.',
+                            'سياسة تعليق الحسابات: الشروط والإجراءات الخاصة بتعطيل أو حظر الملفات.'
+                        ], JSON_UNESCAPED_UNICODE)
+                    ],
+                    'fr' => [
+                        'title' => 'Conduite et propriété intellectuelle', 
+                        'subtitle' => 'Code de conduite, propriété intellectuelle, sécurité et responsabilité.', 
+                        'description' => json_encode([
+                            'Code de conduite des étudiants : Normes de comportement et intégrité.',
+                            'Politique de propriété intellectuelle : Droits d\'auteur et contenu utilisateur.',
+                            'Directrices de sécurité : Meilleures pratiques pour des transactions sécurisées.',
+                            'Exclusion de responsabilité : Limites de la responsabilité légale.',
+                            'Politique de suspension : Conditions de désactivation des profils.'
+                        ], JSON_UNESCAPED_UNICODE)
+                    ],
+                    'es' => [
+                        'title' => 'Conducta y propiedad intelectual', 
+                        'subtitle' => 'Código de conducta, propiedad intelectual, seguridad y descargo.', 
+                        'description' => json_encode([
+                            'Código de conducta estudiantil: Estándares de comportamiento e integridad.',
+                            'Política de propiedad intelectual: Derechos de autor y contenido de usuario.',
+                            'Directrices de seguridad y confianza: Mejores prácticas para transacciones.',
+                            'Descargo de responsabilidad: Limitaciones de responsabilidad legal.',
+                            'Política de suspensión: Condiciones para deshabilitar perfiles.'
+                        ], JSON_UNESCAPED_UNICODE)
+                    ],
+                    'de' => [
+                        'title' => 'Verhalten und geistiges Eigentum', 
+                        'subtitle' => 'Verhaltenskodex, geistiges Eigentum, Sicherheit und Haftung.', 
+                        'description' => json_encode([
+                            'Student Verhaltenskodex: Verhaltensstandards und akademische Integrität.',
+                            'Richtlinie zum geistigen Eigentum: Urheberrecht und Benutzerinhalte.',
+                            'Sicherheits- und Vertrauensrichtlinien: Best Practices für Transaktionen.',
+                            'Haftungsausschluss: Einschränkungen der rechtlichen Verantwortung.',
+                            'Kontosperrungsrichtlinie: Bedingungen zur Deaktivierung von Profilen.'
+                        ], JSON_UNESCAPED_UNICODE)
+                    ],
                 ],
             ],
 
             // --- File 3: Marketplace & Trading Standards ---
             [
-                ['key' => 'marketplace_standards', 'section' => 'policies', 'sort_order' => 11],
+                ['key' => 'marketplace_and_trading', 'section' => 'policies', 'sort_order' => 3],
                 [
-                    'en' => ['title' => 'Marketplace Trading Standards', 'subtitle' => 'Core rules for buying and selling within campus limits.', 'description' => json_encode(['Condition Disclosure: Clearly state if items are brand new, lightly used, or heavily worn.', 'No Counterfeits: Selling replica designer items or pirated media software is strictly banned.', 'Bundle Deals: Sellers offering bulk study materials must list exact contents clearly.', 'Pickup Coordination: Agree on specific campus locations and times before confirming deals.'], JSON_UNESCAPED_UNICODE)],
-                    'ar' => ['title' => 'معايير التداول في السوق', 'subtitle' => 'القواعد الأساسية للبيع والشراء داخل نطاق الحرم الجامعي.', 'description' => json_encode(['الإفصاح عن الحالة: وضح ما إذا كانت المنتجات جديدة تماماً، أو مستخدمة برفق، أو مستهلكة.', 'لا للمقلد: بيع المنتجات المقلدة أو وسائط البرمجيات المسروقة محظور تماماً.', 'عروض الحزم: البائعون الذين يقدمون مواد دراسية مجمعة يجب عليهم توضيح المحتويات بدقة.', 'تنسيق الاستلام: اتفق على مواقع وأوقات محددة داخل الحرم قبل تأكيد الصفقات.'], JSON_UNESCAPED_UNICODE)],
-                    'fr' => ['title' => 'Normes de commerce du marché', 'subtitle' => 'Règles fondamentales pour l\'achat et la vente sur le campus.', 'description' => json_encode(['Divulgation de l\'état : Indiquez clairement l\'état réel de l\'article.', 'Pas de contrefaçons : La vente d\'articles de marque répliqués est strictement interdite.', 'Offres groupées : Précisez clairement le contenu des lots de matériel d\'étude.', 'Coordination du ramassage : Convenez des lieux et heures précis avant de confirmer.'], JSON_UNESCAPED_UNICODE)],
-                    'es' => ['title' => 'Estándares comerciales del mercado', 'subtitle' => 'Reglas principales para la compraventa dentro del campus.', 'description' => json_encode(['Divulgación de estado: Indica claramente si los artículos son nuevos o usados.', 'Sin falsificaciones: Está estrictamente prohibida la venta de réplicas.', 'Ofertas de paquetes: Los vendedores deben detallar el contenido exacto.', 'Coordinación de recogida: Acuerden ubicaciones y horarios específicos.'], JSON_UNESCAPED_UNICODE)],
-                    'de' => ['title' => 'Handelsstandards für den Marktplatz', 'subtitle' => 'Grundregeln für den Kauf und Verkauf auf dem Campus.', 'description' => json_encode(['Zustandsoffenlegung: Geben Sie klar an, ob Artikel neu oder gebraucht sind.', 'Keine Fälschungen: Der Verkauf von Replikaten ist strengstens verboten.', 'Paketangebote: Verkäufer von Lernmaterialien müssen den Inhalt genau auflisten.', 'Abholkoordination: Vereinbaren Sie feste Standorte und Zeiten vor der Bestätigung.'], JSON_UNESCAPED_UNICODE)],
-                ],
-            ],
-            [
-                ['key' => 'escrow_and_payment_terms', 'section' => 'policies', 'sort_order' => 12],
-                [
-                    'en' => ['title' => 'Escrow & Payment Terms', 'subtitle' => 'Financial protocols for handling online transactions and processing fees.', 'description' => json_encode(['Payment Gateway: All digital transactions are processed through secure certified gateways.', 'Cash Options: Direct cash payments upon physical inspection remain fully permissible.', 'Chargebacks: Initiating fraudulent bank chargebacks results in immediate account suspension.', 'Currency Standards: All platform listings and wallet balances are denominated in GBP.'], JSON_UNESCAPED_UNICODE)],
-                    'ar' => ['title' => 'شروط الدفع والضمان', 'subtitle' => 'البروتوكولات المالية لمعالجة المعاملات عبر الإنترنت ورسوم المعالجة.', 'description' => json_encode(['بوابة الدفع: تتم معالجة جميع المعاملات الرقمية عبر بوابات معتمدة وآمنة.', 'خيارات النقد: مدفوعات النقد المباشر عند الفحص الفعلي مسموح بها بالكامل.', 'الاسترداد العكسي: بدء استرداد مصرفي احتيالي يؤدي إلى تعليق الحساب فوراً.', 'معايير العمللة: جميع إعلانات المنصة وأرصدة المحفظة مقومة بالجنيه الاسترليني.'], JSON_UNESCAPED_UNICODE)],
-                    'fr' => ['title' => 'Conditions de paiement et de séquestre', 'subtitle' => 'Protocoles financiers pour les transactions en ligne.', 'description' => json_encode(['Passerelle de paiement : Toutes les transactions numériques sont sécurisées.', 'Options en espèces : Les paiements en espèces directs restent autorisés.', 'Rétrofacturations : Les rétrofacturations frauduleuses entraînent une suspension.', 'Normes de devise : Tous les prix de la plateforme sont libellés en GBP.'], JSON_UNESCAPED_UNICODE)],
-                    'es' => ['title' => 'Términos de pago y depósito', 'subtitle' => 'Protocolos financieros para gestionar transacciones en línea.', 'description' => json_encode(['Pasarela de pago: Todas las transacciones digitales se procesan de forma segura.', 'Opciones en efectivo: Los pagos en efectivo directos siguen estando permitidos.', 'Devoluciones de cargo: Las devoluciones fraudulentas causan suspensión.', 'Normas de moneda: Los precios de la plataforma están expresados en GBP.'], JSON_UNESCAPED_UNICODE)],
-                    'de' => ['title' => 'Treuhand- und Zahlungsbedingungen', 'subtitle' => 'Finanzprotokolle für die Abwicklung von Online-Transaktionen.', 'description' => json_encode(['Zahlungsgruppe: Alle digitalen Transaktionen werden über sichere Gateways abgewickelt.', 'Barzahlung: Direkte Barzahlungen nach physischer Inspektion bleiben zulässig.', 'Rücklastschriften: Betrügerische Rücklastschriften führen zur Kontosperrung.', 'Währungsstandards: Alle Plattformangebote sind in GBP ausgewiesen.'], JSON_UNESCAPED_UNICODE)],
-                ],
-            ],
-            [
-                ['key' => 'seller_verification_policy', 'section' => 'policies', 'sort_order' => 13],
-                [
-                    'en' => ['title' => 'Seller Verification Policy', 'subtitle' => 'Requirements for validating merchant profiles and high-volume sellers.', 'description' => json_encode(['ID Checks: High-volume sellers may be asked to provide secondary student identification.', 'Phone Confirmation: Active mobile verification is mandatory prior to publishing ads.', 'Store Branding: Sellers can customize store display banners once verified.', 'Compliance Reviews: Accounts undergo random quarterly audits to ensure regulatory adherence.'], JSON_UNESCAPED_UNICODE)],
-                    'ar' => ['title' => 'سياسة التحقق من البائع', 'subtitle' => 'متطلبات التحقق من ملفات التجار والبائعين ذوي الحجم الكبير.', 'description' => json_encode(['فحص الهوية: قد يُطلب من البائعين ذوي الحجم الكبير تقديم اثبات طالب إضافي.', 'تأكيد الهاتف: التحقق النشط من الجوال إلزامي قبل نشر الإعلانات.', 'علامة المتجر: يمكن للبائعين تخصيص لافتات عرض المتجر بمجرد التحقق.', 'مراجعات الامتثال: تخضع الحسابات لعمليات تدقيق ربع سنوية عشوائية لضمان الالتزام.'], JSON_UNESCAPED_UNICODE)],
-                    'fr' => ['title' => 'Politique de vérification des vendeurs', 'subtitle' => 'Exigences pour valider les profils de marchands.', 'description' => json_encode(['Vérification d\'identité : Une pièce d\'identité secondaire peut être demandée.', 'Confirmation téléphonique : La vérification mobile est obligatoire avant publication.', 'Image de marque : Les vendeurs peuvent personnaliser leurs bannières.', 'Examens de conformité : Les comptes font l\'objet d\'audits trimestriels aléatoires.'], JSON_UNESCAPED_UNICODE)],
-                    'es' => ['title' => 'Política de verificación de vendedores', 'subtitle' => 'Requisitos para validar perfiles de comerciantes.', 'description' => json_encode(['Comprobaciones de identidad: Se puede solicitar identificación secundaria.', 'Confirmación telefónica: La verificación móvil es obligatoria antes de publicar.', 'Marca de tienda: Los vendedores pueden personalizar banners de tienda.', 'Revisiones de cumplimiento: Las cuentas se someten a auditorías trimestrales.'], JSON_UNESCAPED_UNICODE)],
-                    'de' => ['title' => 'Verkäuferverifizierungsrichtlinie', 'subtitle' => 'Anforderungen zur Validierung von Händlerprofilen.', 'description' => json_encode(['ID-Prüfungen: Verkäufer müssen möglicherweise einen Studentenausweis vorlegen.', 'Telefonbestätigung: Eine aktive Mobiltelefonverifizierung ist obligatorisch.', 'Store-Branding: Verkäufer können nach der Verifizierung Banner anpassen.', 'Compliance-Prüfungen: Konten unterliegen zufälligen vierteljährlichen Prüfungen.'], JSON_UNESCAPED_UNICODE)],
-                ],
-            ],
-            [
-                ['key' => 'content_moderation_guidelines', 'section' => 'policies', 'sort_order' => 14],
-                [
-                    'en' => ['title' => 'Content Moderation Guidelines', 'subtitle' => 'Protocols used by administrators to review reports and remove violations.', 'description' => json_encode(['Queue Processing: Reported listings are reviewed by moderation staff within 24 hours.', 'Automated Scanning: System filters flag keywords related to restricted goods automatically.', 'Warning Systems: First-time minor text infractions receive an automated notice.', 'Permanent Removal: Content containing illegal depictions is scrubbed immediately.'], JSON_UNESCAPED_UNICODE)],
-                    'ar' => ['title' => 'إرشادات الإشراف على المحتوى', 'subtitle' => 'البروتوكولات التي يستخدمها المشرفون لمراجعة البلاغات وإزالة المخالفات.', 'description' => json_encode(['معالجة قائمة الانتظار: يتم مراجعة الإعلانات المبلغ عنها خلال 24 ساعة.', 'الفحص التلقائي: تحدد مرشحات النظام الكلمات الرئيسية المتعلقة بالسلع المقيدة.', 'أنظمة التحذير: المخالفات النصية البسيطة لأول مرة تتلقى إشعالاً تلقائياً.', 'الإزالة الدائمة: المحتوى الذي يحتوي على صور غير قانونية يُمسح فوراً.'], JSON_UNESCAPED_UNICODE)],
-                    'fr' => ['title' => 'Lignes directrices de modération du contenu', 'subtitle' => 'Protocoles utilisés par les administrateurs.', 'description' => json_encode(['Traitement de la file d\'attente : Les annonces signalées sont examinées sous 24h.', 'Analyse automatisée : Les filtres système signalent les mots-clés restreints.', 'Systèmes d\'alerte : Les infractions mineures reçoivent un avis automatisé.', 'Suppression permanente : Le contenu illégal est effacé immédiatement.'], JSON_UNESCAPED_UNICODE)],
-                    'es' => ['title' => 'Directrices de moderación de contenido', 'subtitle' => 'Protocolos utilizados por los administradores.', 'description' => json_encode(['Procesamiento de cola: Los anuncios reportados se revisan en 24 horas.', 'Escaneo automatizado: Los filtros del sistema marcan palabras clave.', 'Sistemas de advertencia: Las infracciones menores reciben un aviso.', 'Eliminación permanente: El contenido ilegal se elimina de inmediato.'], JSON_UNESCAPED_UNICODE)],
-                    'de' => ['title' => 'Inhaltsmoderationsrichtlinien', 'subtitle' => 'Protokolle zur Überprüfung von Meldungen.', 'description' => json_encode(['Warteschlangenverarbeitung: Gemeldete Angebote werden innerhalb von 24h geprüft.', 'Automatisches Scannen: Systemfilter markieren eingeschränkte Schlüsselwörter.', 'Warnsysteme: Geringfügige Verstöße erhalten eine automatische Benachrichtigung.', 'Dauerhafte Entfernung: Illegale Inhalte werden sofort gelöscht.'], JSON_UNESCAPED_UNICODE)],
-                ],
-            ],
-            [
-                ['key' => 'promotional_ads_policy', 'section' => 'policies', 'sort_order' => 15],
-                [
-                    'en' => ['title' => 'Promotional Ads Policy', 'subtitle' => 'Rules for boosting listings, sponsored placements, and student discounts.', 'description' => json_encode(['Ad Boosting: Users can pay a nominal fee to feature their listing at the top of search results.', 'Duration Caps: Promoted placements run for fixed 7-day or 14-day promotional cycles.', 'Content Standards: Promotional images must represent the actual item being advertised.', 'No False Claims: Exaggerated discount claims or misleading markdown tags are forbidden.'], JSON_UNESCAPED_UNICODE)],
-                    'ar' => ['title' => 'سياسة الإعلانات الترويجية', 'subtitle' => 'قواعد ترويج الإعلانات، المواضع الممولة، والخصومات الطلابية.', 'description' => json_encode(['ترويج الإعلانات: يمكن للمستخدمين دفع رسوم رمزية لعرض إعلانهم في أعلى نتائج البحث.', 'حدود المدة: تعمل المواضع المروجة لدورات ترويجية ثابتة مدتها 7 أو 14 يوماً.', 'معايير المحتوى: يجب أن تمثل الصور الترويجية العنصر الفعلي المعلن عنه.', 'لا ادعاءات كاذبة: ادعاءات الخصم المبالغ فيها أو علامات التخفيض المضللة محظورة.'], JSON_UNESCAPED_UNICODE)],
-                    'fr' => ['title' => 'Politique des annonces promotionnelles', 'subtitle' => 'Règles pour booster les annonces et placements sponsorisés.', 'description' => json_encode(['Boosting d\'annonces : Les utilisateurs peuvent payer pour figurer en haut.', 'Limites de durée : Les placements durent 7 ou 14 jours.', 'Normes de contenu : Les images doivent représenter l\'article réel.', 'Pas de fausses déclarations : Les allégations de réduction exagérées sont interdites.'], JSON_UNESCAPED_UNICODE)],
-                    'es' => ['title' => 'Política de anuncios promocionales', 'subtitle' => 'Reglas para destacar anuncios y ubicaciones patrocinadas.', 'description' => json_encode(['Impulso de anuncios: Los usuarios pueden pagar una tarifa nominal.', 'Límites de duración: Las ubicaciones promocionadas duran 7 o 14 días.', 'Estándares de contenido: Las imágenes deben representar el artículo actual.', 'Sin falsas afirmaciones: Se prohíben afirmaciones de descuentos exageradas.'], JSON_UNESCAPED_UNICODE)],
-                    'de' => ['title' => 'Werbeanzeigenrichtlinie', 'subtitle' => 'Regeln für das Pushen von Angeboten und gesponserte Platzierungen.', 'description' => json_encode(['Anzeigen-Boosting: Benutzer können eine Gebühr zahlen, um oben zu erscheinen.', 'Dauergrenzen: Gesponserte Platzierungen laufen über 7 oder 14 Tage.', 'Inhaltsstandards: Werbebilder müssen den tatsächlichen Artikel darstellen.', 'Keine falschen Behauptungen: Übertriebene Rabattbehauptungen sind verboten.'], JSON_UNESCAPED_UNICODE)],
+                    'en' => [
+                        'title' => 'Marketplace & Trading Standards', 
+                        'subtitle' => 'Core rules for trading, escrow, seller verification, and promotions.', 
+                        'description' => json_encode([
+                            'Marketplace Trading Standards: Core rules for buying and selling within campus.',
+                            'Escrow & Payment Terms: Financial protocols for handling online transactions.',
+                            'Seller Verification Policy: Requirements for validating merchant profiles.',
+                            'Content Moderation Guidelines: Protocols for reviewing reports and violations.',
+                            'Promotional Ads Policy: Rules for boosting listings and sponsored placements.'
+                        ], JSON_UNESCAPED_UNICODE)
+                    ],
+                    'ar' => [
+                        'title' => 'معايير التداول في السوق', 
+                        'subtitle' => 'قواعد التداول، شروط الدفع، التحقق من البائع، والإشراف والترويج.', 
+                        'description' => json_encode([
+                            'معايير التداول في السوق: القواعد الأساسية للبيع والشراء داخل الحرم الجامعي.',
+                            'شروط الدفع والضمان: البروتوكولات المالية للمعاملات عبر الإنترنت.',
+                            'سياسة التحقق من البائع: متطلبات التحقق من ملفات التجار والبائعين.',
+                            'إرشادات الإشراف على المحتوى: البروتوكولات المستخدمة لمراجعة البلاغات والمخالفات.',
+                            'سياسة الإعلانات الترويجية: قواعد ترويج الإعلانات والمواضع الممولة.'
+                        ], JSON_UNESCAPED_UNICODE)
+                    ],
+                    'fr' => [
+                        'title' => 'Normes de commerce du marché', 
+                        'subtitle' => 'Règles de négoce, séquestre, vérification et modération.', 
+                        'description' => json_encode([
+                            'Normes de commerce : Règles fondamentales pour l\'achat et la vente.',
+                            'Conditions de paiement : Protocoles financiers pour les transactions.',
+                            'Politique de vérification : Exigences pour valider les profils marchands.',
+                            'Lignes directrices de modération : Protocoles d\'examen des rapports.',
+                            'Politique des annonces : Règles pour booster les annonces et sponsorisations.'
+                        ], JSON_UNESCAPED_UNICODE)
+                    ],
+                    'es' => [
+                        'title' => 'Estándares comerciales del mercado', 
+                        'subtitle' => 'Reglas de comercio, depósito, verificación y moderación.', 
+                        'description' => json_encode([
+                            'Estándares comerciales: Reglas principales para la compraventa.',
+                            'Términos de pago y depósito: Protocolos financieros para transacciones.',
+                            'Política de verificación: Requisitos para validar perfiles de comerciantes.',
+                            'Directrices de moderación: Protocolos para revisar reportes.',
+                            'Política de anuncios promocionales: Reglas para destacar anuncios.'
+                        ], JSON_UNESCAPED_UNICODE)
+                    ],
+                    'de' => [
+                        'title' => 'Handelsstandards für den Marktplatz', 
+                        'subtitle' => 'Handelsregeln, Treuhand, Verifizierung und Moderation.', 
+                        'description' => json_encode([
+                            'Handelsstandards: Grundregeln für den Kauf und Verkauf auf dem Campus.',
+                            'Treuhand- und Zahlungsbedingungen: Finanzprotokolle für Online-Transaktionen.',
+                            'Verkäuferverifizierungsrichtlinie: Anforderungen zur Validierung von Händlern.',
+                            'Inhaltsmoderationsrichtlinien: Protokolle zur Überprüfung von Meldungen.',
+                            'Werbeanzeigenrichtlinie: Regeln für das Pushen von Angeboten.'
+                        ], JSON_UNESCAPED_UNICODE)
+                    ],
                 ],
             ],
 
             // --- File 4: Data Governance & Compliance ---
             [
-                ['key' => 'data_retention_policy', 'section' => 'policies', 'sort_order' => 16],
+                ['key' => 'data_governance_and_compliance', 'section' => 'policies', 'sort_order' => 4],
                 [
-                    'en' => ['title' => 'Data Retention Policy', 'subtitle' => 'Lifespan of user records, chat logs, and transaction audit trails.', 'description' => json_encode(['Active Storage: User profile data is retained indefinitely while the account remains active.', 'Log Purging: System application logs and IP records are systematically purged every 90 days.', 'Deleted Accounts: Personal identifiers are anonymized 30 days following formal account closure.', 'Legal Holds: Transaction logs linked to open disputes are kept until legal resolution occurs.'], JSON_UNESCAPED_UNICODE)],
-                    'ar' => ['title' => 'سياسة الاحتفاظ بالبيانات', 'subtitle' => 'المدة الزمنية لسجلات المستخدمين، سجلات المحادثات، ومسارات تدقيق المعاملات.', 'description' => json_encode(['التخزين النشط: يتم الاحتفاظ ببيانات ملف تعريف المستخدم إلى أجل غير مسمى طالما الحساب نشط.', 'تنظيف السجلات: تُحذف سجلات نظام التطبيق وسجلات IP بانتظام كل 90 يوماً.', 'الحسابات المحذوفة: تُجهل معرفات المستخدمين الشخصية بعد 30 يوماً من إغلاق الحساب الرسمي.', 'الاحتفاظ القانوني: تُحفظ سجلات المعاملات المرتبطة بنزاعات مفتوحة حتى حدوث الحل القانوني.'], JSON_UNESCAPED_UNICODE)],
-                    'fr' => ['title' => 'Politique de conservation des données', 'subtitle' => 'Durée de conservation des dossiers utilisateurs et journaux de chat.', 'description' => json_encode(['Stockage actif : Les données de profil sont conservées indéfiniment.', 'Purge des journaux : Les journaux système et IP sont purgés tous les 90 jours.', 'Comptes supprimés : Les identifiants sont anonymisés 30 jours après la clôture.', 'Retenues légales : Les registres de transactions liés à des litiges sont conservés.'], JSON_UNESCAPED_UNICODE)],
-                    'es' => ['title' => 'Política de retención de datos', 'subtitle' => 'Duración de registros de usuario y registros de chat.', 'description' => json_encode(['Almacenamiento activo: Los datos del perfil se conservan indefinidamente.', 'Purga de registros: Los registros del sistema y IP se purgan cada 90 días.', 'Cuentas eliminadas: Los identificadores se anonimizan 30 días después.', 'Retenciones legales: Los registros de transacciones se guardan por disputas.'], JSON_UNESCAPED_UNICODE)],
-                    'de' => ['title' => 'Aufbewahrungsrichtlinie für Daten', 'subtitle' => 'Lebensdauer von Benutzerdatensätzen und Chat-Protokollen.', 'description' => json_encode(['Aktiver Speicher: Profil- und Benutzerdaten werden unbegrenzt aufbewahrt.', 'Log-Bereinigung: Systemprotokolle und IP-Daten werden alle 90 Tage bereinigt.', 'Gelöschte Konten: Identifikatoren werden 30 Tage nach Schließung anonymisiert.', 'Rechtliche Sperren: Transaktionsprotokolle bei Streitigkeiten werden aufbewahrt.'], JSON_UNESCAPED_UNICODE)],
-                ],
-            ],
-            [
-                ['key' => 'third_party_api_policy', 'section' => 'policies', 'sort_order' => 17],
-                [
-                    'en' => ['title' => 'Third-Party API Policy', 'subtitle' => 'Guidelines regarding external integrations, mapping tools, and analytics hooks.', 'description' => json_encode(['Data Sharing: Minimal user data is shared with external vendors strictly for functionality.', 'Map Services: Location features utilize certified third-party mapping SDKs securely.', 'No Resale: API keys and access endpoints must never be resold or exposed publicly.', 'Service Limits: Excessive automated scraping or API query hammering will result in IP blocks.'], JSON_UNESCAPED_UNICODE)],
-                    'ar' => ['title' => 'سياسة واجهات برمجة التطبيقات الخارجية', 'subtitle' => 'إرشادات بشأن التكامل الخارجي، أدوات الخرائط، وخطافات التحليلات.', 'description' => json_encode(['مشاركة البيانات: تتم مشاركة الحد الأدنى من بيانات المستخدم حصرياً لوظائف التشغيل.', 'خدمات الخرائط: تستخدم ميزات الموقع حزمة تطوير الخرائط المعتمدة بأمان.', 'عدم إعادة البيع: يجب عدم إعادة بيع مفاتيح API أو الكشف عنها علناً.', 'حدود الخدمة: الاستخراج التلقائي المفرط أو قصف الاستعلامات سيؤدي إلى حظر IP.'], JSON_UNESCAPED_UNICODE)],
-                    'fr' => ['title' => 'Politique des API tierces', 'subtitle' => 'Lignes directrices concernant les intégrations externes.', 'description' => json_encode(['Partage de données : Un minimum de données est partagé avec les fournisseurs.', 'Services de cartes : Les fonctionnalités utilisent des SDK cartographiques certifiés.', 'Pas de revente : Les clés API ne doivent jamais être revendues ou exposées.', 'Limites de service : Le scraping excessif entraînera des blocages d\'IP.'], JSON_UNESCAPED_UNICODE)],
-                    'es' => ['title' => 'Política de API de terceros', 'subtitle' => 'Directrices sobre integraciones externas y herramientas.', 'description' => json_encode(['Compartir datos: Se comparten datos mínimos con proveedores externos.', 'Servicios de mapas: Las funciones de ubicación utilizan SDK certificados.', 'Sin reventa: Las claves API nunca deben revenderse ni exponerse públicamente.', 'Límites de servicio: El scraping excesivo provocará bloqueos de IP.'], JSON_UNESCAPED_UNICODE)],
-                    'de' => ['title' => 'Drittanbieter-API-Richtlinie', 'subtitle' => 'Richtlinien zu externen Integrationen und Analysetools.', 'description' => json_encode(['Datenaustausch: Minimale Benutzerdaten werden nur für Funktionen geteilt.', 'Kartendienste: Standortfunktionen nutzen zertifizierte Karten-SDKs.', 'Kein Weiterverkauf: API-Schlüssel dürfen niemals weiterverkauft werden.', 'Dienstlimits: Exzessives Scraping führt zu IP-Sperren.'], JSON_UNESCAPED_UNICODE)],
-                ],
-            ],
-            [
-                ['key' => 'anti_harassment_policy', 'section' => 'policies', 'sort_order' => 18],
-                [
-                    'en' => ['title' => 'Anti-Harassment Policy', 'subtitle' => 'Zero-tolerance rules regarding offensive messaging, stalking, and intimidation.', 'description' => json_encode(['Direct Messaging: Unsolicited sexual remarks or threatening text messages are banned.', 'Stalking Behavior: Tracking users offline or following them across multiple listings is prohibited.', 'Reporting Mechanism: In-app reporting buttons are available on every chat window.', 'Investigation Workflow: Accusations trigger immediate safety reviews by senior staff.'], JSON_UNESCAPED_UNICODE)],
-                    'ar' => ['title' => 'سياسة مكافحة المضايقة', 'subtitle' => 'قواعد عدم التسامح مطلقاً مع الرسائل المسيئة، التتبع، والترهيب.', 'description' => json_encode(['الرسائل المباشرة: التعليقات الجنسية غير المرغوبة أو الرسائل النصية المهددة محظورة.', 'سلوك التتبع: تتبع المستخدمين خارج التطبيق أو متابعتهم عبر إعلانات متعددة ممنوع.', 'آلية الإبلاغ: تتوفر أزرار الإبلاغ داخل التطبيق في كل نافذة دردشة.', 'سير عمل التحقيق: تؤدي الاتهامات إلى مراجعات أمان فورية من قبل كبار الموظفين.'], JSON_UNESCAPED_UNICODE)],
-                    'fr' => ['title' => 'Politique anti-harcèlement', 'subtitle' => 'Règles de tolérance zéro concernant les messages offensants.', 'description' => json_encode(['Messagerie directe : Les remarques sexuelles non sollicitées sont interdites.', 'Comportement de traque : Suivre des utilisateurs hors ligne est prohibé.', 'Mécanisme de signalement : Des boutons de signalement sont disponibles.', 'Flux d\'enquête : Les accusations déclenchent des examens immédiats.'], JSON_UNESCAPED_UNICODE)],
-                    'es' => ['title' => 'Política contra el acoso', 'subtitle' => 'Reglas de tolerancia cero sobre mensajes ofensivos y acecho.', 'description' => json_encode(['Mensajería directa: Los comentarios sexuales no solicitados están prohibidos.', 'Comportamiento de acecho: Rastrear a usuarios fuera de línea está prohibido.', 'Mecanismo de reporte: Hay botones de reporte en cada ventana de chat.', 'Flujo de investigación: Las acusaciones activan revisiones de seguridad.'], JSON_UNESCAPED_UNICODE)],
-                    'de' => ['title' => 'Anti-Belästigungs-Richtlinie', 'subtitle' => 'Null-Toleranz-Regeln bezüglich beleidigender Nachrichten und Stalking.', 'description' => json_encode(['Direktnachrichten: Unaufgeforderte sexuelle Bemerkungen sind verboten.', 'Stalking-Verhalten: Das Verfolgen von Benutzern offline ist untersagt.', 'Melde-Mechanismus: In-App-Meldetasten sind in jedem Chatfenster verfügbar.', 'Untersuchungs-Workflow: Anschuldigungen lösen sofortige Sicherheitsprüfungen aus.'], JSON_UNESCAPED_UNICODE)],
-                ],
-            ],
-            [
-                ['key' => 'copyright_dmca_policy', 'section' => 'policies', 'sort_order' => 19],
-                [
-                    'en' => ['title' => 'Copyright & DMCA Policy', 'subtitle' => 'Procedures for submitting intellectual property takedown notifications.', 'description' => json_encode(['Notice Requirements: DMCA complaints must include specific proof of original ownership.', 'Agent Contact: Designated copyright agents review complaints via official support emails.', 'Counter Notices: Accused users have 10 days to file a legal counter-notification.', 'Repeat Infringers: Accounts flagged three times for copyright violations are terminated.'], JSON_UNESCAPED_UNICODE)],
-                    'ar' => ['title' => 'سياسة حقوق النشر و DMCA', 'subtitle' => 'إجراءات تقديم إشعارات إزالة الملكية الفكرية.', 'description' => json_encode(['متطلبات الإشعار: يجب أن تتضمن شكاوى DMCA اثباتاً محددأ للالملكية الأصلية.', 'اتصال الوكيل: يراجع وكلاء حقوق النشر المخصصون الشكاوى عبر البريد الإلكتروني.', 'إشعارات مضادة: لدى المستخدمين المتهمين 10 أيام لتقديم إشعار مضاد قانوني.', 'المخالفون المتكررون: الحسابات التي تُوسم ثلاث مرات بانتهاكات حقوق النشر يتم إنهاؤها.'], JSON_UNESCAPED_UNICODE)],
-                    'fr' => ['title' => 'Politique de copyright et DMCA', 'subtitle' => 'Procédures de soumission des notifications de retrait.', 'description' => json_encode(['Exigences d\'avis : Les plaintes DMCA doivent inclure une preuve de propriété.', 'Contact de l\'agent : Des agents désignés examinent les plaintes par e-mail.', 'Contre-notifications : Les utilisateurs disposent de 10 jours pour répondre.', 'Contrevenants récidivistes : Les comptes signalés trois fois sont résiliés.'], JSON_UNESCAPED_UNICODE)],
-                    'es' => ['title' => 'Política de derechos de autor y DMCA', 'subtitle' => 'Procedimientos para enviar notificaciones de retirada.', 'description' => json_encode(['Requisitos de aviso: Las quejas DMCA deben incluir prueba de propiedad.', 'Contacto de agente: Agentes designados revisan las quejas por correo electrónico.', 'Contra-notificaciones: Los usuarios tienen 10 días para presentar una contranotificación.', 'Infractores reincidentes: Las cuentas reportadas tres veces son canceladas.'], JSON_UNESCAPED_UNICODE)],
-                    'de' => ['title' => 'Urheberrechts- und DMCA-Richtlinie', 'subtitle' => 'Verfahren zur Einreichung von DMCA-Meldungen.', 'description' => json_encode(['Hinweisanforderungen: Beschwerden müssen Eigentumsnachweise enthalten.', 'Agentenkontakt: Beauftragte Agenten prüfen Beschwerden per E-Mail.', 'Gegendarstellungen: Benutzer haben 10 Tage Zeit für eine Gegendarstellung.', 'Wiederholungstäter: Dreimal verפטe Konten werden gelöscht.'], JSON_UNESCAPED_UNICODE)],
-                ],
-            ],
-            [
-                ['key' => 'account_deletion_policy', 'section' => 'policies', 'sort_order' => 20],
-                [
-                    'en' => ['title' => 'Account Deletion Policy', 'subtitle' => 'Instructions and data removal guidelines for closing your profile.', 'description' => json_encode(['Self-Service Closure: Users can request complete profile closure directly from account settings.', 'Immediate Deletion: Active listings and public visibility are removed instantly upon request.', 'Database Purge: Personal contact metrics are fully expunged after a 30-day grace period.', 'Pending Transactions: Accounts with active unresolved orders cannot be deleted immediately.'], JSON_UNESCAPED_UNICODE)],
-                    'ar' => ['title' => 'سياسة حذف الحسابات', 'subtitle' => 'التعليمات وإرشادات إزالة البيانات لإغلاق ملفك الشخصي.', 'description' => json_encode(['الإغلاق الذاتي: يمكن للمستخدمين طلب إغلاق الملف الشخصي الكامل مباشرة من الإعدادات.', 'الحذف الفوري: تُزال الإعلانات النشطة والرؤية العامة فوراً عند الطلب.', 'تنظيف قاعدة البيانات: يتم مسح مقاييس الاتصال الشخصية بالكامل بعد فترة سماح مدتها 30 يوماً.', 'المعاملات المعلقة: الحسابات التي بها طلبات نشطة غير محلولة لا يمكن حذفها فوراً.'], JSON_UNESCAPED_UNICODE)],
-                    'fr' => ['title' => 'Politique de suppression de compte', 'subtitle' => 'Instructions et directives de suppression de données.', 'description' => json_encode(['Clôture en libre-service : Les utilisateurs peuvent fermer leur profil.', 'Suppression immédiate : Les annonces actives sont retirées instantanément.', 'Purge de la base de données : Les contacts sont effacés après un délai de 30 jours.', 'Transactions en cours : Les comptes avec commandes en cours ne peuvent être supprimés.'], JSON_UNESCAPED_UNICODE)],
-                    'es' => ['title' => 'Política de eliminación de cuentas', 'subtitle' => 'Instrucciones y directrices para cerrar tu perfil.', 'description' => json_encode(['Cierre de autoservicio: Los usuarios pueden cerrar su perfil desde ajustes.', 'Eliminación inmediata: Los anuncios activos se eliminan al instante.', 'Purga de base de datos: Los datos de contacto se borran tras 30 días.', 'Transacciones pendientes: Las cuentas con pedidos activos no se pueden borrar.'], JSON_UNESCAPED_UNICODE)],
-                    'de' => ['title' => 'Konto-Löschungsrichtlinie', 'subtitle' => 'Anweisungen und Datenentfernungsrichtlinien.', 'description' => json_encode(['Selbstbedienungsschließung: Benutzer können ihr Profil über Einstellungen schließen.', 'Sofortige Löschung: Aktive Angebote werden sofort entfernt.', 'Datenbankbereinigung: Kontaktdaten werden nach einer Frist von 30 Tagen gelöscht.', 'Ausstehende Transaktionen: Konten mit offenen Bestellungen können nicht sofort gelöscht werden.'], JSON_UNESCAPED_UNICODE)],
+                    'en' => [
+                        'title' => 'Data Governance & Compliance', 
+                        'subtitle' => 'Data retention, APIs, anti-harassment, DMCA, and account deletion.', 
+                        'description' => json_encode([
+                            'Data Retention Policy: Lifespan of user records, chat logs, and audits.',
+                            'Third-Party API Policy: Guidelines for external integrations and SDKs.',
+                            'Anti-Harassment Policy: Zero-tolerance rules regarding offensive messaging.',
+                            'Copyright & DMCA Policy: Procedures for IP takedown notifications.',
+                            'Account Deletion Policy: Instructions and data removal guidelines.'
+                        ], JSON_UNESCAPED_UNICODE)
+                    ],
+                    'ar' => [
+                        'title' => 'حوكمة البيانات والامتثال', 
+                        'subtitle' => 'الاحتفاظ بالبيانات، واجهات البرمجة، مكافحة المضايقة، DMCA، والحذف.', 
+                        'description' => json_encode([
+                            'سياسة الاحتفاظ بالبيانات: المدة الزمنية لسجلات المستخدمين والمحادثات.',
+                            'سياسة واجهات برمجة التطبيقات: إرشادات التكامل الخارجي وأدوات الخرائط.',
+                            'سياسة مكافحة المضايقة: قواعد عدم التسامح مع الرسائل المسيئة والترهيب.',
+                            'سياسة حقوق النشر و DMCA: إجراءات تقديم إشعارات إزالة الملكية الفكرية.',
+                            'سياسة حذف الحسابات: التعليمات وإرشادات إزالة البيانات لإغلاق الملف.'
+                        ], JSON_UNESCAPED_UNICODE)
+                    ],
+                    'fr' => [
+                        'title' => 'Gouvernance des données et conformité', 
+                        'subtitle' => 'Conservation des données, API, anti-harcèlement et DMCA.', 
+                        'description' => json_encode([
+                            'Politique de conservation : Durée de conservation des dossiers.',
+                            'Politique des API tierces : Lignes directrices concernant les intégrations.',
+                            'Politique anti-harcèlement : Règles de tolérance zéro.',
+                            'Politique de copyright et DMCA : Procédures de notification de retrait.',
+                            'Politique de suppression de compte : Instructions de suppression.'
+                        ], JSON_UNESCAPED_UNICODE)
+                    ],
+                    'es' => [
+                        'title' => 'Gobernanza de datos y cumplimiento', 
+                        'subtitle' => 'Retención de datos, API, acoso, DMCA y eliminación de cuentas.', 
+                        'description' => json_encode([
+                            'Política de retención de datos: Duración de registros de usuario y chat.',
+                            'Política de API de terceros: Directrices sobre integraciones externas.',
+                            'Política contra el acoso: Reglas de tolerancia cero sobre mensajes.',
+                            'Política de derechos de autor y DMCA: Procedimientos de retirada.',
+                            'Política de eliminación de cuentas: Instrucciones y directrices.'
+                        ], JSON_UNESCAPED_UNICODE)
+                    ],
+                    'de' => [
+                        'title' => 'Daten-Governance und Compliance', 
+                        'subtitle' => 'Datenspeicherung, APIs, Anti-Harassment, DMCA und Konto-Löschung.', 
+                        'description' => json_encode([
+                            'Aufbewahrungsrichtlinie für Daten: Lebensdauer von Datensätzen.',
+                            'Drittanbieter-API-Richtlinie: Richtlinien zu externen Integrationen.',
+                            'Anti-Belästigungs-Richtlinie: Null-Toleranz-Regeln bei Nachrichten.',
+                            'Urheberrechts- und DMCA-Richtlinie: Verfahren zur Einreichung.',
+                            'Konto-Löschungsrichtlinie: Anweisungen und Datenentfernung.'
+                        ], JSON_UNESCAPED_UNICODE)
+                    ],
                 ],
             ],
 
             // --- File 5: Operations, Security & Miscellaneous ---
             [
-                ['key' => 'system_maintenance_policy', 'section' => 'policies', 'sort_order' => 21],
+                ['key' => 'operations_and_security', 'section' => 'policies', 'sort_order' => 5],
                 [
-                    'en' => ['title' => 'System Maintenance Policy', 'subtitle' => 'Protocols regarding scheduled server downtime and software upgrades.', 'description' => json_encode(['Scheduled Windows: Routine platform maintenance occurs during off-peak campus hours.', 'Advance Notices: Users receive platform notifications 24 hours prior to major updates.', 'Emergency Patches: Critical security vulnerabilities may trigger immediate short outages.', 'Data Integrity: Automated database backups run continuously to prevent data loss.'], JSON_UNESCAPED_UNICODE)],
-                    'ar' => ['title' => 'سياسة صيانة النظام', 'subtitle' => 'البروتوكولات المتعلقة بوقت توقف الخادم المجدول وترقيات البرمجيات.', 'description' => json_encode(['النوافذ المجدولة: تتم صيانة المنصة الروتينية خلال ساعات خارج ذروة الحرم الجامعي.', 'إشعارات مسبقة: يتلقى المستخدمون إشعارات قبل 24 ساعة من التحديثات الكبرى.', 'إصلاحات طارئة: الثغرات الأمنية الحرجة قد تتسبب في انقطاعات قصيرة فورية.', 'سلامة البيانات: تعمل النسخ الاحتياطية التلقائية لقاعدة البيانات باستمرار لمنع فقدان البيانات.'], JSON_UNESCAPED_UNICODE)],
-                    'fr' => ['title' => 'Politique de maintenance du système', 'subtitle' => 'Protocoles concernant les temps d\'arrêt programmés.', 'description' => json_encode(['Fenêtres planifiées : La maintenance de routine a lieu hors heures de pointe.', 'Avis préalables : Les utilisateurs sont prévenus 24h avant les mises à jour.', 'Correctifs d\'urgence : Les failles critiques peuvent entraîner de brèves pannes.', 'Intégrité des données : Des sauvegardes automatiques fonctionnent en continu.'], JSON_UNESCAPED_UNICODE)],
-                    'es' => ['title' => 'Política de mantenimiento del sistema', 'subtitle' => 'Protocolos sobre el tiempo de inactividad programado del servidor.', 'description' => json_encode(['Ventanas programadas: El mantenimiento de rutina ocurre fuera de horas pico.', 'Avisos previos: Los usuarios reciben notificaciones 24 horas antes.', 'Parches de emergencia: Las fallas críticas de seguridad pueden causar cortes.', 'Integridad de datos: Las copias de seguridad automatizadas se ejecutan continuamente.'], JSON_UNESCAPED_UNICODE)],
-                    'de' => ['title' => 'Systemwartungsrichtlinie', 'subtitle' => 'Protokolle zu geplanten Serverausfallzeiten.', 'description' => json_encode(['Geplante Fenster: Routinewartungen finden außerhalb der Stoßzeiten statt.', 'Vorankündigungen: Benutzer erhalten 24 Stunden vor Updates Benachrichtigungen.', 'Notfall-Patches: Kritische Sicherheitslücken können kurze Ausfälle verursachen.', 'Datenintegrität: Automatische Datenbank-Backups laufen kontinuierlich.'], JSON_UNESCAPED_UNICODE)],
-                ],
-            ],
-            [
-                ['key' => 'geo_fencing_policy', 'section' => 'policies', 'sort_order' => 22],
-                [
-                    'en' => ['title' => 'Geo-Fencing Policy', 'subtitle' => 'Geographic restrictions and campus localization requirements for users.', 'description' => json_encode(['Campus Boundaries: Marketplace listings are restricted to authorized university regions.', 'IP Tracking: System access checks geographic routing to block unauthorized foreign proxies.', 'Travel Mode: Verified students traveling abroad retain temporary read-only access.', 'Delivery Radios: Physical item exchanges must occur within designated local area zones.'], JSON_UNESCAPED_UNICODE)],
-                    'ar' => ['title' => 'سياسة السياج الجغرافي', 'subtitle' => 'القيود الجغرافية ومتطلبات توطين الحرم الجامعي للمستخدمين.', 'description' => json_encode(['حدود الحرم: إعلانات السوق مقصورة على مناطق الجامعات المصرح بها.', 'تتبع IP: تفحص وصول النظام التوجيه الجغرافي لحظر الوكلاء الأجانب غير المصرح لهم.', 'وضع السفر: يحتفظ الطلاب الموثقون المسافرون للخارج بوصول مؤقت للقراءة فقط.', 'نطاقات التسليم: يجب أن تقع تبادلات العناصر الفيزيائية ضمن مناطق محلية مخصصة.'], JSON_UNESCAPED_UNICODE)],
-                    'fr' => ['title' => 'Politique de géorepérage', 'subtitle' => 'Restrictions géographiques et exigences de localisation.', 'description' => json_encode(['Limites du campus : Les annonces sont restreintes aux régions universitaires.', 'Suivi IP : L\'accès vérifie le routage pour bloquer les proxys étrangers.', 'Mode voyage : Les étudiants en voyage conservent un accès temporaire en lecture seule.', 'Rayons de livraison : Les échanges physiques doivent avoir lieu dans des zones locales.'], JSON_UNESCAPED_UNICODE)],
-                    'es' => ['title' => 'Política de geocercas', 'subtitle' => 'Restricciones geográficas y requisitos de localización.', 'description' => json_encode(['Límites del campus: Los anuncios se limitan a regiones universitarias.', 'Rastreo de IP: El acceso verifica el enrutamiento para bloquear proxies.', 'Modo de viaje: Los estudiantes que viajan conservan acceso de solo lectura.', 'Radios de entrega: Los intercambios deben ocurrir en zonas locales designadas.'], JSON_UNESCAPED_UNICODE)],
-                    'de' => ['title' => 'Geo-Fencing-Richtlinie', 'subtitle' => 'Geografische Beschränkungen und Campus-Lokalisierungsanforderungen.', 'description' => json_encode(['Campus-Grenzen: Marktplatzangebote sind auf Universitätsregionen beschränkt.', 'IP-Tracking: Der Systemzugriff prüft das Routing, um Proxys zu blockieren.', 'Reisemanmodus: Verifizierte reisende Studenten behalten temporären Lesezugriff.', 'Lieferradien: Physische Artikelübergaben müssen in lokalen Zonen erfolgen.'], JSON_UNESCAPED_UNICODE)],
-                ],
-            ],
-            [
-                ['key' => 'dispute_resolution_policy', 'section' => 'policies', 'sort_order' => 23],
-                [
-                    'en' => ['title' => 'Dispute Resolution Policy', 'subtitle' => 'Step-by-step framework for mediating conflicts between buyers and sellers.', 'description' => json_encode(['Filing Window: Users must file a formal dispute ticket within 7 days of purchase.', 'Evidence Submission: Both parties must upload chat logs, receipts, and photos.', 'Mediation Phase: Platform support staff review evidence and propose binding solutions.', 'Arbitration Limit: Final decisions rendered by platform admins cannot be appealed further.'], JSON_UNESCAPED_UNICODE)],
-                    'ar' => ['title' => 'سياسة تسوية النزاعات', 'subtitle' => 'إطار خطوة بخطوة للوساطة في النزاعات بين المشترين والبائعين.', 'description' => json_encode(['نافذة التقديم: يجب على المستخدمين تقديم تذكرة نزاع رسمية خلال 7 أيام من الشراء.', 'تقديم الأدلة: يجب على الطرفين تحميل سجلات الدردشة، الإيصالات، والصور.', 'مرحلة الوساطة: يراجع موظفو دعم المنصة الأدلة ويقترحون حلولاً ملزمة.', 'حد التحكيم: القرارات النهائية التي يصدرها مشمولو المنصة لا يمكن استئنافها بعد ذلك.'], JSON_UNESCAPED_UNICODE)],
-                    'fr' => ['title' => 'Politique de résolution des litiges', 'subtitle' => 'Cadre étape par étape pour la médiation des conflits.', 'description' => json_encode(['Délai de dépôt : Les utilisateurs doivent déposer un litige sous 7 jours.', 'Soumission de preuves : Les deux parties doivent fournir des journaux et reçus.', 'Phase de médiation : Le support examine les preuves et propose des solutions.', 'Limite d\'arbitrage : Les décisions finales des administrateurs ne sont pas appelables.'], JSON_UNESCAPED_UNICODE)],
-                    'es' => ['title' => 'Política de resolución de disputas', 'subtitle' => 'Marco paso a paso para mediar conflictos.', 'description' => json_encode(['Ventaja de presentación: Los usuarios deben presentar un ticket en 7 días.', 'Envío de pruebas: Ambas partes deben subir registros de chat y recibos.', 'Fase de mediación: El soporte revisa las pruebas y propone soluciones.', 'Límite de arbitraje: Las decisiones finales de los administradores son inapelables.'], JSON_UNESCAPED_UNICODE)],
-                    'de' => ['title' => 'Richtlinie zur Streitbeilegung', 'subtitle' => 'Schritt-für-Schritt-Framework zur Konfliktvermittlung.', 'Description' => json_encode(['Einreichungsfrist: Benutzer müssen innerhalb von 7 Tagen ein Ticket einreichen.', 'Beweismmitteilung: Beide Parteien müssen Chats und Belege hochladen.', 'Schlichtungsphase: Der Support prüft Beweise und schlägt Lösungen vor.', 'Schiedsgerichtslimit: Endgültige Entscheidungen der Administratoren sind nicht anfechtbar.'], JSON_UNESCAPED_UNICODE)],
-                ],
-            ],
-            [
-                ['key' => 'age_restriction_policy', 'section' => 'policies', 'sort_order' => 24],
-                [
-                    'en' => ['title' => 'Age Restriction Policy', 'subtitle' => 'Minimum age requirements and identity verification for platform access.', 'description' => json_encode(['Minimum Age: Users must be at least 18 years of age to register an account.', 'University Verification: Valid enrollment status supersedes standard age checks.', 'Restricted Categories: Adult-themed or age-gated items are barred entirely from listings.', 'Account Termination: Underage accounts detected during audits are closed instantly.'], JSON_UNESCAPED_UNICODE)],
-                    'ar' => ['title' => 'سياسة تقييد العمر', 'subtitle' => 'متطلبات الحد الأدنى للسن والتحقق من الهوية للوصول إلى المنصة.', 'description' => json_encode(['الحد الأدنى للسن: يجب أن يكون عمر المستخدمين 18 عاماً على الأقل لتسجيل حساب.', 'التحقق الجامعي: حالة التسجيل السارية تحل محل فحص السن القياسي.', 'الفئات المقيدة: العناصر ذات الطابع البالغ محظورة تماماً من الإعلانات.', 'إنهاء الحساب: الحسابات دون السن القانونية التي تُكتشف أثناء التدقيق تُغلق فوراً.'], JSON_UNESCAPED_UNICODE)],
-                    'fr' => ['title' => 'Politique de restriction d\'âge', 'subtitle' => 'Exigences d\'âge minimum et vérification d\'identité.', 'description' => json_encode(['Âge minimum : Les utilisateurs doivent avoir au moins 18 ans.', 'Vérification universitaire : Le statut d\'inscription remplace les contrôles.', 'Catégories restreintes : Les articles pour adultes sont totalement interdits.', 'Résiliation de compte : Les comptes de mineurs détectés sont fermés instantanément.'], JSON_UNESCAPED_UNICODE)],
-                    'es' => ['title' => 'Política de restricción de edad', 'subtitle' => 'Requisitos de edad mínima y verificación de identidad.', 'description' => json_encode(['Edad mínima: Los usuarios deben tener al menos 18 años de edad.', 'Verificación universitaria: La inscripción válida reemplaza controles de edad.', 'Categorías restringidas: Los artículos para adultos están prohibidos.', 'Cancelación de cuenta: Las cuentas de menores detectadas se cierran al instante.'], JSON_UNESCAPED_UNICODE)],
-                    'de' => ['title' => 'Altersbeschränkungsrichtlinie', 'subtitle' => 'Mindestalter und Identitätsprüfung für den Plattformzugriff.', 'description' => json_encode(['Mindestalter: Benutzer müssen mindestens 18 Jahre alt sein.', 'Universitätsprüfung: Ein gültiger Status ersetzt Standardaltersprüfungen.', 'Eingeschränkte Kategorien: Artikel für Erwachsene sind vollständig verboten.', 'Kontoauflösung: Minderjährigenkonten werden sofort geschlossen.'], JSON_UNESCAPED_UNICODE)],
-                ],
-            ],
-            [
-                ['key' => 'eco_friendly_initiative_policy', 'section' => 'policies', 'sort_order' => 25],
-                [
-                    'en' => ['title' => 'Eco-Friendly Initiative Policy', 'subtitle' => 'Guidelines promoting sustainable student recycling and campus green goals.', 'description' => json_encode(['Recycling Incentives: Students listing reusable textbooks receive lowered transaction fees.', 'Green Badges: Profiles highlighting local item exchanges earn sustainability badges.', 'Packaging Standards: Users are encouraged to utilize biodegradable shipping materials.', 'Waste Reduction: Bulk donations of unused campus supplies are coordinated via student reps.'], JSON_UNESCAPED_UNICODE)],
-                    'ar' => ['title' => 'سياسة مبادرة الحفاظ على البيئة', 'subtitle' => 'الإرشادات التي تعزز إعادة التدوير الطلابي المستدام وأهداف الحرم الأخضر.', 'description' => json_encode(['حوافز إعادة التدوير: الطلاب الذين يعرضون كتباً قابلة لإعادة الاستخدام يحصلون على رسوم مخفضة.', 'الشارات الخضراء: الملفات الشخصية التي تبرز التبادلات المحلية تكسب شارات الاستدامة.', 'معايير التغليف: يُشجّع المستخدمون على استخدام مواد شحن قابلة للتحلل الحيوي.', 'تقليل النفايات: يتم تنسيق التبرعات الجماعية للإمدادات غير المستخدمة عبر ممثلي الطلاب.'], JSON_UNESCAPED_UNICODE)],
-                    'fr' => ['title' => 'Politique d\'initiative écologique', 'subtitle' => 'Lignes directrices promouvant le recyclage durable.', 'description' => json_encode(['Incitations au recyclage : Les manuels réutilisables bénéficient de frais réduits.', 'Badges verts : Les profils axés sur l\'échange local gagnent des badges.', 'Normes d\'emballage : L\'utilisation de matériaux biodégradables est encouragée.', 'Réduction des déchets : Les dons groupés sont coordonnés via les délégués.'], JSON_UNESCAPED_UNICODE)],
-                    'es' => ['title' => 'Política de iniciativa ecológica', 'subtitle' => 'Directrices que promueven el reciclaje estudiantil sostenible.', 'description' => json_encode(['Incentivos de reciclaje: Los libros reutilizables tienen tarifas reducidas.', 'Insignias verdes: Los perfiles con intercambios locales ganan insignias.', 'Estándares de embalaje: Se fomenta el uso de materiales biodegradables.', 'Reducción de residuos: Las donaciones masivas se coordinan mediante representantes.'], JSON_UNESCAPED_UNICODE)],
-                    'de' => ['title' => 'Umweltinitiativen-Richtlinie', 'subtitle' => 'Richtlinien zur Förderung nachhaltigen Recyclings.', 'description' => json_encode(['Recycling-Anreize: Studenten erhalten niedrigere Gebühren für Bücher.', 'Grüne Abzeichen: Profile mit lokalen Austauschen erhalten Abzeichen.', 'Verpackungsstandards: Die Verwendung biologisch abbaubarer Materialien wird gefördert.', 'Abfallreduzierung: Große Spenden werden über Vertreter koordiniert.'], JSON_UNESCAPED_UNICODE)],
+                    'en' => [
+                        'title' => 'Operations, Security & Miscellaneous', 
+                        'subtitle' => 'System maintenance, geo-fencing, disputes, age restrictions, and eco-initiatives.', 
+                        'description' => json_encode([
+                            'System Maintenance Policy: Scheduled server downtime and software upgrades.',
+                            'Geo-Fencing Policy: Geographic restrictions and campus localization.',
+                            'Dispute Resolution Policy: Framework for mediating buyer-seller conflicts.',
+                            'Age Restriction Policy: Minimum age requirements and verification.',
+                            'Eco-Friendly Initiative Policy: Guidelines promoting sustainable recycling.'
+                        ], JSON_UNESCAPED_UNICODE)
+                    ],
+                    'ar' => [
+                        'title' => 'العمليات والأمان ومتفرقات', 
+                        'subtitle' => 'صيانة النظام، السياج الجغرافي، المنازعات، قيود العمر، والمبادرات البيئية.', 
+                        'description' => json_encode([
+                            'سياسة صيانة النظام: البروتوكولات المتعلقة بوقت توقف الخادم وترقيات البرمجيات.',
+                            'سياسة السياج الجغرافي: القيود الجغرافية ومتطلبات توطين الحرم الجامعي.',
+                            'سياسة تسوية النزاعات: إطار خطوة بخطوة للوساطة بين المشترين والبائعين.',
+                            'سياسة تقييد العمر: متطلبات الحد الأدنى للسن والتحقق من الهوية.',
+                            'سياسة مبادرة الحفاظ على البيئة: الإرشادات لتعزيز إعادة التدوير المستدام.'
+                        ], JSON_UNESCAPED_UNICODE)
+                    ],
+                    'fr' => [
+                        'title' => 'Opérations, sécurité et divers', 
+                        'subtitle' => 'Maintenance, géorepérage, litiges, restrictions d\'âge et écologie.', 
+                        'description' => json_encode([
+                            'Politique de maintenance : Temps d\'arrêt programmés et mises à jour.',
+                            'Politique de géorepérage : Restrictions géographiques et campus.',
+                            'Politique de résolution des litiges : Cadre de médiation des conflits.',
+                            'Politique de restriction d\'âge : Exigences d\'âge minimum et vérification.',
+                            'Politique d\'initiative écologique : Promotion du recyclage durable.'
+                        ], JSON_UNESCAPED_UNICODE)
+                    ],
+                    'es' => [
+                        'title' => 'Operaciones, seguridad y varios', 
+                        'subtitle' => 'Mantenimiento, geocercas, disputas, edad e iniciativas ecológicas.', 
+                        'description' => json_encode([
+                            'Política de mantenimiento del sistema: Tiempo de inactividad programado.',
+                            'Política de geocercas: Restricciones geográficas y de localización.',
+                            'Política de resolución de disputas: Marco para mediar conflictos.',
+                            'Política de restricción de edad: Requisitos de edad mínima.',
+                            'Política de iniciativa ecológica: Directrices de reciclaje sostenible.'
+                        ], JSON_UNESCAPED_UNICODE)
+                    ],
+                    'de' => [
+                        'title' => 'Betrieb, Sicherheit und Sonstiges', 
+                        'subtitle' => 'Wartung, Geo-Fencing, Streitigkeiten, Alter und Umweltinitiativen.', 
+                        'description' => json_encode([
+                            'Systemwartungsrichtlinie: Geplante Serverausfallzeiten und Updates.',
+                            'Geo-Fencing-Richtlinie: Geografische Beschränkungen und Campus.',
+                            'Richtlinie zur Streitbeilegung: Framework zur Konfliktvermittlung.',
+                            'Altersbeschränkungsrichtlinie: Mindestalter und Identitätsprüfung.',
+                            'Umweltinitiativen-Richtlinie: Förderung nachhaltigen Recyclings.'
+                        ], JSON_UNESCAPED_UNICODE)
+                    ],
                 ],
             ],
         ];
