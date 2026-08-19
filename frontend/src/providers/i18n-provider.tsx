@@ -3,13 +3,15 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 type Locale = 'en' | 'ar';
 type Theme = 'light' | 'dark';
 
-type Dictionary = {
+export type Dictionary = {
   appName: string;
   dashboard: string;
   users: string;
   ads: string;
   adReports: string;
   chatReports: string;
+  userReports: string;
+  moderationAppeals: string;
   coupons: string;
   userVerifications: string;
   admins: string;
@@ -25,12 +27,52 @@ type Dictionary = {
   categories: string;
   subCategories: string;
   legalAffairs: string;
+  termsVersions: string;
+  termsVersionsSubtitle: string;
+  publishNewTerms: string;
+  version: string;
+  termsContent: string;
+  newTermsWarning: string;
+  publish: string;
+  effectiveAt: string;
+  acceptances: string;
+  current: string;
+  previousVersion: string;
+  requiredFields: string;
+  publishTermsConfirmation: string;
+  termsPublished: string;
+  accountDeletionRequests: string;
+  accountDeletionSubtitle: string;
+  completed: string;
+  completeDeletionWarning: string;
+  rejectDeletionConfirmation: string;
+  resolutionNote: string;
+  requestResolved: string;
+  noReasonProvided: string;
+  completePermanentDeletion: string;
+  noDeletionRequests: string;
+  featureRestrictions: string;
+  posting: string;
+  messaging: string;
+  restrictionReason: string;
+  durationDaysOptional: string;
+  applyRestriction: string;
+  reasonRequired: string;
+  featureRestrictionApplied: string;
+  liftRestrictionConfirmation: string;
+  liftReason: string;
+  featureRestrictionLifted: string;
+  lifted: string;
+  restricted: string;
+  liftRestriction: string;
+  noFeatureRestrictions: string;
   contactReasons: string;
   contactUs: string;
   pushNotifications: string;
   sendNotification: string;
   sendToAll: string;
   sendToUser: string;
+  sendToMarketing: string;
   audience: string;
   notificationTitle: string;
   notificationBody: string;
@@ -73,6 +115,29 @@ type Dictionary = {
   code: string;
   slug: string;
   sort: string;
+  listingFee: string;
+  listingFeeStandard: string;
+  paymentStatus: string;
+  refund: string;
+  refundStatus: string;
+  refundReason: string;
+  refundReasonPlaceholder: string;
+  issueRefund: string;
+  declineRefund: string;
+  refunded: string;
+  refundDeclined: string;
+  refundRequested: string;
+  refundRequests: string;
+  manageInRefundRequests: string;
+  notRefunded: string;
+  confirmRefund: string;
+  confirmDeclineRefund: string;
+  refundConfirmation: string;
+  declineRefundConfirmation: string;
+  refundIssued: string;
+  refundDeclinedNotice: string;
+  noPaidPayment: string;
+  userNotifiedNote: string;
   state: string;
   section: string;
   isDefault: string;
@@ -181,6 +246,177 @@ type Dictionary = {
   published: string;
   rejected: string;
   sold: string;
+
+  // Added August 2026: strings that were hardcoded in the page components.
+  add: string;
+  admin: string;
+  permission: string;
+  role: string;
+  subCategory: string;
+  university: string;
+  legalAffair: string;
+  contactReason: string;
+  paymentMethod: string;
+  coupon: string;
+  total: string;
+  reviewed: string;
+  dismissed: string;
+  approved: string;
+  usedUp: string;
+  default: string;
+  deletedSuccessfully: string;
+  savedSuccessfully: string;
+  statusUpdatedSuccessfully: string;
+  adDeleted: string;
+  adOwner: string;
+  reporterExplanation: string;
+  reportedAd: string;
+  relatedAd: string;
+  openAd: string;
+  noMessagesInConversation: string;
+  welcomeToDashboard: string;
+  rememberMe: string;
+  forgotPassword: string;
+  profit: string;
+  order: string;
+  topic: string;
+  estimatedAudience: string;
+  firebase: string;
+  userId: string;
+  linkOptional: string;
+  history: string;
+  titleAndBodyRequired: string;
+  userIdRequiredForSingle: string;
+  newCoupon: string;
+  maxDiscountOptional: string;
+  minSpendOptional: string;
+  totalUsesHint: string;
+  startsAtOptional: string;
+  expiresAtOptional: string;
+  redemptions: string;
+  couponNotUsedYet: string;
+  managePlatformSettings: string;
+  loadingSettings: string;
+  noChangesToSave: string;
+  settingsUpdated: string;
+  noDomainsAdded: string;
+  stateHint: string;
+  domainHint: string;
+  universityNameRequired: string;
+  atLeastOneTranslation: string;
+  passwordRequired: string;
+  passwordConfirmationMismatch: string;
+  permissionNameRequired: string;
+  userVerificationDetails: string;
+  allRequests: string;
+  latestVerificationRequest: string;
+  noVerificationRequest: string;
+  allUserVerificationRequests: string;
+  operationsCity: string;
+  preferredContact: string;
+  offersSummary: string;
+  viewVerificationDetails: string;
+  deviceSessions: string;
+  favoriteAds: string;
+  userAds: string;
+  dashboards: string;
+  editCoupon: string;
+  couponOncePerUserNote: string;
+  deleteConfirmation: string;
+  deleteUniversityConfirmation: string;
+  actionFailed: string;
+  newPasswordOptional: string;
+  deleteAdConfirmation: string;
+  verificationRequest: string;
+  business: string;
+  service_provider: string;
+  organization_type: string;
+  website: string;
+  updatedSuccessfully: string;
+  createdSuccessfully: string;
+  passwordTooShort: string;
+  passwordConfirmationRequired: string;
+  roleRequired: string;
+  deleteAdminConfirmation: string;
+  view: string;
+  create: string;
+  update: string;
+  page: string;
+  rolePermissions: string;
+  noPermissionsAssigned: string;
+  roleNameRequired: string;
+  rolePermissionsRequired: string;
+  deleteRoleConfirmation: string;
+  permissionsSelected: string;
+  countryCodeRequired: string;
+  countryCodeLength: string;
+  nameRequiredAnyLanguage: string;
+  countryRequired: string;
+  cityCodeLength: string;
+  nameInLanguage: string;
+  currentImage: string;
+  noImage: string;
+  changeImage: string;
+  languageCodeRequired: string;
+  languageCodeLength: string;
+  titleRequired: string;
+  isActiveQuestion: string;
+  loginFailed: string;
+  nameArRequired: string;
+  nameEnRequired: string;
+  slugRequired: string;
+  imageRequired: string;
+  viewImage: string;
+  allUsers: string;
+  singleUser: string;
+  selectUser: string;
+  deletePaymentMethodConfirmation: string;
+  sending: string;
+  notificationSent: string;
+  firebaseNotConfigured: string;
+  searchUser: string;
+  noUsersFound: string;
+  nameRequired: string;
+  emailRequired: string;
+  emailInvalid: string;
+  paymentUnsettledShort: string;
+  menu: string;
+
+  // Priority + moderation labels (report review pages, user details, appeals).
+  priority: string;
+  allPriorities: string;
+  priorityNormal: string;
+  priorityUrgent: string;
+  priorityCritical: string;
+  moderationAction: string;
+  modWarning: string;
+  modTemporarySuspension: string;
+  modPermanentSuspension: string;
+  modReactivated: string;
+  modSuspensionExpired: string;
+  durationInDays: string;
+  decisionReason: string;
+  applyAction: string;
+  saving: string;
+  moderationActionRecorded: string;
+  warnings: string;
+  suspendedUntil: string;
+  moderationDecisionLog: string;
+  noModerationDecisions: string;
+  systemLabel: string;
+  untilLabel: string;
+  appealStatusPending: string;
+  appealStatusAccepted: string;
+  appealStatusRejected: string;
+  appealStatusAll: string;
+  decisionLabel: string;
+  appealLabel: string;
+  accept: string;
+  reject: string;
+  decisionRecorded: string;
+  unableToLoadAppeals: string;
+  unableToSaveDecision: string;
+  noAppealsFound: string;
 };
 
 const dictionaries: Record<Locale, Dictionary> = {
@@ -191,6 +427,8 @@ const dictionaries: Record<Locale, Dictionary> = {
     ads: 'Ads',
     adReports: 'Ad Reports',
     chatReports: 'Chat Reports',
+    userReports: 'User Reports',
+    moderationAppeals: 'Moderation Appeals',
     coupons: 'Coupons',
     userVerifications: 'User Verifications',
     admins: 'Admins',
@@ -206,12 +444,52 @@ const dictionaries: Record<Locale, Dictionary> = {
     categories: 'Categories',
     subCategories: 'Sub Categories',
     legalAffairs: 'Legal Affairs',
+    termsVersions: 'Terms Versions',
+    termsVersionsSubtitle: 'Publish terms and audit acceptance counts by version.',
+    publishNewTerms: 'Publish New Terms',
+    version: 'Version',
+    termsContent: 'Terms content',
+    newTermsWarning: 'Publishing makes this version current. Existing users must accept it separately.',
+    publish: 'Publish',
+    effectiveAt: 'Effective at',
+    acceptances: 'Acceptances',
+    current: 'Current',
+    previousVersion: 'Previous',
+    requiredFields: 'Version, English title, and English content are required.',
+    publishTermsConfirmation: 'Publish this as the new current terms version?',
+    termsPublished: 'New terms version published.',
+    accountDeletionRequests: 'Account Deletion Requests',
+    accountDeletionSubtitle: 'Review public, login-free requests and complete permanent deletion.',
+    completed: 'Completed',
+    completeDeletionWarning: 'This permanently deletes the matched account and cannot be undone. Continue?',
+    rejectDeletionConfirmation: 'Reject this account deletion request?',
+    resolutionNote: 'Resolution note (optional)',
+    requestResolved: 'Deletion request resolved.',
+    noReasonProvided: 'No reason provided.',
+    completePermanentDeletion: 'Complete permanent deletion',
+    noDeletionRequests: 'No account deletion requests found.',
+    featureRestrictions: 'Feature Restrictions',
+    posting: 'Posting',
+    messaging: 'Messaging',
+    restrictionReason: 'Restriction reason',
+    durationDaysOptional: 'Days (optional)',
+    applyRestriction: 'Apply restriction',
+    reasonRequired: 'A reason is required.',
+    featureRestrictionApplied: 'Feature restriction applied.',
+    liftRestrictionConfirmation: 'Lift this feature restriction?',
+    liftReason: 'Reason for lifting (optional)',
+    featureRestrictionLifted: 'Feature restriction lifted.',
+    lifted: 'Lifted',
+    restricted: 'Restricted',
+    liftRestriction: 'Lift restriction',
+    noFeatureRestrictions: 'No feature restrictions recorded.',
     contactReasons: 'Contact Reasons',
     contactUs: 'Contact Us',
     pushNotifications: 'Push Notifications',
     sendNotification: 'Send Notification',
-    sendToAll: 'All users (topic)',
+    sendToAll: 'All users',
     sendToUser: 'Single user',
+    sendToMarketing: 'Marketing-opted-in users',
     audience: 'Audience',
     notificationTitle: 'Title',
     notificationBody: 'Body',
@@ -253,6 +531,29 @@ const dictionaries: Record<Locale, Dictionary> = {
     code: 'Code',
     slug: 'Slug',
     sort: 'Sort',
+    listingFee: 'Listing fee (£)',
+    listingFeeStandard: 'Standard price',
+    paymentStatus: 'Payment status',
+    refund: 'Refund',
+    refundStatus: 'Refund status',
+    refundReason: 'Refund reason',
+    refundReasonPlaceholder: 'Why is this refund being issued?',
+    issueRefund: 'Issue refund',
+    declineRefund: 'Decline',
+    refunded: 'Refunded',
+    refundDeclined: 'Declined',
+    refundRequested: 'Requested',
+    refundRequests: 'Refund Requests',
+    manageInRefundRequests: 'Manage this from',
+    notRefunded: 'Not refunded',
+    confirmRefund: 'Confirm refund',
+    confirmDeclineRefund: 'Decline refund request',
+    refundConfirmation: 'This will refund the seller through Stripe and cannot be undone. Continue?',
+    declineRefundConfirmation: 'The seller will be told their refund request was declined, with this reason. Continue?',
+    refundIssued: 'Refund issued.',
+    refundDeclinedNotice: 'Refund request declined.',
+    noPaidPayment: 'This ad has no paid Stripe payment to refund.',
+    userNotifiedNote: 'The seller is notified automatically (push + in-app) as soon as you confirm.',
     state: 'State',
     section: 'Section',
     isDefault: 'Default',
@@ -360,17 +661,187 @@ const dictionaries: Record<Locale, Dictionary> = {
     published: 'Published',
     rejected: 'Rejected',
     sold: 'Sold',
+    add: "Add",
+    admin: "Admin",
+    permission: "Permission",
+    role: "Role",
+    subCategory: "Sub Category",
+    university: "University",
+    legalAffair: "Legal Affair",
+    contactReason: "Contact Reason",
+    paymentMethod: "Payment Method",
+    coupon: "Coupon",
+    total: "Total",
+    reviewed: "Reviewed",
+    dismissed: "Dismissed",
+    approved: "Approved",
+    usedUp: "Used up",
+    default: "Default",
+    deletedSuccessfully: "Deleted successfully.",
+    savedSuccessfully: "Saved successfully.",
+    statusUpdatedSuccessfully: "Status updated successfully.",
+    adDeleted: "Ad deleted",
+    adOwner: "Ad owner",
+    reporterExplanation: "Reporter's explanation",
+    reportedAd: "Reported ad",
+    relatedAd: "Related ad",
+    openAd: "Open ad",
+    noMessagesInConversation: "No messages in this conversation.",
+    welcomeToDashboard: "Welcome to Dashboard!",
+    rememberMe: "Remember Me",
+    forgotPassword: "Forgot Password?",
+    profit: "Profit",
+    order: "Order",
+    topic: "Topic",
+    estimatedAudience: "Estimated audience",
+    firebase: "Firebase",
+    userId: "User ID",
+    linkOptional: "Link (optional)",
+    history: "History",
+    titleAndBodyRequired: "Title and body are required.",
+    userIdRequiredForSingle: "User ID is required for single-user notifications.",
+    newCoupon: "New coupon",
+    maxDiscountOptional: "Max discount £ (optional)",
+    minSpendOptional: "Min spend £ (optional)",
+    totalUsesHint: "Total uses (blank = unlimited)",
+    startsAtOptional: "Starts at (optional)",
+    expiresAtOptional: "Expires at (optional)",
+    redemptions: "Redemptions",
+    couponNotUsedYet: "This coupon has not been used yet.",
+    managePlatformSettings: "Manage platform settings and contact info.",
+    loadingSettings: "Loading settings...",
+    noChangesToSave: "No changes to save.",
+    settingsUpdated: "Settings updated successfully.",
+    noDomainsAdded: "No domains added yet.",
+    stateHint: "State (e.g. CA)",
+    domainHint: "e.g. harvard.edu",
+    universityNameRequired: "University name is required.",
+    atLeastOneTranslation: "At least one translation is required.",
+    passwordRequired: "Password is required.",
+    passwordConfirmationMismatch: "Password confirmation does not match.",
+    permissionNameRequired: "Permission name is required.",
+    userVerificationDetails: "User Verification Details",
+    allRequests: "All Requests",
+    latestVerificationRequest: "Latest Verification Request",
+    noVerificationRequest: "No verification request found for this user.",
+    allUserVerificationRequests: "All User Verification Requests",
+    operationsCity: "Operations City",
+    preferredContact: "Preferred Contact",
+    offersSummary: "Offers Summary",
+    viewVerificationDetails: "View verification details",
+    deviceSessions: "Device sessions",
+    favoriteAds: "Favorite ads",
+    userAds: "User Ads",
+    dashboards: "Dashboards",
+    editCoupon: "Edit coupon",
+    couponOncePerUserNote: "Every coupon can be used only once per user — that limit is enforced automatically.",
+    deleteConfirmation: "This item will be permanently deleted. Continue?",
+    deleteUniversityConfirmation: "This university and its domains will be permanently deleted. Continue?",
+    actionFailed: "The action could not be completed.",
+    newPasswordOptional: "New password (optional)",
+    deleteAdConfirmation: "This ad will be permanently deleted. Continue?",
+    verificationRequest: "Verification Request",
+    business: "Business",
+    service_provider: "Service provider",
+    organization_type: "Organization",
+    website: "Website",
+    updatedSuccessfully: "Updated successfully.",
+    createdSuccessfully: "Created successfully.",
+    passwordTooShort: "Password must be at least {min} characters.",
+    passwordConfirmationRequired: "Please confirm the password.",
+    roleRequired: "Please select a role for this admin.",
+    deleteAdminConfirmation: "This admin will be permanently deleted. Continue?",
+    view: "View",
+    create: "Create",
+    update: "Update",
+    page: "Page",
+    rolePermissions: "Role permissions",
+    noPermissionsAssigned: "No permissions assigned.",
+    roleNameRequired: "Please enter the role name.",
+    rolePermissionsRequired: "Please select at least one permission.",
+    deleteRoleConfirmation: "This role will be permanently deleted. Continue?",
+    permissionsSelected: "selected",
+    countryCodeRequired: "Country code is required.",
+    countryCodeLength: "Country code must be exactly 2 letters.",
+    nameRequiredAnyLanguage: "Enter the name in at least one language.",
+    countryRequired: "Please select a country.",
+    cityCodeLength: "City code must not exceed 50 characters.",
+    nameInLanguage: "Name",
+    currentImage: "Current image",
+    noImage: "No image",
+    changeImage: "Change image",
+    languageCodeRequired: "Language code is required.",
+    languageCodeLength: "Language code must not exceed {max} characters.",
+    titleRequired: "Title is required.",
+    isActiveQuestion: "Activation status",
+    loginFailed: "Login failed",
+    nameArRequired: "The Arabic name is required.",
+    nameEnRequired: "The English name is required.",
+    slugRequired: "The slug is required.",
+    imageRequired: "An image is required.",
+    viewImage: "View image",
+    allUsers: "All users",
+    singleUser: "A single user",
+    selectUser: "Select a user",
+    deletePaymentMethodConfirmation: "This payment method will be permanently deleted. Continue?",
+    sending: "Sending...",
+    notificationSent: "Notification sent.",
+    firebaseNotConfigured: "Push notifications are disabled: Firebase is not configured on the server.",
+    searchUser: "Search by name or email",
+    noUsersFound: "No users found",
+    nameRequired: "The name is required.",
+    emailRequired: "The email address is required.",
+    emailInvalid: "Enter a valid email address, for example name@example.com",
+    paymentUnsettledShort: "fee unpaid",
+    menu: "Menu",
+
+    priority: "Priority",
+    allPriorities: "All priorities",
+    priorityNormal: "Normal",
+    priorityUrgent: "Urgent",
+    priorityCritical: "Critical",
+    moderationAction: "Moderation action",
+    modWarning: "Warning",
+    modTemporarySuspension: "Temporary suspension",
+    modPermanentSuspension: "Permanent suspension",
+    modReactivated: "Reactivate",
+    modSuspensionExpired: "Suspension expired",
+    durationInDays: "Duration in days",
+    decisionReason: "Decision reason",
+    applyAction: "Apply action",
+    saving: "Saving…",
+    moderationActionRecorded: "Moderation action recorded.",
+    warnings: "Warnings",
+    suspendedUntil: "Suspended until",
+    moderationDecisionLog: "Moderation Decision Log",
+    noModerationDecisions: "No moderation decisions recorded",
+    systemLabel: "System",
+    untilLabel: "until",
+    appealStatusPending: "Pending",
+    appealStatusAccepted: "Accepted",
+    appealStatusRejected: "Rejected",
+    appealStatusAll: "All",
+    decisionLabel: "Decision",
+    appealLabel: "Appeal",
+    accept: "Accept",
+    reject: "Reject",
+    decisionRecorded: "Decision recorded.",
+    unableToLoadAppeals: "Unable to load appeals.",
+    unableToSaveDecision: "Unable to save decision.",
+    noAppealsFound: "No appeals found",
   },
   ar: {
-       appName: 'لوحة يونيتل',
+    appName: 'لوحة يونيتل',
     dashboard: 'لوحة التحكم',
-    users: 'المستخدمون',
+    users: 'المستخدمين',
     ads: 'الإعلانات',
     adReports: 'بلاغات الإعلانات',
     chatReports: 'بلاغات المحادثات',
+    userReports: 'بلاغات المستخدمين',
+    moderationAppeals: 'استئنافات الإشراف',
     coupons: 'الكوبونات',
     userVerifications: 'طلبات التوثيق',
-    admins: 'المدراء',
+    admins: 'المديرين',
     roles: 'الأدوار',
     permissions: 'الصلاحيات',
     profile: 'الملف الشخصي',
@@ -383,12 +854,52 @@ const dictionaries: Record<Locale, Dictionary> = {
     categories: 'الأقسام',
     subCategories: 'الأقسام الفرعية',
     legalAffairs: 'الشؤون القانونية',
+    termsVersions: 'إصدارات الشروط',
+    termsVersionsSubtitle: 'نشر الشروط ومراجعة عدد الموافقات لكل إصدار.',
+    publishNewTerms: 'نشر شروط جديدة',
+    version: 'الإصدار',
+    termsContent: 'نص الشروط',
+    newTermsWarning: 'سيصبح هذا الإصدار هو الحالي، ويجب على المستخدمين الحاليين قبوله بشكل مستقل.',
+    publish: 'نشر',
+    effectiveAt: 'تاريخ السريان',
+    acceptances: 'الموافقات',
+    current: 'الحالي',
+    previousVersion: 'سابق',
+    requiredFields: 'الإصدار والعنوان والنص الإنجليزي مطلوبة.',
+    publishTermsConfirmation: 'هل تريد نشر هذا الإصدار باعتباره الشروط الحالية؟',
+    termsPublished: 'تم نشر إصدار الشروط الجديد.',
+    accountDeletionRequests: 'طلبات حذف الحساب',
+    accountDeletionSubtitle: 'مراجعة الطلبات العامة وإتمام الحذف الدائم دون تسجيل دخول.',
+    completed: 'مكتمل',
+    completeDeletionWarning: 'سيؤدي ذلك إلى حذف الحساب المطابق نهائياً ولا يمكن التراجع عنه. هل تريد المتابعة؟',
+    rejectDeletionConfirmation: 'هل تريد رفض طلب حذف الحساب؟',
+    resolutionNote: 'ملاحظة المعالجة (اختياري)',
+    requestResolved: 'تمت معالجة طلب الحذف.',
+    noReasonProvided: 'لم يتم تقديم سبب.',
+    completePermanentDeletion: 'إتمام الحذف الدائم',
+    noDeletionRequests: 'لا توجد طلبات حذف حساب.',
+    featureRestrictions: 'قيود الميزات',
+    posting: 'النشر',
+    messaging: 'المراسلة',
+    restrictionReason: 'سبب التقييد',
+    durationDaysOptional: 'الأيام (اختياري)',
+    applyRestriction: 'تطبيق التقييد',
+    reasonRequired: 'السبب مطلوب.',
+    featureRestrictionApplied: 'تم تطبيق قيد الميزة.',
+    liftRestrictionConfirmation: 'هل تريد رفع هذا التقييد؟',
+    liftReason: 'سبب الرفع (اختياري)',
+    featureRestrictionLifted: 'تم رفع قيد الميزة.',
+    lifted: 'مرفوع',
+    restricted: 'مقيّد',
+    liftRestriction: 'رفع التقييد',
+    noFeatureRestrictions: 'لا توجد قيود ميزات مسجلة.',
     contactReasons: 'أسباب التواصل',
     contactUs: 'اتصل بنا',
     pushNotifications: 'الإشعارات',
     sendNotification: 'إرسال إشعار',
-    sendToAll: 'جميع المستخدمين (Topic)',
+    sendToAll: 'جميع المستخدمين',
     sendToUser: 'مستخدم واحد',
+    sendToMarketing: 'المستخدمون الموافقون على التسويق',
     audience: 'الفئة المستهدفة',
     notificationTitle: 'العنوان',
     notificationBody: 'النص',
@@ -430,6 +941,29 @@ const dictionaries: Record<Locale, Dictionary> = {
     code: 'الرمز',
     slug: 'المعرّف النصي',
     sort: 'الترتيب',
+    listingFee: 'سعر الإعلان (£)',
+    listingFeeStandard: 'السعر القياسي',
+    paymentStatus: 'حالة الدفع',
+    refund: 'استرداد',
+    refundStatus: 'حالة الاسترداد',
+    refundReason: 'سبب الاسترداد',
+    refundReasonPlaceholder: 'ما سبب إصدار هذا الاسترداد؟',
+    issueRefund: 'إصدار استرداد',
+    declineRefund: 'رفض',
+    refunded: 'تم الاسترداد',
+    refundDeclined: 'مرفوض',
+    refundRequested: 'مطلوب',
+    refundRequests: 'طلبات الاسترداد',
+    manageInRefundRequests: 'يمكنك إدارة هذا من صفحة',
+    notRefunded: 'لم يتم الاسترداد',
+    confirmRefund: 'تأكيد الاسترداد',
+    confirmDeclineRefund: 'رفض طلب الاسترداد',
+    refundConfirmation: 'سيتم استرداد المبلغ للبائع عبر Stripe ولا يمكن التراجع عن هذا الإجراء. هل تريد المتابعة؟',
+    declineRefundConfirmation: 'سيتم إبلاغ البائع برفض طلب الاسترداد مع هذا السبب. هل تريد المتابعة؟',
+    refundIssued: 'تم إصدار الاسترداد.',
+    refundDeclinedNotice: 'تم رفض طلب الاسترداد.',
+    noPaidPayment: 'لا يوجد دفع مسدد عبر Stripe لهذا الإعلان لاستراده.',
+    userNotifiedNote: 'سيتم إشعار البائع تلقائياً (إشعار فوري وداخل التطبيق) فور التأكيد.',
     state: 'الحالة',
     section: 'القسم',
     isDefault: 'افتراضي',
@@ -537,6 +1071,174 @@ const dictionaries: Record<Locale, Dictionary> = {
     published: 'منشور',
     rejected: 'مرفوض',
     sold: 'مباع',
+    add: "إضافة",
+    admin: "مدير",
+    permission: "صلاحية",
+    role: "دور",
+    subCategory: "قسم فرعي",
+    university: "جامعة",
+    legalAffair: "شأن قانوني",
+    contactReason: "سبب تواصل",
+    paymentMethod: "طريقة دفع",
+    coupon: "كوبون",
+    total: "الإجمالي",
+    reviewed: "تمت المراجعة",
+    dismissed: "مرفوض",
+    approved: "مقبول",
+    usedUp: "مستنفد",
+    default: "افتراضي",
+    deletedSuccessfully: "تم الحذف بنجاح.",
+    savedSuccessfully: "تم الحفظ بنجاح.",
+    statusUpdatedSuccessfully: "تم تحديث الحالة بنجاح.",
+    adDeleted: "تم حذف الإعلان",
+    adOwner: "صاحب الإعلان",
+    reporterExplanation: "شرح المُبلِّغ",
+    reportedAd: "الإعلان المُبلَّغ عنه",
+    relatedAd: "الإعلان المرتبط",
+    openAd: "فتح الإعلان",
+    noMessagesInConversation: "لا توجد رسائل في هذه المحادثة.",
+    welcomeToDashboard: "مرحباً بك في لوحة التحكم!",
+    rememberMe: "تذكرني",
+    forgotPassword: "نسيت كلمة المرور؟",
+    profit: "الأرباح",
+    order: "الطلبات",
+    topic: "الموضوع",
+    estimatedAudience: "الجمهور المتوقع",
+    firebase: "Firebase",
+    userId: "معرّف المستخدم",
+    linkOptional: "الرابط (اختياري)",
+    history: "السجل",
+    titleAndBodyRequired: "العنوان والنص مطلوبان.",
+    userIdRequiredForSingle: "معرّف المستخدم مطلوب لإشعار مستخدم واحد.",
+    newCoupon: "كوبون جديد",
+    maxDiscountOptional: "أقصى خصم £ (اختياري)",
+    minSpendOptional: "أقل قيمة شراء £ (اختياري)",
+    totalUsesHint: "إجمالي الاستخدامات (فارغ = غير محدود)",
+    startsAtOptional: "يبدأ في (اختياري)",
+    expiresAtOptional: "ينتهي في (اختياري)",
+    redemptions: "مرات الاستخدام",
+    couponNotUsedYet: "لم يُستخدم هذا الكوبون بعد.",
+    managePlatformSettings: "إدارة إعدادات المنصة وبيانات التواصل.",
+    loadingSettings: "جارٍ تحميل الإعدادات...",
+    noChangesToSave: "لا توجد تغييرات للحفظ.",
+    settingsUpdated: "تم تحديث الإعدادات بنجاح.",
+    noDomainsAdded: "لم تتم إضافة نطاقات بعد.",
+    stateHint: "الولاية (مثال: CA)",
+    domainHint: "مثال: harvard.edu",
+    universityNameRequired: "اسم الجامعة مطلوب.",
+    atLeastOneTranslation: "مطلوب ترجمة واحدة على الأقل.",
+    passwordRequired: "كلمة المرور مطلوبة.",
+    passwordConfirmationMismatch: "تأكيد كلمة المرور غير مطابق.",
+    permissionNameRequired: "اسم الصلاحية مطلوب.",
+    userVerificationDetails: "تفاصيل طلب التوثيق",
+    allRequests: "كل الطلبات",
+    latestVerificationRequest: "أحدث طلب توثيق",
+    noVerificationRequest: "لا يوجد طلب توثيق لهذا المستخدم.",
+    allUserVerificationRequests: "كل طلبات التوثيق",
+    operationsCity: "مدينة العمل",
+    preferredContact: "وسيلة التواصل المفضلة",
+    offersSummary: "ملخص العروض",
+    viewVerificationDetails: "عرض تفاصيل التوثيق",
+    deviceSessions: "جلسات الأجهزة",
+    favoriteAds: "الإعلانات المفضلة",
+    userAds: "إعلانات المستخدم",
+    dashboards: "لوحات التحكم",
+    editCoupon: "تعديل الكوبون",
+    couponOncePerUserNote: "يمكن استخدام كل كوبون مرة واحدة فقط لكل مستخدم — يُطبَّق هذا الحد تلقائياً.",
+    deleteConfirmation: "سيتم حذف هذا العنصر نهائياً. هل تريد المتابعة؟",
+    deleteUniversityConfirmation: "سيتم حذف هذه الجامعة ونطاقاتها نهائياً. هل تريد المتابعة؟",
+    actionFailed: "تعذّر إتمام العملية.",
+    newPasswordOptional: "كلمة مرور جديدة (اختياري)",
+    deleteAdConfirmation: "سيتم حذف هذا الإعلان نهائياً. هل تريد المتابعة؟",
+    verificationRequest: "طلب توثيق",
+    business: "شركة",
+    service_provider: "مقدّم خدمة",
+    organization_type: "مؤسسة",
+    website: "موقع إلكتروني",
+    updatedSuccessfully: "تم التحديث بنجاح.",
+    createdSuccessfully: "تم الإنشاء بنجاح.",
+    passwordTooShort: "يجب ألا تقل كلمة المرور عن {min} أحرف.",
+    passwordConfirmationRequired: "يرجى تأكيد كلمة المرور.",
+    roleRequired: "يرجى اختيار دور لهذا المشرف.",
+    deleteAdminConfirmation: "سيتم حذف هذا المشرف نهائياً. هل تريد المتابعة؟",
+    view: "عرض",
+    create: "إنشاء",
+    update: "تعديل",
+    page: "الصفحة",
+    rolePermissions: "صلاحيات الدور",
+    noPermissionsAssigned: "لا توجد صلاحيات مسندة.",
+    roleNameRequired: "يرجى إدخال اسم الدور.",
+    rolePermissionsRequired: "يرجى اختيار صلاحية واحدة على الأقل.",
+    deleteRoleConfirmation: "سيتم حذف هذا الدور نهائياً. هل تريد المتابعة؟",
+    permissionsSelected: "محددة",
+    countryCodeRequired: "رمز الدولة مطلوب.",
+    countryCodeLength: "يجب أن يتكون رمز الدولة من حرفين بالضبط.",
+    nameRequiredAnyLanguage: "أدخل الاسم بلغة واحدة على الأقل.",
+    countryRequired: "يرجى اختيار الدولة.",
+    cityCodeLength: "يجب ألا يتجاوز رمز المدينة 50 حرفاً.",
+    nameInLanguage: "الاسم",
+    currentImage: "الصورة الحالية",
+    noImage: "لا توجد صورة",
+    changeImage: "تغيير الصورة",
+    languageCodeRequired: "رمز اللغة مطلوب.",
+    languageCodeLength: "يجب ألا يتجاوز رمز اللغة {max} أحرف.",
+    titleRequired: "العنوان مطلوب.",
+    isActiveQuestion: "حالة التفعيل",
+    loginFailed: "فشل تسجيل الدخول",
+    nameArRequired: "الاسم بالعربية مطلوب.",
+    nameEnRequired: "الاسم بالإنجليزية مطلوب.",
+    slugRequired: "المُعرّف (slug) مطلوب.",
+    imageRequired: "الصورة مطلوبة.",
+    viewImage: "عرض الصورة",
+    allUsers: "جميع المستخدمين",
+    singleUser: "مستخدم واحد",
+    selectUser: "اختر المستخدم",
+    deletePaymentMethodConfirmation: "سيتم حذف طريقة الدفع هذه نهائياً. هل تريد المتابعة؟",
+    sending: "جارٍ الإرسال...",
+    notificationSent: "تم إرسال الإشعار.",
+    firebaseNotConfigured: "الإشعارات معطّلة: لم يتم إعداد Firebase على الخادم.",
+    searchUser: "ابحث بالاسم أو البريد الإلكتروني",
+    noUsersFound: "لا يوجد مستخدمون",
+    nameRequired: "الاسم مطلوب.",
+    emailRequired: "البريد الإلكتروني مطلوب.",
+    emailInvalid: "أدخل بريداً إلكترونياً صحيحاً، مثال: name@example.com",
+    paymentUnsettledShort: "الرسوم غير مدفوعة",
+    menu: "القائمة",
+
+    priority: "الأولوية",
+    allPriorities: "كل الأولويات",
+    priorityNormal: "عادية",
+    priorityUrgent: "عاجلة",
+    priorityCritical: "حرجة",
+    moderationAction: "إجراء الإشراف",
+    modWarning: "تحذير",
+    modTemporarySuspension: "إيقاف مؤقت",
+    modPermanentSuspension: "إيقاف دائم",
+    modReactivated: "إعادة تفعيل",
+    modSuspensionExpired: "انتهاء مدة الإيقاف",
+    durationInDays: "المدة بالأيام",
+    decisionReason: "سبب القرار",
+    applyAction: "تطبيق الإجراء",
+    saving: "جارٍ الحفظ...",
+    moderationActionRecorded: "تم تسجيل إجراء الإشراف.",
+    warnings: "عدد التحذيرات",
+    suspendedUntil: "موقوف حتى",
+    moderationDecisionLog: "سجل قرارات الإشراف",
+    noModerationDecisions: "لا توجد قرارات مسجلة",
+    systemLabel: "النظام",
+    untilLabel: "حتى",
+    appealStatusPending: "قيد الانتظار",
+    appealStatusAccepted: "مقبول",
+    appealStatusRejected: "مرفوض",
+    appealStatusAll: "الكل",
+    decisionLabel: "القرار",
+    appealLabel: "الاستئناف",
+    accept: "قبول",
+    reject: "رفض",
+    decisionRecorded: "تم تسجيل القرار.",
+    unableToLoadAppeals: "تعذّر تحميل الاستئنافات.",
+    unableToSaveDecision: "تعذّر حفظ القرار.",
+    noAppealsFound: "لا توجد استئنافات",
   },
 };
 

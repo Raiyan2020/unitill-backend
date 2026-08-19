@@ -11,7 +11,7 @@ import { useI18n } from '../providers/i18n-provider';
 
 type HistoryRow = {
   id: number;
-  audience: 'all' | 'user';
+  audience: 'all' | 'user' | 'marketing';
   topic: string | null;
   title: string;
   body: string;
@@ -28,8 +28,12 @@ type HistoryRow = {
 type Meta = {
   all_users_topic: string;
   estimated_all_audience: number;
+  marketing_topic: string;
+  estimated_marketing_audience: number;
   firebase_configured: boolean;
 };
+
+type UserOption = { id: number; name: string | null; email: string | null };
 
 type PaginatedResponse<T> = { data: T[]; total: number };
 
@@ -44,8 +48,10 @@ export function PushNotificationsPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
-  const [audience, setAudience] = useState<'all' | 'user'>('all');
+  const [audience, setAudience] = useState<'all' | 'user' | 'marketing'>('all');
   const [userId, setUserId] = useState('');
+  const [users, setUsers] = useState<UserOption[]>([]);
+  const [userSearch, setUserSearch] = useState('');
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [link, setLink] = useState('');
@@ -54,9 +60,9 @@ export function PushNotificationsPage() {
   const fetchMeta = async () => {
     try {
       const res = await api.get('/admin/push-notifications/meta');
-      setMeta(ensureApiSuccess<Meta>(res, 'Failed to load notification meta'));
+      setMeta(ensureApiSuccess<Meta>(res, t.actionFailed));
     } catch (error) {
-      notify.errorFrom(error, 'Failed to load notification meta.');
+      notify.errorFrom(error, t.actionFailed);
     }
   };
 
@@ -66,11 +72,11 @@ export function PushNotificationsPage() {
       const res = await api.get('/admin/push-notifications', {
         params: { page, per_page: pageSize, search: search || undefined },
       });
-      const payload = ensureApiSuccess<PaginatedResponse<HistoryRow>>(res, 'Failed to load notifications');
+      const payload = ensureApiSuccess<PaginatedResponse<HistoryRow>>(res, t.actionFailed);
       setRows(payload?.data || []);
       setTotal(payload?.total || 0);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to load notifications.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setLoading(false);
     }
@@ -96,13 +102,31 @@ export function PushNotificationsPage() {
     return () => clearTimeout(timer);
   }, [search]);
 
+  const fetchUsers = async (term: string) => {
+    try {
+      const res = await api.get('/admin/users', { params: { per_page: 100, search: term || undefined } });
+      const payload = ensureApiSuccess<PaginatedResponse<UserOption>>(res, t.actionFailed);
+      setUsers(payload?.data || []);
+    } catch {
+      // Non-fatal: the picker just stays empty.
+      setUsers([]);
+    }
+  };
+
+  useEffect(() => {
+    if (audience !== 'user') return;
+    const timer = setTimeout(() => fetchUsers(userSearch), 350);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [audience, userSearch]);
+
   const handleSend = async () => {
     if (!title.trim() || !body.trim()) {
-      notify.error('Title and body are required.');
+      notify.error(t.titleAndBodyRequired);
       return;
     }
     if (audience === 'user' && !userId.trim()) {
-      notify.error('User ID is required for single-user notifications.');
+      notify.error(t.userIdRequiredForSingle);
       return;
     }
 
@@ -115,8 +139,8 @@ export function PushNotificationsPage() {
         body: body.trim(),
         link: link.trim() || undefined,
       });
-      ensureApiSuccess(res, 'Failed to send notification');
-      notify.success(audience === 'all' ? 'Notification sent to all users.' : 'Notification sent to user.');
+      ensureApiSuccess(res, t.actionFailed);
+      notify.success(t.notificationSent);
       setTitle('');
       setBody('');
       setLink('');
@@ -124,7 +148,7 @@ export function PushNotificationsPage() {
       fetchRows();
       fetchMeta();
     } catch (error) {
-      notify.errorFrom(error, 'Failed to send notification.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setSending(false);
     }
@@ -148,9 +172,18 @@ export function PushNotificationsPage() {
         <CardContent className="space-y-4">
           {meta ? (
             <div className="rounded-lg border border-[#ececf3] bg-[#fafafe] p-3 text-sm dark:border-[#44485f] dark:bg-[#383d56]">
-              <p><strong>Topic:</strong> {meta.all_users_topic}</p>
-              <p><strong>Estimated audience:</strong> {meta.estimated_all_audience}</p>
-              <p><strong>Firebase:</strong> {meta.firebase_configured ? 'Configured' : 'Not configured'}</p>
+              {audience === 'marketing' ? (
+                <>
+                  <p><strong>{t.topic}:</strong> {meta.marketing_topic}</p>
+                  <p><strong>{t.estimatedAudience}:</strong> {meta.estimated_marketing_audience}</p>
+                </>
+              ) : (
+                <>
+                  <p><strong>{t.topic}:</strong> {meta.all_users_topic}</p>
+                  <p><strong>{t.estimatedAudience}:</strong> {meta.estimated_all_audience}</p>
+                </>
+              )}
+              <p><strong>{t.firebase}:</strong> {meta.firebase_configured ? t.yes : t.no}</p>
             </div>
           ) : null}
 
@@ -159,18 +192,35 @@ export function PushNotificationsPage() {
               <span className="font-medium">{t.audience}</span>
               <select
                 value={audience}
-                onChange={(e) => setAudience(e.target.value as 'all' | 'user')}
+                onChange={(e) => setAudience(e.target.value as 'all' | 'user' | 'marketing')}
                 className="h-10 w-full rounded-lg border border-[#dbdbe8] bg-white px-3 dark:border-[#4a4f68] dark:bg-[#2f3349]"
               >
                 <option value="all">{t.sendToAll}</option>
                 <option value="user">{t.sendToUser}</option>
+                <option value="marketing">{t.sendToMarketing}</option>
               </select>
             </label>
 
             {audience === 'user' ? (
               <label className="space-y-2 text-sm">
-                <span className="font-medium">User ID</span>
-                <Input value={userId} onChange={(e) => setUserId(e.target.value)} placeholder="42" />
+                <span className="font-medium">{t.user}</span>
+                <Input
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                  placeholder={t.searchUser}
+                />
+                <select
+                  value={userId}
+                  onChange={(e) => setUserId(e.target.value)}
+                  className="h-10 w-full rounded-lg border border-[#dbdbe8] bg-white px-3 dark:border-[#4a4f68] dark:bg-[#2f3349]"
+                >
+                  <option value="">{users.length ? t.selectUser : t.noUsersFound}</option>
+                  {users.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {[user.name, user.email].filter(Boolean).join(' — ') || `#${user.id}`}
+                    </option>
+                  ))}
+                </select>
               </label>
             ) : null}
           </div>
@@ -192,13 +242,19 @@ export function PushNotificationsPage() {
           </label>
 
           <label className="block space-y-2 text-sm">
-            <span className="font-medium">Link (optional)</span>
-            <Input value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://..." />
+            <span className="font-medium">{t.linkOptional}</span>
+            <Input value={link} onChange={(e) => setLink(e.target.value)} placeholder={t.linkOptional} />
           </label>
+
+          {meta?.firebase_configured === false ? (
+            <p className="rounded-lg border border-amber-300/70 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:border-amber-500/40 dark:text-amber-300">
+              {t.firebaseNotConfigured}
+            </p>
+          ) : null}
 
           <Button onClick={handleSend} disabled={sending || meta?.firebase_configured === false}>
             <Bell size={16} className="me-2" />
-            {sending ? 'Sending...' : t.sendNotification}
+            {sending ? t.sending : t.sendNotification}
           </Button>
         </CardContent>
       </Card>
@@ -206,7 +262,7 @@ export function PushNotificationsPage() {
       <Card>
         <CardContent className="p-0">
           <div className="flex items-center justify-between gap-3 border-b border-[#ececf3] p-4 dark:border-[#44485f]">
-            <h3 className="font-semibold">History</h3>
+            <h3 className="font-semibold">{t.history}</h3>
             <div className="flex items-center gap-2">
               <select
                 value={pageSize}
@@ -240,7 +296,7 @@ export function PushNotificationsPage() {
                   rows.map((row) => (
                     <tr key={row.id} className="border-t border-[#ececf3] dark:border-[#44485f]">
                       <td className="px-4 py-3">{row.id}</td>
-                      <td className="px-4 py-3">{row.audience === 'all' ? `Topic: ${row.topic || '-'}` : 'User'}</td>
+                      <td className="px-4 py-3">{row.audience === 'user' ? t.user : `${t.topic}: ${row.topic || '-'}`}</td>
                       <td className="px-4 py-3">{row.title}</td>
                       <td className="px-4 py-3">{row.user_name ? `${row.user_name} (#${row.user_id})` : '-'}</td>
                       <td className="px-4 py-3">{row.status}</td>

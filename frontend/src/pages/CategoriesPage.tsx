@@ -5,8 +5,9 @@ import { TableFooter, TableLoadingRow } from '../components/table/TableHelpers';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
-import { api } from '../lib/api';
+import { api, backendOrigin } from '../lib/api';
 import { ensureApiSuccess } from '../lib/api-response';
+import { digitsOnly, toInteger } from '../lib/form';
 import { useNotify } from '../lib/notify';
 import { useI18n } from '../providers/i18n-provider';
 
@@ -18,9 +19,15 @@ type Row = {
   sort: number;
   image: string | null;
   image_url: string | null;
+  listing_fee: number | null;
   translations: Record<string, string>;
 };
 type PaginatedResponse<T> = { data: T[]; total: number };
+
+/** Best available name for a row, for modal titles. */
+function categoryName(row: Row): string {
+  return row.translations?.en || Object.values(row.translations || {}).find(Boolean) || `#${row.id}`;
+}
 
 export function CategoriesPage() {
   const { t } = useI18n();
@@ -38,18 +45,18 @@ export function CategoriesPage() {
   const [deleting, setDeleting] = useState<Row | null>(null);
   const [saving, setSaving] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [form, setForm] = useState({ status: 'active', sort: '0', translations: {} as Record<string, string> });
+  const [form, setForm] = useState({ status: 'active', sort: '0', listingFee: '', translations: {} as Record<string, string> });
   const didInitSearch = useRef(false);
 
   const fetchRows = async () => {
     setLoading(true);
     try {
       const res = await api.get('/admin/categories', { params: { page, per_page: pageSize, search: search || undefined } });
-      const payload = ensureApiSuccess<PaginatedResponse<Row>>(res, 'Failed to load categories');
+      const payload = ensureApiSuccess<PaginatedResponse<Row>>(res, t.actionFailed);
       setRows(payload?.data || []);
       setTotal(payload?.total || 0);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to load categories.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setLoading(false);
     }
@@ -57,7 +64,7 @@ export function CategoriesPage() {
 
   const fetchLanguages = async () => {
     const res = await api.get('/admin/languages', { params: { per_page: 100 } });
-    const payload = ensureApiSuccess<PaginatedResponse<LanguageRow>>(res, 'Failed to load languages');
+    const payload = ensureApiSuccess<PaginatedResponse<LanguageRow>>(res, t.actionFailed);
     setLanguages(payload?.data || []);
   };
 
@@ -87,7 +94,7 @@ export function CategoriesPage() {
   const openCreate = () => {
     setEditing(null);
     setImageFile(null);
-    setForm({ status: 'active', sort: '0', translations: emptyTranslations() });
+    setForm({ status: 'active', sort: '0', listingFee: '', translations: emptyTranslations() });
     setFormOpen(true);
   };
 
@@ -96,31 +103,37 @@ export function CategoriesPage() {
     languages.forEach((l) => { mapped[l.code] = row.translations?.[l.code] || ''; });
     setEditing(row);
     setImageFile(null);
-    setForm({ status: row.status, sort: String(row.sort || 0), translations: mapped });
+    setForm({ status: row.status, sort: String(row.sort || 0), listingFee: row.listing_fee !== null ? String(row.listing_fee) : '', translations: mapped });
     setFormOpen(true);
   };
 
   const save = async () => {
+    if (!Object.values(form.translations).some((value) => value.trim())) {
+      notify.error(t.nameRequiredAnyLanguage);
+      return;
+    }
+
     setSaving(true);
     try {
       const payload = new FormData();
       payload.append('status', form.status);
-      payload.append('sort', String(Number(form.sort || 0)));
+      payload.append('sort', String(toInteger(form.sort)));
+      payload.append('listing_fee', form.listingFee.trim());
       Object.entries(form.translations).forEach(([code, value]) => payload.append(`translations[${code}]`, value));
       if (imageFile) payload.append('image', imageFile);
 
       if (editing) {
         const res = await api.post(`/admin/categories/${editing.id}?_method=PUT`, payload);
-        ensureApiSuccess(res, 'Failed to update category');
+        ensureApiSuccess(res, t.actionFailed);
       } else {
         const res = await api.post('/admin/categories', payload);
-        ensureApiSuccess(res, 'Failed to create category');
+        ensureApiSuccess(res, t.actionFailed);
       }
       setFormOpen(false);
       await fetchRows();
-      notify.success(editing ? 'Category updated successfully.' : 'Category created successfully.');
+      notify.success(editing ? t.updatedSuccessfully : t.createdSuccessfully);
     } catch (error) {
-      notify.errorFrom(error, editing ? 'Failed to update category.' : 'Failed to create category.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setSaving(false);
     }
@@ -131,20 +144,18 @@ export function CategoriesPage() {
     setSaving(true);
     try {
       const res = await api.delete(`/admin/categories/${deleting.id}`);
-      ensureApiSuccess(res, 'Failed to delete category');
+      ensureApiSuccess(res, t.actionFailed);
       setDeleting(null);
       await fetchRows();
-      notify.success('Category deleted successfully.');
+      notify.success(t.deletedSuccessfully);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to delete category.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setSaving(false);
     }
   };
 
   const pagesCount = Math.max(1, Math.ceil(total / pageSize));
-  const backendOrigin = (import.meta.env.VITE_BACKEND_ORIGIN as string | undefined) || 'http://127.0.0.1:8000';
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
@@ -154,7 +165,7 @@ export function CategoriesPage() {
             {[10, 25, 50, 100].map((size) => <option key={size} value={size}>{size}</option>)}
           </select>
           <Input className="h-9 w-[220px]" placeholder={t.search} value={search} onChange={(e) => setSearch(e.target.value)} />
-          <Button size="sm" onClick={openCreate}>+ Add Category</Button>
+          <Button size="sm" onClick={openCreate}>+ {t.add} {t.category}</Button>
         </div>
       </div>
 
@@ -169,14 +180,15 @@ export function CategoriesPage() {
                   <th className="px-4 py-3 text-start">{t.name}</th>
                   <th className="px-4 py-3 text-start">{t.status}</th>
                   <th className="px-4 py-3 text-start">{t.sort}</th>
+                  <th className="px-4 py-3 text-start">{t.listingFee}</th>
                   <th className="px-4 py-3 text-start">{t.actions}</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <TableLoadingRow colSpan={6} />
+                  <TableLoadingRow colSpan={7} />
                 ) : rows.length === 0 ? (
-                  <tr><td className="px-4 py-6 text-center text-sm text-[#8a8da8]" colSpan={6}>{t.noDataFound}</td></tr>
+                  <tr><td className="px-4 py-6 text-center text-sm text-[#8a8da8]" colSpan={7}>{t.noDataFound}</td></tr>
                 ) : rows.map((row) => (
                   <tr key={row.id} className="border-t border-[#ececf3] dark:border-[#44485f]">
                     <td className="px-4 py-3">
@@ -194,6 +206,7 @@ export function CategoriesPage() {
                     <td className="px-4 py-3">{row.translations?.en || row.translations?.ar || '-'}</td>
                     <td className="px-4 py-3">{row.status}</td>
                     <td className="px-4 py-3">{row.sort}</td>
+                    <td className="px-4 py-3">{row.listing_fee !== null ? `£${row.listing_fee.toFixed(2)}` : t.listingFeeStandard}</td>
                     <td className="px-4 py-3">
                       <div className="flex gap-2">
                         <Button size="icon" variant="secondary" title={t.subCategories} onClick={() => navigate(`/categories/${row.id}/subcategories`)}>
@@ -217,22 +230,57 @@ export function CategoriesPage() {
           <div className="flex min-h-full items-start justify-center py-4 md:items-center md:py-8">
             <Card className="w-full max-w-2xl overflow-hidden rounded-2xl">
               <CardHeader className="sticky top-0 z-10 flex flex-row items-center justify-between space-y-0 border-b border-[#ececf3] bg-white/95 backdrop-blur dark:border-[#44485f] dark:bg-[#2f3349]/95">
-                <CardTitle>{editing ? `Edit #${editing.id}` : 'Create Category'}</CardTitle>
+                <CardTitle>{editing ? `${t.edit}: ${categoryName(editing)}` : `${t.add} ${t.category}`}</CardTitle>
                 <Button variant="ghost" size="icon" onClick={() => setFormOpen(false)}><X className="h-4 w-4" /></Button>
               </CardHeader>
               <CardContent className="max-h-[78vh] space-y-4 overflow-y-auto p-4 md:max-h-[84vh] md:p-6">
-                <div className="grid gap-3 md:grid-cols-3">
-                  <Input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] ?? null)} />
-                  <Input placeholder={t.sort} value={form.sort} onChange={(e) => setForm((s) => ({ ...s, sort: e.target.value }))} />
-                  <select value={form.status} onChange={(e) => setForm((s) => ({ ...s, status: e.target.value as 'active' | 'inactive' }))} className="h-10 rounded-xl border border-[#dbdbe8] bg-white px-3 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]">
-                    <option value="active">{t.active}</option>
-                    <option value="inactive">{t.inactive}</option>
-                  </select>
+                <div className="grid gap-3 md:grid-cols-4">
+                  <label className="space-y-1.5">
+                    <span className="text-xs text-[#8a8da8]">{editing ? t.changeImage : t.image}</span>
+                    <Input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] ?? null)} />
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-xs text-[#8a8da8]">{t.sort}</span>
+                    <Input placeholder={t.sort} inputMode="numeric" value={form.sort} onChange={(e) => setForm((s) => ({ ...s, sort: digitsOnly(e.target.value) }))} />
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-xs text-[#8a8da8]">{t.listingFee}</span>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder={t.listingFeeStandard}
+                      value={form.listingFee}
+                      onChange={(e) => setForm((s) => ({ ...s, listingFee: e.target.value }))}
+                    />
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-xs text-[#8a8da8]">{t.status}</span>
+                    <select value={form.status} onChange={(e) => setForm((s) => ({ ...s, status: e.target.value as 'active' | 'inactive' }))} className="h-10 w-full rounded-xl border border-[#dbdbe8] bg-white px-3 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]">
+                      <option value="active">{t.active}</option>
+                      <option value="inactive">{t.inactive}</option>
+                    </select>
+                  </label>
                 </div>
+
+                {editing && (
+                  <div className="space-y-1.5">
+                    <p className="text-xs text-[#8a8da8]">{t.currentImage}</p>
+                    {imageFile || editing.image_url ? (
+                      <img
+                        src={imageFile ? URL.createObjectURL(imageFile) : (editing.image_url as string)}
+                        alt=""
+                        className="h-24 w-24 rounded-xl border border-[#ececf3] object-cover dark:border-[#44485f]"
+                      />
+                    ) : (
+                      <p className="text-sm text-[#8a8da8]">{t.noImage}</p>
+                    )}
+                  </div>
+                )}
                 <div className="grid gap-4 md:grid-cols-2">
                   {languages.map((language) => (
                     <div key={language.id}>
-                      <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-[#8a8da8]">Name ({language.code})</p>
+                      <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-[#8a8da8]">{t.nameInLanguage} ({language.code})</p>
                       <Input value={form.translations[language.code] || ''} onChange={(e) => setForm((s) => ({ ...s, translations: { ...s.translations, [language.code]: e.target.value } }))} />
                     </div>
                   ))}
@@ -250,9 +298,9 @@ export function CategoriesPage() {
       {deleting && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
           <Card className="w-full max-w-md">
-            <CardHeader><CardTitle>Confirm deletion</CardTitle></CardHeader>
+            <CardHeader><CardTitle>{t.confirmDeletion}</CardTitle></CardHeader>
             <CardContent>
-              <p className="mb-4 text-sm">Delete category #{deleting.id}?</p>
+              <p className="mb-4 text-sm">{t.deleteConfirmation}</p>
               <div className="flex justify-end gap-2">
                 <Button variant="secondary" onClick={() => setDeleting(null)}>{t.cancel}</Button>
                 <Button variant="destructive" onClick={confirmDelete} disabled={saving}>{t.delete}</Button>

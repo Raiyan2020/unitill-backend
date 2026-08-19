@@ -14,6 +14,8 @@ type AdAttribute = {
   label: string;
   input_type: 'string' | 'number' | 'boolean' | 'select' | 'date' | 'multiselect';
   value: string | null;
+  /** Localized display text; the API falls back to value when nothing needs translating. */
+  value_label?: string | null;
 };
 
 type AdDetails = {
@@ -30,6 +32,14 @@ type AdDetails = {
   slug: string | null;
   cover_image_url: string | null;
   published_at: string | null;
+  listing_fee: string | null;
+  payment_status: string | null;
+  stripe_payment_intent_id: string | null;
+  refund_status: string | null;
+  refund_reference: string | null;
+  refund_reason: string | null;
+  refunded_at: string | null;
+  refund_declined_at: string | null;
   user: { id: number | null; name: string; email: string | null; phone: string | null } | null;
   country: { id: number; country_code: string } | null;
   city: { id: number; code: string | null } | null;
@@ -49,7 +59,8 @@ type AdDetails = {
  * so a newly added input_type still shows something useful here.
  */
 function formatAttributeValue(attribute: AdAttribute, yes: string, no: string, locale: 'en' | 'ar') {
-  const raw = (attribute.value ?? '').trim();
+  // Prefer the localized label; value stays the raw English option key.
+  const raw = (attribute.value_label ?? attribute.value ?? '').trim();
   if (!raw) return '-';
 
   switch (attribute.input_type) {
@@ -83,15 +94,16 @@ export function AdDetailsPage() {
       setLoading(true);
       try {
         const res = await api.get(`/admin/ads/${id}`);
-        const payload = ensureApiSuccess<AdDetails>(res, 'Failed to load ad details');
+        const payload = ensureApiSuccess<AdDetails>(res, t.actionFailed);
         setAd(payload || null);
       } catch (error) {
-        notify.errorFrom(error, 'Failed to load ad details.');
+        notify.errorFrom(error, t.actionFailed);
       } finally {
         setLoading(false);
       }
     };
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   if (loading) {
@@ -218,6 +230,35 @@ export function AdDetailsPage() {
               </div>
             </div>
           ) : null}
+
+          <div>
+            <p className="mb-2 text-sm font-semibold">{t.refund}</p>
+            <div className="grid gap-3 md:grid-cols-3">
+              <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
+                <p className="text-xs text-[#8a8da8]">{t.listingFee}</p>
+                <p className="mt-1 text-sm">{ad.listing_fee ? `£${ad.listing_fee}` : '-'}</p>
+              </div>
+              <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
+                <p className="text-xs text-[#8a8da8]">{t.paymentStatus}</p>
+                <p className="mt-1 text-sm">{ad.payment_status || '-'}</p>
+              </div>
+              <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
+                <p className="text-xs text-[#8a8da8]">{t.refundStatus}</p>
+                <p className="mt-1 text-sm">
+                  {ad.refund_status === 'refunded' ? t.refunded
+                    : ad.refund_status === 'declined' ? t.refundDeclined
+                    : ad.refund_status === 'requested' ? t.refundRequested
+                    : t.notRefunded}
+                </p>
+              </div>
+            </div>
+            {ad.refund_status ? (
+              <p className="mt-3 text-sm text-[#8a8da8]">
+                {t.manageInRefundRequests}{' '}
+                <Link to="/refund-requests" className="text-[#7367f0] hover:underline">{t.refundRequests}</Link>
+              </p>
+            ) : null}
+          </div>
         </CardContent>
       </Card>
     </div>

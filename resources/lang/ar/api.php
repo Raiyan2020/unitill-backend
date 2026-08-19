@@ -33,6 +33,8 @@ return [
         'no_email_on_file' => 'لا يوجد بريد لإرسال رمز التحقق',
         'no_code_requested' => 'لم يتم طلب رمز تحقق. سجّل الدخول مجدداً',
         'resend_cooldown' => 'يمكنك إعادة الإرسال بعد :seconds ثانية',
+        'no_student_email' => 'لا يوجد بريد جامعي مسجّل',
+        'reverify_code_sent' => 'تم إرسال رمز التحقق إلى بريدك الجامعي',
     ],
     'register' => [
         'personal_email_required' => 'البريد الشخصي مطلوب',
@@ -63,11 +65,21 @@ return [
         'paused' => 'تم إيقاف الإعلان',
         'only_paused_expired_activate' => 'يمكن تفعيل الإعلانات الموقوفة أو المنتهية فقط',
         'activated' => 'تم تفعيل الإعلان',
+        'only_expired_extend' => 'يمكن تمديد الإعلانات المنتهية فقط',
+        'not_yet_eligible_extend' => 'هذا الإعلان لا يزال نشطًا ولا يحتاج إلى تمديد الآن',
+        'extended' => 'تم تمديد الإعلان بنجاح',
         'only_sold_relist' => 'يمكن إعادة بيع الإعلانات المباعة فقط. استخدم إعادة التفعيل للإعلانات الموقوفة أو المنتهية.',
         'relisted' => 'تم إنشاء إعلان جديد من الإعلان المباع',
         'sold_cannot_delete' => 'لا يمكن حذف إعلان مباع',
         'deleted' => 'تم حذف الإعلان',
         'coupon_failed' => 'تعذّر تطبيق كود الخصم',
+        'refund_not_available' => 'لا يوجد دفع مسدد لهذا الإعلان لطلب استرداده.',
+        'refund_already_decided' => 'يوجد بالفعل طلب استرداد لهذا الإعلان.',
+        'refund_reason_required' => 'يرجى ذكر سبب طلب الاسترداد.',
+        'refund_requested' => 'تم إرسال طلب الاسترداد إلى UniTill.',
+        'cannot_publish_in_status' => 'لا يمكن نشر هذا الإعلان في حالته الحالية.',
+        'payment_unsettled' => 'لا يمكن نشر هذا الإعلان قبل سداد رسوم النشر. يمكنك مع ذلك تعيينه كمرفوض أو مسودة أو منتهٍ.',
+        'status_updated' => 'تم تحديث حالة الإعلان',
     ],
     'ad_form' => [
         'invalid_main_category' => 'القسم الرئيسي غير صالح',
@@ -108,6 +120,13 @@ return [
         'report_submitted' => 'تم إرسال البلاغ',
         'attachment_too_large' => 'الملف كبير جدًا. الحد الأقصى 10 ميجابايت.',
         'attachment_type_not_allowed' => 'نوع الملف غير مدعوم.',
+    ],
+    'contact_us' => [
+        'sent' => 'تم إرسال رسالتك بنجاح',
+    ],
+    'filter' => [
+        'price' => 'السعر',
+        'distance_postcode' => 'المسافة (الرمز البريدي)',
     ],
     'sort' => [
         'newest_first' => 'الأحدث أولاً',
@@ -223,6 +242,12 @@ return [
         'expired' => 'منتهي',
         'draft' => 'مسودة',
         'sold' => 'مباع',
+    ],
+    'refund' => [
+        'accepted_title' => 'تم إصدار الاسترداد',
+        'accepted_body' => 'تم إصدار استرداد مبلغ إعلانك ":title".',
+        'declined_title' => 'تم رفض طلب الاسترداد',
+        'declined_body' => 'تم رفض طلب استرداد إعلانك ":title". السبب: :reason',
     ],
     'account' => [
         'identifier_required' => 'بريد الطالب أو البريد الشخصي مطلوب',

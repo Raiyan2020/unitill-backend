@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Input } from '../components/ui/input';
 import { api } from '../lib/api';
 import { ensureApiSuccess } from '../lib/api-response';
+import { digitsOnly, toInteger } from '../lib/form';
 import { useNotify } from '../lib/notify';
 import { useI18n } from '../providers/i18n-provider';
 
@@ -46,11 +47,11 @@ export function LegalAffairsPage() {
     setLoading(true);
     try {
       const res = await api.get('/admin/legal-affairs', { params: { page, per_page: pageSize, search: search || undefined } });
-      const payload = ensureApiSuccess<PaginatedResponse<Row>>(res, 'Failed to load legal affairs');
+      const payload = ensureApiSuccess<PaginatedResponse<Row>>(res, t.actionFailed);
       setRows(payload?.data || []);
       setTotal(payload?.total || 0);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to load legal affairs.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setLoading(false);
     }
@@ -58,7 +59,7 @@ export function LegalAffairsPage() {
 
   const fetchLanguages = async () => {
     const res = await api.get('/admin/languages', { params: { per_page: 100 } });
-    const payload = ensureApiSuccess<PaginatedResponse<LanguageRow>>(res, 'Failed to load languages');
+    const payload = ensureApiSuccess<PaginatedResponse<LanguageRow>>(res, t.actionFailed);
     setLanguages(payload?.data || []);
   };
 
@@ -114,26 +115,31 @@ export function LegalAffairsPage() {
   };
 
   const save = async () => {
+    if (!Object.values(form.translations).some((value) => value?.title?.trim())) {
+      notify.error(t.titleRequired);
+      return;
+    }
+
     setSaving(true);
     try {
       const payload = {
         section: form.section || null,
         is_active: form.is_active,
-        sort_order: Number(form.sort_order || 0),
+        sort_order: toInteger(form.sort_order),
         translations: form.translations,
       };
       if (editing) {
         const res = await api.put(`/admin/legal-affairs/${editing.id}`, payload);
-        ensureApiSuccess(res, 'Failed to update legal affair');
+        ensureApiSuccess(res, t.actionFailed);
       } else {
         const res = await api.post('/admin/legal-affairs', payload);
-        ensureApiSuccess(res, 'Failed to create legal affair');
+        ensureApiSuccess(res, t.actionFailed);
       }
       setFormOpen(false);
       await fetchRows();
-      notify.success(editing ? 'Legal affair updated successfully.' : 'Legal affair created successfully.');
+      notify.success(editing ? t.updatedSuccessfully : t.createdSuccessfully);
     } catch (error) {
-      notify.errorFrom(error, editing ? 'Failed to update legal affair.' : 'Failed to create legal affair.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setSaving(false);
     }
@@ -144,12 +150,12 @@ export function LegalAffairsPage() {
     setSaving(true);
     try {
       const res = await api.delete(`/admin/legal-affairs/${deleting.id}`);
-      ensureApiSuccess(res, 'Failed to delete legal affair');
+      ensureApiSuccess(res, t.actionFailed);
       setDeleting(null);
       await fetchRows();
-      notify.success('Legal affair deleted successfully.');
+      notify.success(t.deletedSuccessfully);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to delete legal affair.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setSaving(false);
     }
@@ -166,7 +172,7 @@ export function LegalAffairsPage() {
             {[10, 25, 50, 100].map((size) => <option key={size} value={size}>{size}</option>)}
           </select>
           <Input className="h-9 w-[220px]" placeholder={t.search} value={search} onChange={(e) => setSearch(e.target.value)} />
-          <Button size="sm" onClick={openCreate}>+ Add Legal Affair</Button>
+          <Button size="sm" onClick={openCreate}>+ {t.add} {t.legalAffair}</Button>
         </div>
       </div>
 
@@ -216,14 +222,14 @@ export function LegalAffairsPage() {
           <div className="flex min-h-full items-start justify-center py-4 md:items-center md:py-8">
             <Card className="w-full max-w-3xl overflow-hidden rounded-2xl">
             <CardHeader className="sticky top-0 z-10 flex flex-row items-center justify-between space-y-0 border-b border-[#ececf3] bg-white/95 backdrop-blur dark:border-[#44485f] dark:bg-[#2f3349]/95">
-              <CardTitle>{editing ? `Edit #${editing.id}` : 'Create Legal Affair'}</CardTitle>
+              <CardTitle>{editing ? `${t.edit} ${t.legalAffair}` : `${t.add} ${t.legalAffair}`}</CardTitle>
               <Button variant="ghost" size="icon" onClick={() => setFormOpen(false)}><X className="h-4 w-4" /></Button>
             </CardHeader>
             <CardContent className="max-h-[72vh] space-y-3 overflow-y-auto p-4 md:max-h-[78vh] md:p-6">
               <div className="grid gap-3 md:grid-cols-3">
                 <Input placeholder={t.section} value={form.section} onChange={(e) => setForm((s) => ({ ...s, section: e.target.value }))} />
-                <Input placeholder={t.sort} value={form.sort_order} onChange={(e) => setForm((s) => ({ ...s, sort_order: e.target.value }))} />
-                <label className="flex items-center gap-2 rounded-xl border border-[#dbdbe8] px-3 text-sm dark:border-[#4a4f68]"><input type="checkbox" checked={form.is_active} onChange={(e) => setForm((s) => ({ ...s, is_active: e.target.checked }))} /> Active</label>
+                <Input placeholder={t.sort} inputMode="numeric" value={form.sort_order} onChange={(e) => setForm((s) => ({ ...s, sort_order: digitsOnly(e.target.value) }))} />
+                <label className="flex items-center gap-2 rounded-xl border border-[#dbdbe8] px-3 text-sm dark:border-[#4a4f68]"><input type="checkbox" checked={form.is_active} onChange={(e) => setForm((s) => ({ ...s, is_active: e.target.checked }))} /> {t.active}</label>
               </div>
 
               {languages.map((language) => (
@@ -261,9 +267,9 @@ export function LegalAffairsPage() {
       {deleting && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
           <Card className="w-full max-w-md">
-            <CardHeader><CardTitle>Confirm deletion</CardTitle></CardHeader>
+            <CardHeader><CardTitle>{t.confirmDeletion}</CardTitle></CardHeader>
             <CardContent>
-              <p className="mb-4 text-sm">Delete legal affair #{deleting.id}?</p>
+              <p className="mb-4 text-sm">{t.deleteConfirmation}</p>
               <div className="flex justify-end gap-2">
                 <Button variant="secondary" onClick={() => setDeleting(null)}>{t.cancel}</Button>
                 <Button variant="destructive" onClick={confirmDelete} disabled={saving}>{t.delete}</Button>

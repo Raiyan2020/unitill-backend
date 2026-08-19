@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\TermsVersion;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -17,6 +18,7 @@ class UserResource extends JsonResource
         $lang = $request->header('lang', 'en');
         $locale = $lang === 'ar' ? 'ar' : 'en';
         $isOwnProfile = $request->user()?->id === $this->id;
+        $isV2Response = $request->is('api/v2/*');
         $mask = function (?string $e) {
             if (! $e || ! str_contains($e, '@')) {
                 return null;
@@ -25,8 +27,6 @@ class UserResource extends JsonResource
 
             return (strlen($local) <= 2 ? substr($local, 0, 1) : substr($local, 0, 2)).'***@'.$domain;
         };
-
-        $name = $lang === 'en' ? 'name_en' : 'name_ar';
 
         // "Show first name only" applies to everyone except the owner, who always
         // sees their own full name inside Edit Profile.
@@ -41,12 +41,14 @@ class UserResource extends JsonResource
             'first_name' => $this->first_name,
             'last_name' => $showLastName ? $this->last_name : null,
             'image' => $this->image ? getimg($this->image) : null,
-            'phone' => $this->phone,
-            'email' => $this->email,
             'member_since' => $this->created_at
                 ? $this->created_at->locale($locale)->translatedFormat('F Y')
                 : null,
+            // Raw join timestamp so the app can format it in its own locale;
+            // `member_since` above stays for older builds.
+            'created_at' => $this->created_at?->toIso8601String(),
             'ads_count' => (int) ($this->published_ads_count ?? 0),
+            'active_ads_count' => (int) ($this->published_ads_count ?? 0),
             // Restored: these three are part of the published mobile contract
             // (profile header, seller badge, rating row) and were commented out
             // during the parallel rewrite rather than intentionally dropped.
@@ -54,14 +56,18 @@ class UserResource extends JsonResource
             'total_reviews' => (int) ($this->total_reviews_count ?? 0),
             'is_trusted_seller' => (bool) $this->is_trusted_seller,
             'device_type' => $this->device_type,
-            'city_id' => (int) $this->city_id,
-            'city_name' => $this->city ? $this->city->$name : null,
+            'city' => $this->city ? new CityResource($this->city) : null,
             'status' => ($this->status === '1' || $this->status === 1)
                 ? 'active'
                 : (($this->status === '2' || $this->status === 2) ? 'pending_verification' : 'inactive'),
         ];
 
         if ($isOwnProfile) {
+            // Contact details are the account owner's alone. They used to be in
+            // the shared block, which handed any authenticated caller another
+            // user's personal email and phone number via GET /show-profile/{id}.
+            $data['phone'] = $this->phone;
+            $data['email'] = $this->email;
             $data['student_email'] = $this->student_email;
             // Student re-verification lifecycle. The mobile app reads these to
             // decide whether to show the "reconfirm your student status" prompt.
@@ -82,6 +88,32 @@ class UserResource extends JsonResource
                     'notify_system' => true,
                 ],
             ];
+            if ($isV2Response) {
+                $currentTerms = TermsVersion::query()->where('is_current', true)->latest('effective_at')->first();
+                $currentTermsAcceptance = $currentTerms
+                    ? $this->termsAcceptances()->where('terms_version_id', $currentTerms->id)->first()
+                    : null;
+                $postingRestriction = $this->activeFeatureRestriction('posting');
+                $messagingRestriction = $this->activeFeatureRestriction('messaging');
+
+                $data['terms'] = [
+                    'current_version' => $currentTerms?->version,
+                    'accepted' => $currentTermsAcceptance !== null,
+                    'accepted_at' => $currentTermsAcceptance?->accepted_at?->toIso8601String(),
+                ];
+                $data['capabilities'] = [
+                    'can_post' => $postingRestriction === null,
+                    'can_message' => $messagingRestriction === null,
+                ];
+                $data['feature_restrictions'] = collect([$postingRestriction, $messagingRestriction])
+                    ->filter()
+                    ->map(fn ($restriction) => [
+                        'id' => $restriction->id,
+                        'feature' => $restriction->feature,
+                        'reason' => $restriction->reason,
+                        'ends_at' => $restriction->ends_at?->toIso8601String(),
+                    ])->values()->all();
+            }
         } else {
             $data['student_email_masked'] = $mask($this->student_email);
         }

@@ -76,4 +76,10 @@ return [
         'key' => env('VEHICLE_API_KEY'),
     ],
 
+    'google_translate' => [
+        // Service-account JSON key (Cloud Translation API v3), same pattern as
+        // FIREBASE_CREDENTIALS below — a project-relative path.
+        'credentials_path' => env('GOOGLE_TRANSLATE_CREDENTIALS'),
+    ],
+
 ];

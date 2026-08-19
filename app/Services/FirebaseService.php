@@ -42,9 +42,9 @@ class FirebaseService
                 ->withNotification(Notification::create($title, $body))
                 ->withData($this->stringifyData($data));
 
-            $messageId = $this->messaging->send($message);
+            $response = $this->messaging->send($message);
 
-            return ['success' => true, 'message_id' => $messageId];
+            return ['success' => true, 'message_id' => $this->messageIdFrom($response)];
         } catch (FirebaseException|MessagingException $e) {
             logger()->error('Firebase token send error: '.$e->getMessage());
 
@@ -63,9 +63,9 @@ class FirebaseService
                 ->withNotification(Notification::create($title, $body))
                 ->withData($this->stringifyData($data));
 
-            $messageId = $this->messaging->send($message);
+            $response = $this->messaging->send($message);
 
-            return ['success' => true, 'message_id' => $messageId];
+            return ['success' => true, 'message_id' => $this->messageIdFrom($response)];
         } catch (FirebaseException|MessagingException $e) {
             logger()->error('Firebase topic send error: '.$e->getMessage());
 
@@ -105,6 +105,27 @@ class FirebaseService
 
             return ['success' => false, 'error' => $e->getMessage()];
         }
+    }
+
+    /**
+     * Messaging::send() returns the decoded FCM response array
+     * (['name' => 'projects/x/messages/y']), not an id string. Persisting the
+     * array straight into the varchar fcm_message_id column raised
+     * "Array to string conversion" on every successful push.
+     */
+    protected function messageIdFrom(mixed $response): ?string
+    {
+        if (is_string($response)) {
+            return $response;
+        }
+
+        if (is_array($response)) {
+            $name = $response['name'] ?? null;
+
+            return is_string($name) ? $name : null;
+        }
+
+        return null;
     }
 
     protected function stringifyData(array $data): array

@@ -5,7 +5,7 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { TableFooter, TableLoadingRow } from '../components/table/TableHelpers';
-import { api } from '../lib/api';
+import { api, backendOrigin } from '../lib/api';
 import { ensureApiSuccess } from '../lib/api-response';
 import { useNotify } from '../lib/notify';
 import { useI18n } from '../providers/i18n-provider';
@@ -17,6 +17,7 @@ type AdRow = {
   public_id: string;
   title: string;
   status: AdStatus;
+  payment_status: string | null;
   cover_image: string | null;
   cover_image_url: string | null;
   user_id: number;
@@ -26,14 +27,15 @@ type AdRow = {
 
 type PaginatedResponse<T> = { data: T[]; total: number };
 
-const statusOptions: { value: AdStatus; label: string }[] = [
-  { value: 'draft', label: 'Draft' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'published', label: 'Published' },
-  { value: 'rejected', label: 'Rejected' },
-  { value: 'sold', label: 'Sold' },
-  { value: 'expired', label: 'Expired' },
-];
+const statusValues: AdStatus[] = ['draft', 'pending', 'published', 'rejected', 'sold', 'expired'];
+
+/** Payment states the API accepts as "settled" before an ad may go live. */
+const SETTLED_PAYMENTS = ['paid', 'free', 'waived', 'coupon'];
+
+/** The API refuses to publish an ad whose listing fee is still outstanding. */
+function canPublish(row: AdRow): boolean {
+  return row.status === 'published' || SETTLED_PAYMENTS.includes(row.payment_status ?? '');
+}
 
 function statusSelectClass(status: AdStatus) {
   if (status === 'published') return 'border-emerald-300/70 bg-emerald-500/15 text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/20 dark:text-emerald-300';
@@ -54,9 +56,8 @@ export function AdsPage() {
   const [total, setTotal] = useState(0);
   const [deleting, setDeleting] = useState<AdRow | null>(null);
   const [savingDelete, setSavingDelete] = useState(false);
+  const [deleteReason, setDeleteReason] = useState('');
   const [statusSavingId, setStatusSavingId] = useState<number | null>(null);
-
-  const backendOrigin = ((import.meta.env.VITE_BACKEND_ORIGIN as string | undefined) || 'http://127.0.0.1:8000').replace(/\/+$/, '');
 
   const resolveImage = (row: AdRow) => {
     if (row.cover_image_url) return row.cover_image_url;
@@ -68,11 +69,11 @@ export function AdsPage() {
     setLoading(true);
     try {
       const res = await api.get('/admin/ads', { params: { page, per_page: pageSize, search: search || undefined } });
-      const payload = ensureApiSuccess<PaginatedResponse<AdRow>>(res, 'Failed to load ads');
+      const payload = ensureApiSuccess<PaginatedResponse<AdRow>>(res, t.actionFailed);
       setRows(payload?.data || []);
       setTotal(payload?.total || 0);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to load ads.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setLoading(false);
     }
@@ -100,27 +101,31 @@ export function AdsPage() {
     if (!deleting) return;
     setSavingDelete(true);
     try {
-      const res = await api.delete(`/admin/ads/${deleting.id}`);
-      ensureApiSuccess(res, 'Failed to delete ad');
+      const res = await api.delete(`/admin/ads/${deleting.id}`, { data: { reason: deleteReason } });
+      ensureApiSuccess(res, t.actionFailed);
       setDeleting(null);
+      setDeleteReason('');
       await fetchRows();
-      notify.success('Ad deleted successfully.');
+      notify.success(t.deletedSuccessfully);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to delete ad.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setSavingDelete(false);
     }
   };
 
   const updateStatus = async (row: AdRow, status: AdStatus) => {
+    if (status === row.status) return;
+    const reason = window.prompt(t.reason);
+    if (!reason?.trim()) return;
     setStatusSavingId(row.id);
     try {
-      const res = await api.put(`/admin/ads/${row.id}`, { status });
-      ensureApiSuccess(res, 'Failed to update ad status');
+      const res = await api.put(`/admin/ads/${row.id}`, { status, reason: reason.trim(), source_type: 'manual' });
+      ensureApiSuccess(res, t.actionFailed);
       setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, status } : r)));
-      notify.success('Ad status updated successfully.');
+      notify.success(t.statusUpdatedSuccessfully);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to update ad status.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setStatusSavingId(null);
     }
@@ -202,9 +207,10 @@ export function AdsPage() {
                           onChange={(e) => updateStatus(row, e.target.value as AdStatus)}
                           className={`h-9 min-w-[130px] rounded-full border px-3 text-xs font-semibold shadow-sm outline-none transition-all focus:ring-2 focus:ring-[#7367f0]/30 ${statusSelectClass(row.status)}`}
                         >
-                          {statusOptions.map((s) => (
-                            <option key={s.value} value={s.value}>
-                              {s.label}
+                          {statusValues.map((s) => (
+                            <option key={s} value={s} disabled={s === 'published' && !canPublish(row)}>
+                              {t[s]}
+                              {s === 'published' && !canPublish(row) ? ` — ${t.paymentUnsettledShort}` : ''}
                             </option>
                           ))}
                         </select>
@@ -241,10 +247,19 @@ export function AdsPage() {
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
           <Card className="w-full max-w-md">
             <CardContent className="pt-6">
-              <p className="mb-4 text-sm">Delete ad #{deleting.public_id || deleting.id}?</p>
+              <p className="text-sm">{t.deleteAdConfirmation}</p>
+              <p className="mb-4 mt-1 text-sm font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">
+                {deleting.title || deleting.public_id || `#${deleting.id}`}
+              </p>
+              <textarea
+                value={deleteReason}
+                onChange={(event) => setDeleteReason(event.target.value)}
+                placeholder={t.reason}
+                className="mb-4 min-h-24 w-full rounded-lg border border-[#dbdbe8] bg-white p-3 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]"
+              />
               <div className="flex justify-end gap-2">
-                <Button variant="secondary" onClick={() => setDeleting(null)}>{t.cancel}</Button>
-                <Button variant="destructive" onClick={deleteAd} disabled={savingDelete}>{t.delete}</Button>
+                <Button variant="secondary" onClick={() => { setDeleting(null); setDeleteReason(''); }}>{t.cancel}</Button>
+                <Button variant="destructive" onClick={deleteAd} disabled={savingDelete || !deleteReason.trim()}>{t.delete}</Button>
               </div>
             </CardContent>
           </Card>
@@ -253,4 +268,3 @@ export function AdsPage() {
     </div>
   );
 }
-

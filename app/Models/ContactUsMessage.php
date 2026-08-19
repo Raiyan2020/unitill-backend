@@ -11,6 +11,16 @@ class ContactUsMessage extends Model
         'user_id',
         'contact_reason_id',
         'message',
+        'status',
+        'closed_at',
+        'closed_by',
+    ];
+
+    protected $casts = [
+        // Set when the support-inbox notification actually left the server;
+        // null with a mail_error means the row was stored but never mailed.
+        'mail_sent_at' => 'datetime',
+        'closed_at' => 'datetime',
     ];
 
     public function user(): BelongsTo
@@ -21,5 +31,10 @@ class ContactUsMessage extends Model
     public function contactReason(): BelongsTo
     {
         return $this->belongsTo(ContactReason::class);
+    }
+
+    public function closedBy(): BelongsTo
+    {
+        return $this->belongsTo(Admin::class, 'closed_by');
     }
 }

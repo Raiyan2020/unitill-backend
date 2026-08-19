@@ -25,6 +25,9 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             CategoryAttributeSeeder::class,
             PaymentMethodSeeder::class,
+            // Must run after the content seeders: it backfills their fr/es/zh
+            // rows and the option label maps without touching existing data.
+            MultilingualContentSeeder::class,
             AdSeeder::class,
             TrustedSellerApplicationSeeder::class,
 

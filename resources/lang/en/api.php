@@ -33,6 +33,8 @@ return [
         'no_email_on_file' => 'No email on file to send the code to',
         'no_code_requested' => 'No verification code requested. Please sign in again.',
         'resend_cooldown' => 'You can resend in :seconds seconds',
+        'no_student_email' => 'No university email on file',
+        'reverify_code_sent' => 'Verification code sent to your student email',
     ],
     'register' => [
         'personal_email_required' => 'Personal email is required',
@@ -63,11 +65,21 @@ return [
         'paused' => 'Ad paused successfully',
         'only_paused_expired_activate' => 'Only paused or expired ads can be activated',
         'activated' => 'Ad activated successfully',
+        'only_expired_extend' => 'Only an expired listing can be extended',
+        'not_yet_eligible_extend' => 'This listing is still active and does not need extending yet',
+        'extended' => 'Listing extended successfully',
         'only_sold_relist' => 'Only sold ads can be relisted this way. Use activate for paused or expired ads.',
         'relisted' => 'A new listing was created from the sold ad',
         'sold_cannot_delete' => 'A sold ad cannot be deleted',
         'deleted' => 'Ad deleted successfully',
         'coupon_failed' => 'The coupon code could not be applied.',
+        'refund_not_available' => 'This ad has no paid payment to request a refund for.',
+        'refund_already_decided' => 'A refund request for this ad already exists.',
+        'refund_reason_required' => 'Please tell us why you are requesting a refund.',
+        'refund_requested' => 'Your refund request was sent to UniTill.',
+        'cannot_publish_in_status' => 'This listing cannot be published in its current state.',
+        'payment_unsettled' => 'This ad cannot be published until its listing fee is paid. You can still set it to rejected, draft or expired.',
+        'status_updated' => 'Ad status updated',
     ],
     'ad_form' => [
         'invalid_main_category' => 'Invalid main category',
@@ -108,6 +120,13 @@ return [
         'report_submitted' => 'Report submitted',
         'attachment_too_large' => 'File is too large. Maximum size is 10 MB.',
         'attachment_type_not_allowed' => 'This file type is not supported.',
+    ],
+    'contact_us' => [
+        'sent' => 'Your message was sent successfully',
+    ],
+    'filter' => [
+        'price' => 'Price',
+        'distance_postcode' => 'Distance (postcode)',
     ],
     'sort' => [
         'newest_first' => 'Newest First',
@@ -225,6 +244,12 @@ return [
         'expired' => 'Expired',
         'draft' => 'Draft',
         'sold' => 'Sold',
+    ],
+    'refund' => [
+        'accepted_title' => 'Refund issued',
+        'accepted_body' => 'Your refund for ":title" has been issued.',
+        'declined_title' => 'Refund request declined',
+        'declined_body' => 'Your refund request for ":title" was declined. Reason: :reason',
     ],
     'account' => [
         'identifier_required' => 'student_email or email is required',

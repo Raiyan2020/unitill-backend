@@ -33,6 +33,8 @@ return [
         'no_email_on_file' => '没有可发送验证码的邮箱地址',
         'no_code_requested' => '未申请验证码，请重新登录。',
         'resend_cooldown' => '请在 :seconds 秒后重新发送',
+        'no_student_email' => '未登记学校邮箱',
+        'reverify_code_sent' => '验证码已发送至你的学校邮箱',
     ],
     'register' => [
         'personal_email_required' => '请填写个人邮箱',
@@ -63,11 +65,21 @@ return [
         'paused' => '广告已暂停',
         'only_paused_expired_activate' => '仅已暂停或已过期的广告可重新启用',
         'activated' => '广告已重新启用',
+        'only_expired_extend' => '仅已过期的广告可以延期',
+        'not_yet_eligible_extend' => '该广告仍处于有效期内，暂不需要延期',
+        'extended' => '广告延期成功',
         'only_sold_relist' => '仅已售出的广告可通过此方式重新发布。已暂停或已过期的广告请使用重新启用。',
         'relisted' => '已根据已售出的广告创建新广告',
         'sold_cannot_delete' => '已售出的广告无法删除',
         'deleted' => '广告已删除',
         'coupon_failed' => '优惠码无法使用。',
+        'refund_not_available' => '此广告没有可申请退款的已付款项。',
+        'refund_already_decided' => '该广告已存在一个退款申请。',
+        'refund_reason_required' => '请说明您申请退款的原因。',
+        'refund_requested' => '您的退款申请已发送给 UniTill。',
+        'cannot_publish_in_status' => '该广告在当前状态下无法发布。',
+        'payment_unsettled' => '该广告在发布费用结清前无法上线。你仍可将其设为已拒绝、草稿或已过期。',
+        'status_updated' => '广告状态已更新',
     ],
     'ad_form' => [
         'invalid_main_category' => '主分类无效',
@@ -108,6 +120,13 @@ return [
         'report_submitted' => '举报已提交',
         'attachment_too_large' => '文件过大，最大为 10 MB。',
         'attachment_type_not_allowed' => '不支持此文件类型。',
+    ],
+    'contact_us' => [
+        'sent' => '你的消息已成功发送',
+    ],
+    'filter' => [
+        'price' => '价格',
+        'distance_postcode' => '距离（邮编）',
     ],
     'sort' => [
         'newest_first' => '最新优先',
@@ -223,6 +242,12 @@ return [
         'expired' => '已过期',
         'draft' => '草稿',
         'sold' => '已售出',
+    ],
+    'refund' => [
+        'accepted_title' => '退款已发放',
+        'accepted_body' => '您的广告「:title」退款已发放。',
+        'declined_title' => '退款申请已被拒绝',
+        'declined_body' => '您对「:title」的退款申请已被拒绝。原因：:reason',
     ],
     'account' => [
         'identifier_required' => '请填写学校邮箱或个人邮箱',

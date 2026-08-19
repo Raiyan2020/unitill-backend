@@ -3,6 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Support\StudentVerificationPeriod;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -28,9 +30,12 @@ class User extends Authenticatable
         'password',
         'address',
         'status',
+        'suspended_until',
+        'warning_count',
         'activation_code',
         'resend_code_count',
         'device_token',
+        'device_token_updated_at',
         'device_type',
         'remember_token',
         'city_id',
@@ -43,6 +48,8 @@ class User extends Authenticatable
         'notify_system',
         'notify_chat',
         'notify_ads',
+        'notify_marketing',
+        'marketing_consent_at',
         'student_email',
         'student_verified_at',
         'student_reverify_due_at',
@@ -53,7 +60,7 @@ class User extends Authenticatable
         'login_otp',
         'login_otp_expires_at',
         'login_otp_sent_at',
-        ];
+    ];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -72,17 +79,16 @@ class User extends Authenticatable
      *
      * @var array<string, string>
      */
-
-
     public static $rules = [
         'first_name' => 'required|string|max:255',
         'last_name' => 'required|string|max:255',
         'phone' => 'required|max:191',
         'email' => 'nullable|email|max:255|unique:users,email',
         'password' => 'required|string|min:6|confirmed',
-//        'country_code' => 'required|string|max:5',
+        //        'country_code' => 'required|string|max:5',
 
     ];
+
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
@@ -94,30 +100,52 @@ class User extends Authenticatable
         'notify_system' => 'boolean',
         'notify_chat' => 'boolean',
         'notify_ads' => 'boolean',
+        'notify_marketing' => 'boolean',
+        'marketing_consent_at' => 'datetime',
         'is_trusted_seller' => 'boolean',
         'trusted_seller_verified_at' => 'datetime',
         'activation_code_expires_at' => 'datetime',
         'activation_sent_at' => 'datetime',
         'terms_accepted_at' => 'datetime',
+        'device_token_updated_at' => 'datetime',
         'reset_code_expire' => 'datetime',
         'login_otp_expires_at' => 'datetime',
         'login_otp_sent_at' => 'datetime',
         'student_verified_at' => 'datetime',
         'student_reverify_due_at' => 'datetime',
         'reverify_notified_at' => 'datetime',
+        'suspended_until' => 'datetime',
+        'warning_count' => 'integer',
     ];
 
-    /**
-     * Whether the student must reconfirm their university status before they
-     * can keep using student-gated features (posting, messaging).
-     *
-     * A null due date means the account predates the lifecycle or has just
-     * reconfirmed, so it is never overdue.
-     */
+    /** Whether the annual verification date has arrived. */
     public function needsReverification(): bool
     {
         return $this->student_reverify_due_at !== null
             && now()->greaterThanOrEqualTo($this->student_reverify_due_at);
+    }
+
+    /** The end of the 60-day period in which the user may still use the app. */
+    public function reverificationGraceEndsAt(): ?Carbon
+    {
+        if ($this->student_reverify_due_at === null) {
+            return null;
+        }
+
+        return StudentVerificationPeriod::graceEndsAt($this->student_reverify_due_at);
+    }
+
+    public function isInReverificationGracePeriod(): bool
+    {
+        return $this->needsReverification() && ! $this->isReverificationBlocked();
+    }
+
+    /** Whether the annual due date and the complete grace period have passed. */
+    public function isReverificationBlocked(): bool
+    {
+        $graceEndsAt = $this->reverificationGraceEndsAt();
+
+        return $graceEndsAt !== null && now()->greaterThanOrEqualTo($graceEndsAt);
     }
 
     protected static function booted(): void
@@ -129,18 +157,41 @@ class User extends Authenticatable
         });
     }
 
-    //city
+    // city
     public function city()
     {
         return $this->belongsTo(City::class, 'city_id');
     }
 
-
-
-    //notifications
+    // notifications
     public function notifications()
     {
         return $this->hasMany(UserNotification::class);
+    }
+
+    public function moderationActions()
+    {
+        return $this->hasMany(UserModerationAction::class);
+    }
+
+    public function moderationAppeals()
+    {
+        return $this->hasMany(ModerationAppeal::class);
+    }
+
+    public function termsAcceptances()
+    {
+        return $this->hasMany(TermsAcceptance::class);
+    }
+
+    public function featureRestrictions()
+    {
+        return $this->hasMany(UserFeatureRestriction::class);
+    }
+
+    public function activeFeatureRestriction(string $feature): ?UserFeatureRestriction
+    {
+        return $this->featureRestrictions()->active()->where('feature', $feature)->latest('id')->first();
     }
 
     public function userDevices()
@@ -223,5 +274,4 @@ class User extends Authenticatable
     {
         return (float) ($this->ratingsReceived()->avg('score') ?? 0);
     }
-
 }

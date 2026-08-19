@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ResolvesTranslations;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ContactReason extends Model
 {
+    use ResolvesTranslations;
+
     protected $fillable = [
         'sort_order',
         'is_active',
@@ -24,16 +27,7 @@ class ContactReason extends Model
 
     public function nameForLanguageCode(string $code): string
     {
-        $language = Language::where('code', $code)->first();
-        if ($language) {
-            $translation = $this->relationLoaded('translations')
-                ? $this->translations->firstWhere('language_id', $language->id)
-                : $this->translations()->where('language_id', $language->id)->first();
-            if ($translation) {
-                return $translation->name;
-            }
-        }
-
-        return '';
+        // Never "" — a blank chip cannot be read or chosen in the app.
+        return (string) $this->translatedValue($code, 'name', '');
     }
 }

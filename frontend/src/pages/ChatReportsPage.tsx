@@ -12,6 +12,13 @@ import { useI18n } from '../providers/i18n-provider';
 
 type ReportStatus = 'pending' | 'reviewed' | 'dismissed';
 type ReportType = 'user' | 'chat';
+type ReportPriority = 'normal' | 'urgent' | 'critical';
+
+function priorityLabel(priority: string | null | undefined, t: ReturnType<typeof useI18n>['t']): string {
+  if (priority === 'critical') return t.priorityCritical;
+  if (priority === 'urgent') return t.priorityUrgent;
+  return t.priorityNormal;
+}
 
 type Party = { id: number; name: string; email: string | null };
 type ReportedAd = { id: number; public_id: string | null; title: string | null };
@@ -32,6 +39,9 @@ type ReportRow = {
   reason_label: string | null;
   description: string | null;
   status: ReportStatus;
+  priority: ReportPriority;
+  decision_reason: string | null;
+  resolved_at: string | null;
   created_at: string | null;
   conversation_id: number | null;
   ad: ReportedAd | null;
@@ -50,11 +60,7 @@ type ReportsResponse = {
   reasons: ReasonOption[];
 };
 
-const statusOptions: { value: ReportStatus; label: string }[] = [
-  { value: 'pending', label: 'Pending' },
-  { value: 'reviewed', label: 'Reviewed' },
-  { value: 'dismissed', label: 'Dismissed' },
-];
+const statusValues: ReportStatus[] = ['pending', 'reviewed', 'dismissed'];
 
 function statusSelectClass(status: ReportStatus) {
   if (status === 'reviewed') return 'border-emerald-300/70 bg-emerald-500/15 text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/20 dark:text-emerald-300';
@@ -73,12 +79,16 @@ export function ChatReportsPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [reasonFilter, setReasonFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
   const [statusSavingId, setStatusSavingId] = useState<number | null>(null);
   const [details, setDetails] = useState<ReportDetails | null>(null);
+  const [moderationAction, setModerationAction] = useState('warning');
+  const [moderationReason, setModerationReason] = useState('');
+  const [suspensionDays, setSuspensionDays] = useState('7');
+  const [moderationSaving, setModerationSaving] = useState(false);
 
   const fetchRows = async () => {
     setLoading(true);
@@ -90,16 +100,17 @@ export function ChatReportsPage() {
           search: search || undefined,
           status: statusFilter || undefined,
           reason: reasonFilter || undefined,
-          type: typeFilter || undefined,
+          type: 'chat',
+          priority: priorityFilter || undefined,
         },
       });
-      const payload = ensureApiSuccess<ReportsResponse>(res, 'Failed to load chat reports');
+      const payload = ensureApiSuccess<ReportsResponse>(res, t.actionFailed);
       setRows(payload?.reports?.data || []);
       setTotal(payload?.reports?.total || 0);
       if (payload?.counts) setCounts(payload.counts);
       if (payload?.reasons) setReasons(payload.reasons);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to load chat reports.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setLoading(false);
     }
@@ -108,7 +119,7 @@ export function ChatReportsPage() {
   useEffect(() => {
     fetchRows();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, statusFilter, reasonFilter, typeFilter]);
+  }, [page, pageSize, statusFilter, reasonFilter, priorityFilter]);
 
   useEffect(() => {
     if (!didInitSearch.current) {
@@ -126,30 +137,53 @@ export function ChatReportsPage() {
   const openDetails = async (id: number) => {
     try {
       const res = await api.get(`/admin/chat-reports/${id}`);
-      const payload = ensureApiSuccess<ReportDetails>(res, 'Failed to load report details');
+      const payload = ensureApiSuccess<ReportDetails>(res, t.actionFailed);
       setDetails(payload || null);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to load report details.');
+      notify.errorFrom(error, t.actionFailed);
     }
   };
 
   const updateStatus = async (row: ReportRow, status: ReportStatus) => {
+    const decisionReason = status === 'pending' ? null : window.prompt(t.reason);
+    if (status !== 'pending' && !decisionReason?.trim()) return;
     const previous = row.status;
     setStatusSavingId(row.id);
     try {
-      const res = await api.put(`/admin/chat-reports/${row.id}`, { status });
-      ensureApiSuccess(res, 'Failed to update report status');
+      const res = await api.put(`/admin/chat-reports/${row.id}`, { status, decision_reason: decisionReason?.trim() || null });
+      ensureApiSuccess(res, t.actionFailed);
       setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, status } : r)));
       setCounts((prev) => ({
         ...prev,
         [previous]: Math.max(0, prev[previous] - 1),
         [status]: prev[status] + 1,
       }));
-      notify.success('Report status updated successfully.');
+      notify.success(t.statusUpdatedSuccessfully);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to update report status.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setStatusSavingId(null);
+    }
+  };
+
+  const applyModeration = async () => {
+    if (!details?.reported_user || !moderationReason.trim()) return;
+    setModerationSaving(true);
+    try {
+      const payload: Record<string, string | number> = {
+        action: moderationAction,
+        reason: moderationReason.trim(),
+        source_type: 'chat_report',
+        source_id: details.id,
+      };
+      if (moderationAction === 'temporary_suspension') payload.duration_days = Number(suspensionDays);
+      await api.post(`/admin/users/${details.reported_user.id}/moderation-actions`, payload);
+      setModerationReason('');
+      notify.success(t.moderationActionRecorded);
+    } catch (error) {
+      notify.errorFrom(error, t.actionFailed);
+    } finally {
+      setModerationSaving(false);
     }
   };
 
@@ -158,19 +192,17 @@ export function ChatReportsPage() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-2xl font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">Chat Reports</h2>
+        <h2 className="text-2xl font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">{t.chatReports}</h2>
         <div className="flex flex-wrap items-center gap-2">
           <select
-            value={typeFilter}
-            onChange={(e) => {
-              setPage(1);
-              setTypeFilter(e.target.value);
-            }}
+            value={priorityFilter}
+            onChange={(e) => { setPage(1); setPriorityFilter(e.target.value); }}
             className="h-9 rounded-lg border border-[#dbdbe8] bg-white px-2 text-sm text-[#2f2b3d] dark:border-[#4a4f68] dark:bg-[#2f3349] dark:text-[#d7d8ea]"
           >
-            <option value="">{t.allTypes}</option>
-            <option value="user">{t.reportedUser}</option>
-            <option value="chat">{t.reportedConversation}</option>
+            <option value="">{t.allPriorities}</option>
+            <option value="critical">{t.priorityCritical}</option>
+            <option value="urgent">{t.priorityUrgent}</option>
+            <option value="normal">{t.priorityNormal}</option>
           </select>
           <select
             value={statusFilter}
@@ -181,8 +213,8 @@ export function ChatReportsPage() {
             className="h-9 rounded-lg border border-[#dbdbe8] bg-white px-2 text-sm text-[#2f2b3d] dark:border-[#4a4f68] dark:bg-[#2f3349] dark:text-[#d7d8ea]"
           >
             <option value="">{t.allStatuses}</option>
-            {statusOptions.map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
+            {statusValues.map((value) => (
+              <option key={value} value={value}>{t[value]}</option>
             ))}
           </select>
           <select
@@ -237,8 +269,8 @@ export function ChatReportsPage() {
               <thead className="bg-[#f8f7fb] text-[#6f6b7d] dark:bg-[#383d56] dark:text-[#b6b8cc]">
                 <tr>
                   <th className="px-4 py-3 text-start">{t.id}</th>
-                  <th className="px-4 py-3 text-start">{t.type}</th>
                   <th className="px-4 py-3 text-start">{t.reason}</th>
+                  <th className="px-4 py-3 text-start">{t.priority}</th>
                   <th className="px-4 py-3 text-start">{t.reporter}</th>
                   <th className="px-4 py-3 text-start">{t.reportedUser}</th>
                   <th className="px-4 py-3 text-start">{t.date}</th>
@@ -255,12 +287,12 @@ export function ChatReportsPage() {
                   rows.map((row) => (
                     <tr key={row.id} className="border-t border-[#ececf3] dark:border-[#44485f]">
                       <td className="px-4 py-3">{row.id}</td>
+                      <td className="px-4 py-3">{row.reason_label || row.reason}</td>
                       <td className="px-4 py-3">
-                        <span className="rounded-full bg-[#f1f0fb] px-2 py-1 text-xs font-medium text-[#6f6b7d] dark:bg-[#3d4260] dark:text-[#b6b8cc]">
-                          {row.type === 'user' ? 'User' : 'Conversation'}
+                        <span className={`rounded-full px-2 py-1 text-xs font-semibold ${row.priority === 'critical' ? 'bg-rose-500/15 text-rose-600' : row.priority === 'urgent' ? 'bg-amber-500/15 text-amber-600' : 'bg-slate-500/15 text-slate-600'}`}>
+                          {priorityLabel(row.priority, t)}
                         </span>
                       </td>
-                      <td className="px-4 py-3">{row.reason_label || row.reason}</td>
                       <td className="px-4 py-3">{row.reporter?.name || '-'}</td>
                       <td className="px-4 py-3">
                         {row.reported_user ? (
@@ -277,8 +309,8 @@ export function ChatReportsPage() {
                           onChange={(e) => updateStatus(row, e.target.value as ReportStatus)}
                           className={`h-9 min-w-[130px] rounded-full border px-3 text-xs font-semibold shadow-sm outline-none transition-all focus:ring-2 focus:ring-[#7367f0]/30 ${statusSelectClass(row.status)}`}
                         >
-                          {statusOptions.map((option) => (
-                            <option key={option.value} value={option.value}>{option.label}</option>
+                          {statusValues.map((value) => (
+                            <option key={value} value={value}>{t[value]}</option>
                           ))}
                         </select>
                       </td>
@@ -321,33 +353,60 @@ export function ChatReportsPage() {
 
               <div className="grid gap-3 md:grid-cols-2">
                 <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                  <p className="text-xs text-[#8a8da8]">Reason</p>
+                  <p className="text-xs text-[#8a8da8]">{t.reason}</p>
                   <p className="mt-1 text-sm font-semibold">{details.reason_label || details.reason}</p>
                 </div>
                 <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                  <p className="text-xs text-[#8a8da8]">Type</p>
+                  <p className="text-xs text-[#8a8da8]">{t.type}</p>
                   <p className="mt-1 text-sm font-semibold">{details.type === 'user' ? 'Reported user' : 'Reported conversation'}</p>
                 </div>
                 <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                  <p className="text-xs text-[#8a8da8]">Reporter</p>
+                  <p className="text-xs text-[#8a8da8]">{t.reporter}</p>
                   <p className="mt-1 text-sm">{details.reporter?.name || '-'}</p>
                   <p className="text-xs text-[#8a8da8]">{details.reporter?.email || ''}</p>
                 </div>
                 <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                  <p className="text-xs text-[#8a8da8]">Reported user</p>
+                  <p className="text-xs text-[#8a8da8]">{t.reportedUser}</p>
                   <p className="mt-1 text-sm">{details.reported_user?.name || '-'}</p>
                   <p className="text-xs text-[#8a8da8]">{details.reported_user?.email || ''}</p>
                 </div>
               </div>
 
               <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                <p className="text-xs text-[#8a8da8]">Reporter's explanation</p>
+                <p className="text-xs text-[#8a8da8]">{t.reporterExplanation}</p>
                 <p className="mt-1 whitespace-pre-wrap text-sm">{details.description || '-'}</p>
               </div>
 
+              {details.decision_reason ? <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
+                <p className="text-xs text-[#8a8da8]">{t.decisionReason}</p>
+                <p className="mt-1 whitespace-pre-wrap text-sm">{details.decision_reason}</p>
+                <p className="mt-1 text-xs text-[#8a8da8]">{details.resolved_at || '-'}</p>
+              </div> : null}
+
+              {details.reported_user ? (
+                <div className="space-y-3 rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
+                  <p className="text-sm font-semibold">{t.moderationAction}</p>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <select value={moderationAction} onChange={(e) => setModerationAction(e.target.value)} className="h-10 rounded-lg border border-[#dbdbe8] bg-white px-3 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]">
+                      <option value="warning">{t.modWarning}</option>
+                      <option value="temporary_suspension">{t.modTemporarySuspension}</option>
+                      <option value="permanent_suspension">{t.modPermanentSuspension}</option>
+                      <option value="reactivated">{t.modReactivated}</option>
+                    </select>
+                    {moderationAction === 'temporary_suspension' ? (
+                      <Input type="number" min="1" max="365" value={suspensionDays} onChange={(e) => setSuspensionDays(e.target.value)} placeholder={t.durationInDays} />
+                    ) : null}
+                  </div>
+                  <textarea value={moderationReason} onChange={(e) => setModerationReason(e.target.value)} rows={3} placeholder={t.decisionReason} className="w-full rounded-lg border border-[#dbdbe8] bg-white px-3 py-2 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]" />
+                  <Button disabled={moderationSaving || !moderationReason.trim()} onClick={applyModeration}>
+                    {moderationSaving ? t.saving : t.applyAction}
+                  </Button>
+                </div>
+              ) : null}
+
               {details.ad ? (
                 <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                  <p className="text-xs text-[#8a8da8]">Related ad</p>
+                  <p className="text-xs text-[#8a8da8]">{t.relatedAd}</p>
                   <Link to={`/ads/${details.ad.id}`} className="mt-1 inline-block text-sm font-semibold text-[#7367f0] hover:underline">
                     {details.ad.title || `#${details.ad.public_id}`}
                   </Link>
@@ -377,7 +436,7 @@ export function ChatReportsPage() {
                   </div>
                 ) : (
                   <div className="rounded-xl border border-dashed border-[#ececf3] p-3 text-sm text-[#8a8da8] dark:border-[#44485f]">
-                    No messages in this conversation.
+                    {t.noMessagesInConversation}
                   </div>
                 )}
               </div>

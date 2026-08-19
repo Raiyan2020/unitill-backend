@@ -23,6 +23,11 @@ class CategorySeeder extends Seeder
             return;
         }
 
+        $categoryFees = [
+            'Accommodation' => 2.99,
+            'Cars' => 2.99,
+        ];
+
         $tree = [
             [
                 'en' => 'Accommodation', 'ar' => 'السكن',
@@ -120,7 +125,7 @@ class CategorySeeder extends Seeder
 
         $sort = 1;
         foreach ($tree as $node) {
-            $main = $this->ensureCategory($langs, $node['en'], $node['ar'], null, $sort);
+            $main = $this->ensureCategory($langs, $node['en'], $node['ar'], null, $sort, $categoryFees[$node['en']] ?? null);
             $sort++;
 
             $childSort = 1;
@@ -146,7 +151,8 @@ class CategorySeeder extends Seeder
         string $en,
         string $ar,
         ?int $parentId,
-        int $sort
+        int $sort,
+        ?float $listingFee = null
     ): Category {
         $existingId = CategoryTranslation::query()
             ->where('name', $en)
@@ -165,6 +171,7 @@ class CategorySeeder extends Seeder
             'status' => 'active',
             'filter_group_id' => null,
             'sort' => $sort,
+            'listing_fee' => $listingFee,
         ]);
 
         foreach (['en' => $en, 'ar' => $ar] as $code => $name) {

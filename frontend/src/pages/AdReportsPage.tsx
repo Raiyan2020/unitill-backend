@@ -11,6 +11,13 @@ import { useNotify } from '../lib/notify';
 import { useI18n } from '../providers/i18n-provider';
 
 type ReportStatus = 'pending' | 'reviewed' | 'dismissed';
+type ReportPriority = 'normal' | 'urgent' | 'critical';
+
+function priorityLabel(priority: string | null | undefined, t: ReturnType<typeof useI18n>['t']): string {
+  if (priority === 'critical') return t.priorityCritical;
+  if (priority === 'urgent') return t.priorityUrgent;
+  return t.priorityNormal;
+}
 
 type ReportedAd = { id: number; public_id: string | null; title: string | null; status: string };
 type Reporter = { id: number; name: string; email: string | null };
@@ -21,6 +28,9 @@ type ReportRow = {
   reason_label: string | null;
   comment: string | null;
   status: ReportStatus;
+  priority: ReportPriority;
+  decision_reason: string | null;
+  resolved_at: string | null;
   created_at: string | null;
   ad: ReportedAd | null;
   reporter: Reporter | null;
@@ -40,11 +50,7 @@ type ReportsResponse = {
   reasons: ReasonOption[];
 };
 
-const statusOptions: { value: ReportStatus; label: string }[] = [
-  { value: 'pending', label: 'Pending' },
-  { value: 'reviewed', label: 'Reviewed' },
-  { value: 'dismissed', label: 'Dismissed' },
-];
+const statusValues: ReportStatus[] = ['pending', 'reviewed', 'dismissed'];
 
 function statusSelectClass(status: ReportStatus) {
   if (status === 'reviewed') return 'border-emerald-300/70 bg-emerald-500/15 text-emerald-700 dark:border-emerald-500/40 dark:bg-emerald-500/20 dark:text-emerald-300';
@@ -63,11 +69,15 @@ export function AdReportsPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [reasonFilter, setReasonFilter] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [total, setTotal] = useState(0);
   const [statusSavingId, setStatusSavingId] = useState<number | null>(null);
   const [details, setDetails] = useState<ReportDetails | null>(null);
+  const [action, setAction] = useState('warning');
+  const [actionReason, setActionReason] = useState('');
+  const [durationDays, setDurationDays] = useState('7');
 
   const fetchRows = async () => {
     setLoading(true);
@@ -79,15 +89,16 @@ export function AdReportsPage() {
           search: search || undefined,
           status: statusFilter || undefined,
           reason: reasonFilter || undefined,
+          priority: priorityFilter || undefined,
         },
       });
-      const payload = ensureApiSuccess<ReportsResponse>(res, 'Failed to load ad reports');
+      const payload = ensureApiSuccess<ReportsResponse>(res, t.actionFailed);
       setRows(payload?.reports?.data || []);
       setTotal(payload?.reports?.total || 0);
       if (payload?.counts) setCounts(payload.counts);
       if (payload?.reasons) setReasons(payload.reasons);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to load ad reports.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setLoading(false);
     }
@@ -96,7 +107,7 @@ export function AdReportsPage() {
   useEffect(() => {
     fetchRows();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, pageSize, statusFilter, reasonFilter]);
+  }, [page, pageSize, statusFilter, reasonFilter, priorityFilter]);
 
   useEffect(() => {
     if (!didInitSearch.current) {
@@ -114,19 +125,21 @@ export function AdReportsPage() {
   const openDetails = async (id: number) => {
     try {
       const res = await api.get(`/admin/ad-reports/${id}`);
-      const payload = ensureApiSuccess<ReportDetails>(res, 'Failed to load report details');
+      const payload = ensureApiSuccess<ReportDetails>(res, t.actionFailed);
       setDetails(payload || null);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to load report details.');
+      notify.errorFrom(error, t.actionFailed);
     }
   };
 
   const updateStatus = async (row: ReportRow, status: ReportStatus) => {
+    const decisionReason = status === 'pending' ? null : window.prompt(t.reason);
+    if (status !== 'pending' && !decisionReason?.trim()) return;
     const previous = row.status;
     setStatusSavingId(row.id);
     try {
-      const res = await api.put(`/admin/ad-reports/${row.id}`, { status });
-      ensureApiSuccess(res, 'Failed to update report status');
+      const res = await api.put(`/admin/ad-reports/${row.id}`, { status, decision_reason: decisionReason?.trim() || null });
+      ensureApiSuccess(res, t.actionFailed);
       setRows((prev) => prev.map((r) => (r.id === row.id ? { ...r, status } : r)));
       // العدّادات محسوبة على الخادم، لذلك تُحدَّث محلياً حتى الطلب التالي
       setCounts((prev) => ({
@@ -134,9 +147,9 @@ export function AdReportsPage() {
         [previous]: Math.max(0, prev[previous] - 1),
         [status]: prev[status] + 1,
       }));
-      notify.success('Report status updated successfully.');
+      notify.success(t.statusUpdatedSuccessfully);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to update report status.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setStatusSavingId(null);
     }
@@ -144,11 +157,25 @@ export function AdReportsPage() {
 
   const pagesCount = Math.max(1, Math.ceil(total / pageSize));
 
+  const applyModeration = async () => {
+    if (!details?.ad_owner || !actionReason.trim()) return;
+    const payload: Record<string, string | number> = { action, reason: actionReason.trim(), source_type: 'ad_report', source_id: details.id };
+    if (action === 'temporary_suspension') payload.duration_days = Number(durationDays);
+    try {
+      await api.post(`/admin/users/${details.ad_owner.id}/moderation-actions`, payload);
+      setActionReason('');
+      notify.success(t.moderationActionRecorded);
+    } catch (error) { notify.errorFrom(error, t.actionFailed); }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-2xl font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">Ad Reports</h2>
+        <h2 className="text-2xl font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">{t.adReports}</h2>
         <div className="flex flex-wrap items-center gap-2">
+          <select value={priorityFilter} onChange={(e) => { setPage(1); setPriorityFilter(e.target.value); }} className="h-9 rounded-lg border border-[#dbdbe8] bg-white px-2 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]">
+            <option value="">{t.allPriorities}</option><option value="critical">{t.priorityCritical}</option><option value="urgent">{t.priorityUrgent}</option><option value="normal">{t.priorityNormal}</option>
+          </select>
           <select
             value={statusFilter}
             onChange={(e) => {
@@ -158,8 +185,8 @@ export function AdReportsPage() {
             className="h-9 rounded-lg border border-[#dbdbe8] bg-white px-2 text-sm text-[#2f2b3d] dark:border-[#4a4f68] dark:bg-[#2f3349] dark:text-[#d7d8ea]"
           >
             <option value="">{t.allStatuses}</option>
-            {statusOptions.map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
+            {statusValues.map((value) => (
+              <option key={value} value={value}>{t[value]}</option>
             ))}
           </select>
           <select
@@ -193,10 +220,10 @@ export function AdReportsPage() {
 
       <div className="grid gap-3 sm:grid-cols-4">
         {([
-          ['Pending', counts.pending, 'text-amber-600 dark:text-amber-300'],
-          ['Reviewed', counts.reviewed, 'text-emerald-600 dark:text-emerald-300'],
-          ['Dismissed', counts.dismissed, 'text-slate-600 dark:text-slate-300'],
-          ['Total', counts.total, 'text-[#7367f0]'],
+          [t.pending, counts.pending, 'text-amber-600 dark:text-amber-300'],
+          [t.reviewed, counts.reviewed, 'text-emerald-600 dark:text-emerald-300'],
+          [t.dismissed, counts.dismissed, 'text-slate-600 dark:text-slate-300'],
+          [t.total, counts.total, 'text-[#7367f0]'],
         ] as const).map(([label, value, tone]) => (
           <Card key={label}>
             <CardContent className="p-4">
@@ -216,6 +243,7 @@ export function AdReportsPage() {
                   <th className="px-4 py-3 text-start">{t.id}</th>
                   <th className="px-4 py-3 text-start">{t.ad}</th>
                   <th className="px-4 py-3 text-start">{t.reason}</th>
+                  <th className="px-4 py-3 text-start">{t.priority}</th>
                   <th className="px-4 py-3 text-start">{t.reporter}</th>
                   <th className="px-4 py-3 text-start">{t.date}</th>
                   <th className="px-4 py-3 text-start">{t.status}</th>
@@ -224,9 +252,9 @@ export function AdReportsPage() {
               </thead>
               <tbody>
                 {loading ? (
-                  <TableLoadingRow colSpan={7} />
+                  <TableLoadingRow colSpan={8} />
                 ) : rows.length === 0 ? (
-                  <tr><td className="px-4 py-6 text-center text-sm text-[#8a8da8]" colSpan={7}>{t.noDataFound}</td></tr>
+                  <tr><td className="px-4 py-6 text-center text-sm text-[#8a8da8]" colSpan={8}>{t.noDataFound}</td></tr>
                 ) : (
                   rows.map((row) => (
                     <tr key={row.id} className="border-t border-[#ececf3] dark:border-[#44485f]">
@@ -237,10 +265,11 @@ export function AdReportsPage() {
                             {row.ad.title || `#${row.ad.public_id}`}
                           </Link>
                         ) : (
-                          <span className="text-[#8a8da8]">Ad deleted</span>
+                          <span className="text-[#8a8da8]">{t.adDeleted}</span>
                         )}
                       </td>
                       <td className="px-4 py-3">{row.reason_label || row.reason}</td>
+                      <td className="px-4 py-3"><span className={`rounded-full px-2 py-1 text-xs font-semibold ${row.priority === 'critical' ? 'bg-rose-500/15 text-rose-600' : row.priority === 'urgent' ? 'bg-amber-500/15 text-amber-600' : 'bg-slate-500/15 text-slate-600'}`}>{priorityLabel(row.priority, t)}</span></td>
                       <td className="px-4 py-3">{row.reporter?.name || '-'}</td>
                       <td className="px-4 py-3 whitespace-nowrap">{row.created_at || '-'}</td>
                       <td className="px-4 py-3">
@@ -250,8 +279,8 @@ export function AdReportsPage() {
                           onChange={(e) => updateStatus(row, e.target.value as ReportStatus)}
                           className={`h-9 min-w-[130px] rounded-full border px-3 text-xs font-semibold shadow-sm outline-none transition-all focus:ring-2 focus:ring-[#7367f0]/30 ${statusSelectClass(row.status)}`}
                         >
-                          {statusOptions.map((option) => (
-                            <option key={option.value} value={option.value}>{option.label}</option>
+                          {statusValues.map((value) => (
+                            <option key={value} value={value}>{t[value]}</option>
                           ))}
                         </select>
                       </td>
@@ -294,7 +323,7 @@ export function AdReportsPage() {
 
               <div className="grid gap-3 md:grid-cols-2">
                 <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                  <p className="text-xs text-[#8a8da8]">Reason</p>
+                  <p className="text-xs text-[#8a8da8]">{t.reason}</p>
                   <p className="mt-1 text-sm font-semibold">{details.reason_label || details.reason}</p>
                 </div>
                 <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
@@ -302,31 +331,47 @@ export function AdReportsPage() {
                   <p className="mt-1 text-sm font-semibold capitalize">{details.status}</p>
                 </div>
                 <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                  <p className="text-xs text-[#8a8da8]">Reporter</p>
+                  <p className="text-xs text-[#8a8da8]">{t.reporter}</p>
                   <p className="mt-1 text-sm">{details.reporter?.name || '-'}</p>
                   <p className="text-xs text-[#8a8da8]">{details.reporter?.email || ''}</p>
                 </div>
                 <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                  <p className="text-xs text-[#8a8da8]">Ad owner</p>
+                  <p className="text-xs text-[#8a8da8]">{t.adOwner}</p>
                   <p className="mt-1 text-sm">{details.ad_owner?.name || '-'}</p>
                   <p className="text-xs text-[#8a8da8]">{details.ad_owner?.email || ''}</p>
                 </div>
               </div>
 
               <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                <p className="text-xs text-[#8a8da8]">Reporter's explanation</p>
+                <p className="text-xs text-[#8a8da8]">{t.reporterExplanation}</p>
                 <p className="mt-1 whitespace-pre-wrap text-sm">{details.comment || '-'}</p>
               </div>
 
+              {details.decision_reason ? <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
+                <p className="text-xs text-[#8a8da8]">{t.decisionReason}</p>
+                <p className="mt-1 whitespace-pre-wrap text-sm">{details.decision_reason}</p>
+                <p className="mt-1 text-xs text-[#8a8da8]">{details.resolved_at || '-'}</p>
+              </div> : null}
+
+              {details.ad_owner ? <div className="space-y-3 rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
+                <p className="text-sm font-semibold">{t.moderationAction}</p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <select value={action} onChange={(e) => setAction(e.target.value)} className="h-10 rounded-lg border bg-white px-3 text-sm dark:bg-[#2f3349]"><option value="warning">{t.modWarning}</option><option value="temporary_suspension">{t.modTemporarySuspension}</option><option value="permanent_suspension">{t.modPermanentSuspension}</option><option value="reactivated">{t.modReactivated}</option></select>
+                  {action === 'temporary_suspension' ? <Input type="number" min="1" max="365" value={durationDays} onChange={(e) => setDurationDays(e.target.value)} placeholder={t.durationInDays} /> : null}
+                </div>
+                <textarea rows={3} value={actionReason} onChange={(e) => setActionReason(e.target.value)} placeholder={t.decisionReason} className="w-full rounded-lg border bg-white px-3 py-2 text-sm dark:bg-[#2f3349]" />
+                <Button disabled={!actionReason.trim()} onClick={applyModeration}>{t.applyAction}</Button>
+              </div> : null}
+
               <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                <p className="text-xs text-[#8a8da8]">Reported ad</p>
-                <p className="mt-1 text-sm font-semibold">{details.ad?.title || 'Ad deleted'}</p>
+                <p className="text-xs text-[#8a8da8]">{t.reportedAd}</p>
+                <p className="mt-1 text-sm font-semibold">{details.ad?.title || t.adDeleted}</p>
                 <p className="mt-1 whitespace-pre-wrap text-sm text-[#6f6b7d] dark:text-[#b6b8cc]">
                   {details.ad_description || '-'}
                 </p>
                 {details.ad ? (
                   <Link to={`/ads/${details.ad.id}`} className="mt-2 inline-block text-sm font-semibold text-[#7367f0] hover:underline">
-                    Open ad →
+                    {t.openAd} →
                   </Link>
                 ) : null}
               </div>

@@ -27,10 +27,15 @@ class ChatParticipantResource extends JsonResource
         return trim($firstName.' '.$lastName) ?: (string) $this->name;
     }
 
+    /**
+     * Multibyte-safe: substr() would take the first BYTE of a name, and half of
+     * an Arabic character is invalid UTF-8 — which made json_encode() fail for
+     * the whole conversations response, not just this field.
+     */
     protected function initials(): string
     {
-        $first = strtoupper(substr(trim((string) ($this->first_name ?: $this->name)), 0, 1));
-        $last = strtoupper(substr(trim((string) $this->last_name), 0, 1));
+        $first = mb_strtoupper(mb_substr(trim((string) ($this->first_name ?: $this->name)), 0, 1));
+        $last = mb_strtoupper(mb_substr(trim((string) $this->last_name), 0, 1));
 
         return $first.($last ?: '');
     }

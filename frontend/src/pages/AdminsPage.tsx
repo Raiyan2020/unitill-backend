@@ -33,6 +33,12 @@ function isPrimaryAdminRow(row: AdminRow): boolean {
   return row.id === 1 || row.email.trim().toLowerCase() === PRIMARY_ADMIN_EMAIL;
 }
 
+/** Mirrors the API rule in AdminController: password => 'min:6'. */
+const MIN_PASSWORD_LENGTH = 6;
+
+/** Deliberately permissive: the API is the authority, this only catches typos. */
+const EMAIL_PATTERN = /^[^s@]+@[^s@]+.[^s@]{2,}$/;
+
 export function AdminsPage() {
   const notify = useNotify();
   const { t } = useI18n();
@@ -61,7 +67,7 @@ export function AdminsPage() {
     setLoading(true);
     try {
       const res = await api.get('/admin/admins', { params: { page, per_page: pageSize, search: search || undefined } });
-      const payload: PaginatedResponse<AdminRow> = ensureApiSuccess<PaginatedResponse<AdminRow>>(res, 'Failed to load admins');
+      const payload: PaginatedResponse<AdminRow> = ensureApiSuccess<PaginatedResponse<AdminRow>>(res, t.actionFailed);
       setRows(payload?.data || []);
       setTotal(payload?.total || 0);
     } finally {
@@ -71,7 +77,7 @@ export function AdminsPage() {
 
   const fetchRoles = async () => {
     const res = await api.get('/admin/roles');
-    setRoles(ensureApiSuccess<RoleRow[]>(res, 'Failed to load roles') || []);
+    setRoles(ensureApiSuccess<RoleRow[]>(res, t.actionFailed) || []);
   };
 
   useEffect(() => {
@@ -105,7 +111,7 @@ export function AdminsPage() {
   const openEdit = async (row: AdminRow) => {
     if (isPrimaryAdminRow(row)) return;
     const res = await api.get(`/admin/admins/${row.id}`);
-    const data = ensureApiSuccess<{ name?: string; email?: string; roles?: string[] }>(res, 'Failed to load admin details');
+    const data = ensureApiSuccess<{ name?: string; email?: string; roles?: string[] }>(res, t.actionFailed);
     setFormOpen(true);
     setEditing(row);
     setForm({
@@ -118,12 +124,41 @@ export function AdminsPage() {
   };
 
   const save = async () => {
+    if (!form.name.trim()) {
+      notify.error(t.nameRequired);
+      return;
+    }
+    // Mirrors AdminController: email => 'required|email'. Checking the shape
+    // here turns a raw 422 into a message the admin can act on.
+    const email = form.email.trim();
+    if (!email) {
+      notify.error(t.emailRequired);
+      return;
+    }
+    if (!EMAIL_PATTERN.test(email)) {
+      notify.error(t.emailInvalid);
+      return;
+    }
     if (!editing && !form.password) {
-      notify.error('Password is required.');
+      notify.error(t.passwordRequired);
+      return;
+    }
+    // Only validate length when a password was actually typed: on edit an empty
+    // field means "leave the current password alone".
+    if (form.password && form.password.length < MIN_PASSWORD_LENGTH) {
+      notify.error(t.passwordTooShort.replace('{min}', String(MIN_PASSWORD_LENGTH)));
+      return;
+    }
+    if (form.password && !form.password_confirmation) {
+      notify.error(t.passwordConfirmationRequired);
       return;
     }
     if (form.password !== form.password_confirmation) {
-      notify.error('Password confirmation does not match.');
+      notify.error(t.passwordConfirmationMismatch);
+      return;
+    }
+    if (!form.role) {
+      notify.error(t.roleRequired);
       return;
     }
 
@@ -136,7 +171,7 @@ export function AdminsPage() {
           password: form.password || undefined,
           roles: form.role ? [form.role] : [],
         });
-        ensureApiSuccess(res, 'Failed to update admin');
+        ensureApiSuccess(res, t.actionFailed);
       } else {
         const res = await api.post('/admin/admins', {
           name: form.name,
@@ -145,15 +180,15 @@ export function AdminsPage() {
           password_confirmation: form.password_confirmation,
           roles: form.role ? [form.role] : [],
         });
-        ensureApiSuccess(res, 'Failed to create admin');
+        ensureApiSuccess(res, t.actionFailed);
       }
       setForm({ name: '', email: '', password: '', password_confirmation: '', role: '' });
       setEditing(null);
       setFormOpen(false);
       await fetchAdmins();
-      notify.success(editing ? 'Admin updated successfully.' : 'Admin created successfully.');
+      notify.success(editing ? t.updatedSuccessfully : t.createdSuccessfully);
     } catch (error) {
-      notify.errorFrom(error, editing ? 'Failed to update admin.' : 'Failed to create admin.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setSaving(false);
     }
@@ -164,12 +199,12 @@ export function AdminsPage() {
     setSaving(true);
     try {
       const res = await api.delete(`/admin/admins/${deleting.id}`);
-      ensureApiSuccess(res, 'Failed to delete admin');
+      ensureApiSuccess(res, t.actionFailed);
       setDeleting(null);
       await fetchAdmins();
-      notify.success('Admin deleted successfully.');
+      notify.success(t.deletedSuccessfully);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to delete admin.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setSaving(false);
     }
@@ -198,7 +233,7 @@ export function AdminsPage() {
           </select>
           <Input className="h-9 w-[220px]" placeholder={t.search} value={search} onChange={(e) => setSearch(e.target.value)} />
           <Button size="sm" onClick={openCreate}>
-            + Add Admin
+            + {t.add} {t.admin}
           </Button>
         </div>
       </div>
@@ -266,7 +301,7 @@ export function AdminsPage() {
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
           <Card className="w-full max-w-xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle>{editing ? `Edit #${editing.id}` : 'Create Admin'}</CardTitle>
+              <CardTitle>{editing ? `${t.edit} ${t.admin}` : `${t.add} ${t.admin}`}</CardTitle>
               <Button
                 variant="ghost"
                 size="icon"
@@ -281,20 +316,32 @@ export function AdminsPage() {
             </CardHeader>
             <CardContent className="space-y-5">
               <div className="grid gap-3.5 md:grid-cols-2">
-                <Input placeholder={t.name} value={form.name} onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))} />
-                <Input placeholder={t.email} value={form.email} onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))} />
-                <Input
-                  type="password"
-                  placeholder={editing ? 'New password (optional)' : 'Password'}
-                  value={form.password}
-                  onChange={(e) => setForm((s) => ({ ...s, password: e.target.value }))}
-                />
-                <Input
-                  type="password"
-                  placeholder={editing ? 'Confirm new password' : 'Confirm password'}
-                  value={form.password_confirmation}
-                  onChange={(e) => setForm((s) => ({ ...s, password_confirmation: e.target.value }))}
-                />
+                <label className="space-y-1.5">
+                  <span className="text-xs text-[#8a8da8]">{t.name}</span>
+                  <Input placeholder={t.name} value={form.name} onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))} />
+                </label>
+                <label className="space-y-1.5">
+                  <span className="text-xs text-[#8a8da8]">{t.email}</span>
+                  <Input placeholder={t.email} value={form.email} onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))} />
+                </label>
+                <label className="space-y-1.5">
+                  <span className="text-xs text-[#8a8da8]">{editing ? t.newPasswordOptional : t.password}</span>
+                  <Input
+                    type="password"
+                    placeholder={editing ? t.newPasswordOptional : t.password}
+                    value={form.password}
+                    onChange={(e) => setForm((s) => ({ ...s, password: e.target.value }))}
+                  />
+                </label>
+                <label className="space-y-1.5">
+                  <span className="text-xs text-[#8a8da8]">{editing ? t.confirmNewPassword : t.confirmPassword}</span>
+                  <Input
+                    type="password"
+                    placeholder={editing ? t.confirmNewPassword : t.confirmPassword}
+                    value={form.password_confirmation}
+                    onChange={(e) => setForm((s) => ({ ...s, password_confirmation: e.target.value }))}
+                  />
+                </label>
               </div>
 
               <div className="space-y-1.5">
@@ -334,9 +381,12 @@ export function AdminsPage() {
       {deleting && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
           <Card className="w-full max-w-md">
-            <CardHeader><CardTitle>Confirm deletion</CardTitle></CardHeader>
+            <CardHeader><CardTitle>{t.confirmDeletion}</CardTitle></CardHeader>
             <CardContent>
-              <p className="mb-4 text-sm">Delete admin #{deleting.id}?</p>
+              <p className="text-sm">{t.deleteAdminConfirmation}</p>
+              <p className="mb-4 mt-1 text-sm font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">
+                {deleting.name || deleting.email}
+              </p>
               <div className="flex justify-end gap-2">
                 <Button variant="secondary" onClick={() => setDeleting(null)}>{t.cancel}</Button>
                 <Button variant="destructive" onClick={confirmDelete} disabled={saving}>{t.delete}</Button>

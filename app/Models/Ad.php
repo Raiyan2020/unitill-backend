@@ -35,6 +35,14 @@ class Ad extends Model
         'listing_fee',
         'payment_status',
         'stripe_payment_intent_id',
+        'publish_confirmed_at',
+        'refund_status',
+        'refund_requested_at',
+        'refund_request_reason',
+        'refund_reference',
+        'refund_reason',
+        'refunded_at',
+        'refund_declined_at',
         'is_free_listing',
         'currency',
         'is_negotiable',
@@ -63,6 +71,10 @@ class Ad extends Model
         'expires_at' => 'datetime',
         'paused_at' => 'datetime',
         'sold_at' => 'datetime',
+        'publish_confirmed_at' => 'datetime',
+        'refunded_at' => 'datetime',
+        'refund_declined_at' => 'datetime',
+        'refund_requested_at' => 'datetime',
     ];
 
     protected static function booted(): void
@@ -109,6 +121,11 @@ class Ad extends Model
     public function images(): HasMany
     {
         return $this->hasMany(AdImage::class)->orderBy('sort_order');
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class)->latest('id');
     }
 
     public function attributeValues(): HasMany

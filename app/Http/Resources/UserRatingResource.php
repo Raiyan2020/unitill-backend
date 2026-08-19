@@ -34,7 +34,7 @@ class UserRatingResource extends JsonResource
 
         $firstName = trim((string) ($rater->first_name ?: explode(' ', (string) $rater->name)[0] ?? ''));
         $lastInitial = $rater->last_name
-            ? strtoupper(substr(trim($rater->last_name), 0, 1)).'.'
+            ? mb_strtoupper(mb_substr(trim($rater->last_name), 0, 1)).'.'
             : '';
 
         return trim($firstName.' '.$lastInitial) ?: 'Anonymous';
@@ -46,8 +46,9 @@ class UserRatingResource extends JsonResource
             return '??';
         }
 
-        $first = strtoupper(substr(trim((string) ($rater->first_name ?: $rater->name)), 0, 1));
-        $last = strtoupper(substr(trim((string) $rater->last_name), 0, 1));
+        // Multibyte-safe: see ChatParticipantResource::initials().
+        $first = mb_strtoupper(mb_substr(trim((string) ($rater->first_name ?: $rater->name)), 0, 1));
+        $last = mb_strtoupper(mb_substr(trim((string) $rater->last_name), 0, 1));
 
         return $first.($last ?: '');
     }

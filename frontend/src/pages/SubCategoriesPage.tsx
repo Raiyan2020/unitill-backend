@@ -14,6 +14,11 @@ type LanguageRow = { id: number; code: string };
 type Row = { id: number; parent_id: number | null; translations: Record<string, string> };
 type PaginatedResponse<T> = { data: T[]; total: number };
 
+/** Best available name for a row, for modal titles. */
+function subCategoryName(row: Row): string {
+  return row.translations?.en || Object.values(row.translations || {}).find(Boolean) || `#${row.id}`;
+}
+
 export function SubCategoriesPage() {
   const { t } = useI18n();
   const notify = useNotify();
@@ -39,11 +44,11 @@ export function SubCategoriesPage() {
     setLoading(true);
     try {
       const res = await api.get('/admin/categories', { params: { parent_id: parentId, page, per_page: pageSize, search: search || undefined } });
-      const payload = ensureApiSuccess<PaginatedResponse<Row>>(res, 'Failed to load sub categories');
+      const payload = ensureApiSuccess<PaginatedResponse<Row>>(res, t.actionFailed);
       setRows(payload?.data || []);
       setTotal(payload?.total || 0);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to load sub categories.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setLoading(false);
     }
@@ -51,7 +56,7 @@ export function SubCategoriesPage() {
 
   const fetchLanguages = async () => {
     const res = await api.get('/admin/languages', { params: { per_page: 100 } });
-    const payload = ensureApiSuccess<PaginatedResponse<LanguageRow>>(res, 'Failed to load languages');
+    const payload = ensureApiSuccess<PaginatedResponse<LanguageRow>>(res, t.actionFailed);
     setLanguages(payload?.data || []);
   };
 
@@ -95,7 +100,7 @@ export function SubCategoriesPage() {
   const save = async () => {
     const hasAnyTitle = Object.values(form.translations).some((v) => String(v || '').trim() !== '');
     if (!hasAnyTitle) {
-      notify.error('At least one translation is required.');
+      notify.error(t.atLeastOneTranslation);
       return;
     }
 
@@ -109,16 +114,16 @@ export function SubCategoriesPage() {
       };
       if (editing) {
         const res = await api.put(`/admin/categories/${editing.id}`, payload);
-        ensureApiSuccess(res, 'Failed to update sub category');
+        ensureApiSuccess(res, t.actionFailed);
       } else {
         const res = await api.post('/admin/categories', payload);
-        ensureApiSuccess(res, 'Failed to create sub category');
+        ensureApiSuccess(res, t.actionFailed);
       }
       setFormOpen(false);
       await fetchRows();
-      notify.success(editing ? 'Sub category updated successfully.' : 'Sub category created successfully.');
+      notify.success(editing ? t.updatedSuccessfully : t.createdSuccessfully);
     } catch (error) {
-      notify.errorFrom(error, editing ? 'Failed to update sub category.' : 'Failed to create sub category.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setSaving(false);
     }
@@ -129,12 +134,12 @@ export function SubCategoriesPage() {
     setSaving(true);
     try {
       const res = await api.delete(`/admin/categories/${deleting.id}`);
-      ensureApiSuccess(res, 'Failed to delete sub category');
+      ensureApiSuccess(res, t.actionFailed);
       setDeleting(null);
       await fetchRows();
-      notify.success('Sub category deleted successfully.');
+      notify.success(t.deletedSuccessfully);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to delete sub category.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setSaving(false);
     }
@@ -150,12 +155,12 @@ export function SubCategoriesPage() {
           <p className="text-xs text-[#8a8da8]">Parent category #{parentId}</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="secondary" size="sm" onClick={() => navigate('/categories')}>Back</Button>
+          <Button variant="secondary" size="sm" onClick={() => navigate('/categories')}>{t.back}</Button>
           <select value={pageSize} onChange={(e) => { setPage(1); setPageSize(Number(e.target.value)); }} className="h-9 rounded-lg border border-[#dbdbe8] bg-white px-2 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]">
             {[10, 25, 50, 100].map((size) => <option key={size} value={size}>{size}</option>)}
           </select>
           <Input className="h-9 w-[220px]" placeholder={t.search} value={search} onChange={(e) => setSearch(e.target.value)} />
-          <Button size="sm" onClick={openCreate}>+ Add Sub Category</Button>
+          <Button size="sm" onClick={openCreate}>+ {t.add} {t.subCategory}</Button>
         </div>
       </div>
 
@@ -198,14 +203,14 @@ export function SubCategoriesPage() {
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
           <Card className="w-full max-w-xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle>{editing ? `Edit #${editing.id}` : 'Create Sub Category'}</CardTitle>
+              <CardTitle>{editing ? `${t.edit}: ${subCategoryName(editing)}` : `${t.add} ${t.subCategory}`}</CardTitle>
               <Button variant="ghost" size="icon" onClick={() => setFormOpen(false)}><X className="h-4 w-4" /></Button>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 {languages.map((language) => (
                   <div key={language.id}>
-                    <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-[#8a8da8]">Title ({language.code})</p>
+                    <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-[#8a8da8]">{t.nameInLanguage} ({language.code})</p>
                     <Input
                       value={form.translations[language.code] || ''}
                       onChange={(e) =>
@@ -230,9 +235,9 @@ export function SubCategoriesPage() {
       {deleting && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
           <Card className="w-full max-w-md">
-            <CardHeader><CardTitle>Confirm deletion</CardTitle></CardHeader>
+            <CardHeader><CardTitle>{t.confirmDeletion}</CardTitle></CardHeader>
             <CardContent>
-              <p className="mb-4 text-sm">Delete sub category #{deleting.id}?</p>
+              <p className="mb-4 text-sm">{t.deleteConfirmation}</p>
               <div className="flex justify-end gap-2">
                 <Button variant="secondary" onClick={() => setDeleting(null)}>{t.cancel}</Button>
                 <Button variant="destructive" onClick={confirmDelete} disabled={saving}>{t.delete}</Button>

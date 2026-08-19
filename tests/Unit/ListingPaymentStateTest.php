@@ -94,6 +94,31 @@ class ListingPaymentStateTest extends TestCase
 
         app(StripeService::class)->createListingPaymentIntent($ad);
 
-        Http::assertSent(fn ($request) => $request->hasHeader('Idempotency-Key', 'listing-payment-42'));
+        Http::assertSent(fn ($request) => $request->hasHeader('Idempotency-Key', 'listing-payment-42-listing-500'));
+    }
+
+    public function test_extension_payment_uses_a_distinct_idempotency_key_from_the_original_listing_payment(): void
+    {
+        // Same ad id, different fee (extension price vs listing fee) — this is
+        // exactly the collision that produced Stripe's "idempotent requests...
+        // same parameters" error when the key was ad-id-only.
+        config(['services.stripe.secret' => 'sk_test_contract']);
+        Http::fake([
+            'api.stripe.com/*' => Http::response([
+                'id' => 'pi_test',
+                'client_secret' => 'pi_test_secret_value',
+            ]),
+        ]);
+
+        $ad = new Ad([
+            'public_id' => 'PUBLIC123',
+            'user_id' => 7,
+            'listing_fee' => 0.99,
+        ]);
+        $ad->id = 80;
+
+        app(StripeService::class)->createListingPaymentIntent($ad, 'extension');
+
+        Http::assertSent(fn ($request) => $request->hasHeader('Idempotency-Key', 'listing-payment-80-extension-99'));
     }
 }

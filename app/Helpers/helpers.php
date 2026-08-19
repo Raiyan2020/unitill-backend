@@ -3,6 +3,15 @@
 
 use Carbon\Carbon;
 
+/*
+ * JSON_INVALID_UTF8_SUBSTITUTE on both helpers: json_encode() throws
+ * "Malformed UTF-8 characters" on a single bad byte anywhere in the payload,
+ * which took down the whole conversations list because one stored message held
+ * invalid bytes. Substituting U+FFFD degrades that one character instead of the
+ * entire response. Valid UTF-8 is encoded byte-for-byte as before, so existing
+ * mobile responses are unchanged.
+ */
+
 function sendResponse($result, $message = null)
 {
 
@@ -18,7 +27,7 @@ function sendResponse($result, $message = null)
         $response['message'] = $message;
     }
 
-    return response()->json($response, 200);
+    return response()->json($response, 200, [], JSON_INVALID_UTF8_SUBSTITUTE);
 }
 
 function sendError($error = 'error', $errorMessages = [], $code = 400)
@@ -44,7 +53,7 @@ function sendError($error = 'error', $errorMessages = [], $code = 400)
         $response['data'] = $errorMessages;
     }
 
-    return response()->json($response, $code);
+    return response()->json($response, $code, [], JSON_INVALID_UTF8_SUBSTITUTE);
 }
 
 

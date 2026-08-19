@@ -6,6 +6,7 @@ import { Input } from '../components/ui/input';
 import { TableFooter, TableLoadingRow } from '../components/table/TableHelpers';
 import { api } from '../lib/api';
 import { ensureApiSuccess } from '../lib/api-response';
+import { digitsOnly, toInteger } from '../lib/form';
 import { useNotify } from '../lib/notify';
 import { useI18n } from '../providers/i18n-provider';
 
@@ -21,6 +22,9 @@ type LanguageRow = {
 };
 
 type PaginatedResponse<T> = { data: T[] };
+
+/** Mirrors LanguageController: code => 'max:10'. */
+const LANGUAGE_CODE_MAX_LENGTH = 10;
 
 export function LanguagesPage() {
   const notify = useNotify();
@@ -50,7 +54,7 @@ export function LanguagesPage() {
     setLoading(true);
     try {
       const res = await api.get('/admin/languages', { params: { page, per_page: pageSize, search: search || undefined } });
-      const payload: PaginatedResponse<LanguageRow> & { total?: number } = ensureApiSuccess<PaginatedResponse<LanguageRow>>(res, 'Failed to load languages');
+      const payload: PaginatedResponse<LanguageRow> & { total?: number } = ensureApiSuccess<PaginatedResponse<LanguageRow>>(res, t.actionFailed);
       setRows(payload?.data || []);
       setTotal(payload?.total || 0);
     } finally {
@@ -95,21 +99,35 @@ export function LanguagesPage() {
   };
 
   const save = async () => {
+    const code = form.code.trim();
+    if (!code) {
+      notify.error(t.languageCodeRequired);
+      return;
+    }
+    if (code.length > LANGUAGE_CODE_MAX_LENGTH) {
+      notify.error(t.languageCodeLength.replace('{max}', String(LANGUAGE_CODE_MAX_LENGTH)));
+      return;
+    }
+    if (!form.name.trim() || !form.native_name.trim()) {
+      notify.error(t.nameRequiredAnyLanguage);
+      return;
+    }
+
     setSaving(true);
     try {
-      const payload = { ...form, sort_order: Number(form.sort_order || 0) };
+      const payload = { ...form, sort_order: toInteger(form.sort_order) };
       if (editing) {
         const res = await api.put(`/admin/languages/${editing.id}`, payload);
-        ensureApiSuccess(res, 'Failed to update language');
+        ensureApiSuccess(res, t.actionFailed);
       } else {
         const res = await api.post('/admin/languages', payload);
-        ensureApiSuccess(res, 'Failed to create language');
+        ensureApiSuccess(res, t.actionFailed);
       }
       setFormOpen(false);
       await fetchRows();
-      notify.success(editing ? 'Language updated successfully.' : 'Language created successfully.');
+      notify.success(editing ? t.updatedSuccessfully : t.createdSuccessfully);
     } catch (error) {
-      notify.errorFrom(error, editing ? 'Failed to update language.' : 'Failed to create language.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setSaving(false);
     }
@@ -120,12 +138,12 @@ export function LanguagesPage() {
     setSaving(true);
     try {
       const res = await api.delete(`/admin/languages/${deleting.id}`);
-      ensureApiSuccess(res, 'Failed to delete language');
+      ensureApiSuccess(res, t.actionFailed);
       setDeleting(null);
       await fetchRows();
-      notify.success('Language deleted successfully.');
+      notify.success(t.deletedSuccessfully);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to delete language.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setSaving(false);
     }
@@ -153,7 +171,7 @@ export function LanguagesPage() {
             ))}
           </select>
           <Input className="h-9 w-[220px]" placeholder={t.search} value={search} onChange={(e) => setSearch(e.target.value)} />
-          <Button size="sm" onClick={openCreate}>+ Add Language</Button>
+          <Button size="sm" onClick={openCreate}>+ {t.add} {t.language}</Button>
         </div>
       </div>
 
@@ -216,22 +234,47 @@ export function LanguagesPage() {
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
           <Card className="w-full max-w-xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle>{editing ? `Edit #${editing.id}` : 'Create Language'}</CardTitle>
+              <CardTitle>{editing ? `${t.edit}: ${editing.name || editing.code}` : `${t.add} ${t.language}`}</CardTitle>
               <Button variant="ghost" size="icon" onClick={() => setFormOpen(false)}><X className="h-4 w-4" /></Button>
             </CardHeader>
             <CardContent className="grid gap-3 md:grid-cols-2">
-              <Input placeholder={t.code} value={form.code} onChange={(e) => setForm((s) => ({ ...s, code: e.target.value }))} />
-              <Input placeholder={t.sort} value={form.sort_order} onChange={(e) => setForm((s) => ({ ...s, sort_order: e.target.value }))} />
-              <Input placeholder={t.name} value={form.name} onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))} />
-              <Input placeholder={t.nativeName} value={form.native_name} onChange={(e) => setForm((s) => ({ ...s, native_name: e.target.value }))} />
-              <select value={form.direction} onChange={(e) => setForm((s) => ({ ...s, direction: e.target.value as 'ltr' | 'rtl' }))} className="h-10 rounded-xl border border-[#dbdbe8] bg-white px-3 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]">
-                <option value="ltr">ltr</option>
-                <option value="rtl">rtl</option>
-              </select>
-              <div className="flex items-center gap-4 rounded-xl border border-[#ececf3] px-3 dark:border-[#44485f]">
-                <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.is_active} onChange={(e) => setForm((s) => ({ ...s, is_active: e.target.checked }))} /> Active</label>
-                <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.is_default} onChange={(e) => setForm((s) => ({ ...s, is_default: e.target.checked }))} /> Default</label>
-              </div>
+              <label className="space-y-1.5">
+                <span className="text-xs text-[#8a8da8]">{t.code}</span>
+                <Input placeholder={t.code} value={form.code} onChange={(e) => setForm((s) => ({ ...s, code: e.target.value }))} />
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-xs text-[#8a8da8]">{t.sort}</span>
+                <Input placeholder={t.sort} inputMode="numeric" value={form.sort_order} onChange={(e) => setForm((s) => ({ ...s, sort_order: digitsOnly(e.target.value) }))} />
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-xs text-[#8a8da8]">{t.name}</span>
+                <Input placeholder={t.name} value={form.name} onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))} />
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-xs text-[#8a8da8]">{t.nativeName}</span>
+                <Input placeholder={t.nativeName} value={form.native_name} onChange={(e) => setForm((s) => ({ ...s, native_name: e.target.value }))} />
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-xs text-[#8a8da8]">{t.direction}</span>
+                <select value={form.direction} onChange={(e) => setForm((s) => ({ ...s, direction: e.target.value as 'ltr' | 'rtl' }))} className="h-10 w-full rounded-xl border border-[#dbdbe8] bg-white px-3 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]">
+                  <option value="ltr">ltr</option>
+                  <option value="rtl">rtl</option>
+                </select>
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-xs text-[#8a8da8]">{t.isActiveQuestion}</span>
+                <select
+                  value={form.is_active ? 'active' : 'inactive'}
+                  onChange={(e) => setForm((s) => ({ ...s, is_active: e.target.value === 'active' }))}
+                  className="h-10 w-full rounded-xl border border-[#dbdbe8] bg-white px-3 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]"
+                >
+                  <option value="active">{t.active}</option>
+                  <option value="inactive">{t.inactive}</option>
+                </select>
+              </label>
+              <label className="col-span-full flex items-center gap-2 rounded-xl border border-[#ececf3] px-3 py-2.5 text-sm dark:border-[#44485f]">
+                <input type="checkbox" checked={form.is_default} onChange={(e) => setForm((s) => ({ ...s, is_default: e.target.checked }))} /> {t.isDefault}
+              </label>
               <div className="col-span-full flex justify-end gap-2">
                 <Button variant="secondary" onClick={() => setFormOpen(false)}>{t.cancel}</Button>
                 <Button onClick={save} disabled={saving}>{t.save}</Button>
@@ -244,9 +287,9 @@ export function LanguagesPage() {
       {deleting && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
           <Card className="w-full max-w-md">
-            <CardHeader><CardTitle>Confirm deletion</CardTitle></CardHeader>
+            <CardHeader><CardTitle>{t.confirmDeletion}</CardTitle></CardHeader>
             <CardContent>
-              <p className="mb-4 text-sm">Delete language #{deleting.id}?</p>
+              <p className="mb-4 text-sm">{t.deleteConfirmation}</p>
               <div className="flex justify-end gap-2">
                 <Button variant="secondary" onClick={() => setDeleting(null)}>{t.cancel}</Button>
                 <Button variant="destructive" onClick={confirmDelete} disabled={saving}>{t.delete}</Button>

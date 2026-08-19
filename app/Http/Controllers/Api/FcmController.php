@@ -23,7 +23,10 @@ class FcmController extends Controller
         $user = Auth::user();
         $deviceToken = $validated['device_token'];
 
-        $user->update(['device_token' => $deviceToken]);
+        $user->update([
+            'device_token' => $deviceToken,
+            'device_token_updated_at' => now(),
+        ]);
         $this->pushNotifications->syncUserTopicSubscription($user->fresh(), $deviceToken);
 
         return sendResponse([

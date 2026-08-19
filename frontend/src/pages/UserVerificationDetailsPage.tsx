@@ -38,10 +38,10 @@ export function UserVerificationDetailsPage() {
         const res = await api.get('/admin/trusted-seller-applications', {
           params: { user_id: uid, per_page: 100 },
         });
-        const payload = ensureApiSuccess<PaginatedResponse<RequestRow>>(res, 'Failed to load user verification data');
+        const payload = ensureApiSuccess<PaginatedResponse<RequestRow>>(res, t.actionFailed);
         setRows(payload?.data || []);
       } catch (error) {
-        notify.errorFrom(error, 'Failed to load user verification data.');
+        notify.errorFrom(error, t.actionFailed);
       } finally {
         setLoading(false);
       }
@@ -54,46 +54,46 @@ export function UserVerificationDetailsPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-2xl font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">User Verification Details</h2>
+        <h2 className="text-2xl font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">{t.userVerificationDetails}</h2>
         <div className="flex items-center gap-2">
-          <Link to="/users"><Button variant="secondary">Back to Users</Button></Link>
-          <Link to="/user-verifications"><Button variant="secondary">All Requests</Button></Link>
+          <Link to="/users"><Button variant="secondary">{t.backToUsers}</Button></Link>
+          <Link to="/user-verifications"><Button variant="secondary">{t.allRequests}</Button></Link>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Latest Verification Request</CardTitle>
+          <CardTitle>{t.latestVerificationRequest}</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-sm text-[#8a8da8]">Loading...</p>
+            <p className="text-sm text-[#8a8da8]">{t.loading}</p>
           ) : !latest ? (
-            <p className="text-sm text-[#8a8da8]">No verification request found for this user.</p>
+            <p className="text-sm text-[#8a8da8]">{t.noVerificationRequest}</p>
           ) : (
             <div className="grid gap-3 md:grid-cols-3">
               <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                <p className="text-xs text-[#8a8da8]">User</p>
+                <p className="text-xs text-[#8a8da8]">{t.user}</p>
                 <p className="mt-1 text-sm font-semibold">{latest.user_name}</p>
               </div>
               <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                <p className="text-xs text-[#8a8da8]">Email</p>
+                <p className="text-xs text-[#8a8da8]">{t.email}</p>
                 <p className="mt-1 text-sm">{latest.user_email || '-'}</p>
               </div>
               <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                <p className="text-xs text-[#8a8da8]">Status</p>
+                <p className="text-xs text-[#8a8da8]">{t.status}</p>
                 <p className="mt-1 text-sm capitalize">{latest.status}</p>
               </div>
               <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                <p className="text-xs text-[#8a8da8]">Seller Type</p>
+                <p className="text-xs text-[#8a8da8]">{t.sellerType}</p>
                 <p className="mt-1 text-sm">{latest.seller_type}</p>
               </div>
               <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                <p className="text-xs text-[#8a8da8]">City</p>
+                <p className="text-xs text-[#8a8da8]">{t.city}</p>
                 <p className="mt-1 text-sm">{latest.operations_city || '-'}</p>
               </div>
               <div className="rounded-xl border border-[#ececf3] p-3 dark:border-[#44485f]">
-                <p className="text-xs text-[#8a8da8]">Phone</p>
+                <p className="text-xs text-[#8a8da8]">{t.phone}</p>
                 <p className="mt-1 text-sm">{latest.contact_phone || '-'}</p>
               </div>
             </div>
@@ -104,7 +104,7 @@ export function UserVerificationDetailsPage() {
       {rows.length > 0 ? (
         <Card>
           <CardHeader>
-            <CardTitle>All User Verification Requests</CardTitle>
+            <CardTitle>{t.allUserVerificationRequests}</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">

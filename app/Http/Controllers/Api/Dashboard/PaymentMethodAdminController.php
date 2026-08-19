@@ -26,7 +26,22 @@ class PaymentMethodAdminController extends Controller
             });
         }
 
-        return sendResponse($query->paginate($perPage), 'Payment methods fetched');
+        $rows = $query->paginate($perPage);
+
+        // `image` is a storage-relative path, which the dashboard cannot resolve
+        // when it runs on its own domain. Serve an absolute URL alongside it,
+        // matching what the categories endpoint already does.
+        $rows->getCollection()->transform(function (PaymentMethod $method) {
+            $method->image_url = $method->image
+                ? (str_starts_with($method->image, 'http')
+                    ? $method->image
+                    : asset('storage/'.ltrim($method->image, '/')))
+                : null;
+
+            return $method;
+        });
+
+        return sendResponse($rows, 'Payment methods fetched');
     }
 
     public function store(Request $request)

@@ -58,10 +58,10 @@ const emptyForm = {
 type FormState = typeof emptyForm;
 
 function statusOf(row: CouponRow) {
-  if (!row.is_active) return { label: 'Inactive', tone: 'bg-slate-500/15 text-slate-700 dark:text-slate-300' };
-  if (row.is_expired) return { label: 'Expired', tone: 'bg-rose-500/15 text-rose-700 dark:text-rose-300' };
-  if (row.is_exhausted) return { label: 'Used up', tone: 'bg-amber-500/15 text-amber-700 dark:text-amber-300' };
-  return { label: 'Active', tone: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' };
+  if (!row.is_active) return { key: 'inactive' as const, tone: 'bg-slate-500/15 text-slate-700 dark:text-slate-300' };
+  if (row.is_expired) return { key: 'expired' as const, tone: 'bg-rose-500/15 text-rose-700 dark:text-rose-300' };
+  if (row.is_exhausted) return { key: 'usedUp' as const, tone: 'bg-amber-500/15 text-amber-700 dark:text-amber-300' };
+  return { key: 'active' as const, tone: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300' };
 }
 
 export function CouponsPage() {
@@ -87,12 +87,12 @@ export function CouponsPage() {
       const res = await api.get('/admin/coupons', {
         params: { page, per_page: pageSize, search: search || undefined, status: statusFilter || undefined },
       });
-      const payload = ensureApiSuccess<CouponsResponse>(res, 'Failed to load coupons');
+      const payload = ensureApiSuccess<CouponsResponse>(res, t.actionFailed);
       setRows(payload?.coupons?.data || []);
       setTotal(payload?.coupons?.total || 0);
       if (payload?.counts) setCounts(payload.counts);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to load coupons.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setLoading(false);
     }
@@ -156,13 +156,13 @@ export function CouponsPage() {
       const res = editingId
         ? await api.put(`/admin/coupons/${editingId}`, body)
         : await api.post('/admin/coupons', body);
-      ensureApiSuccess(res, 'Failed to save coupon');
+      ensureApiSuccess(res, t.actionFailed);
       notify.success(editingId ? 'Coupon updated.' : 'Coupon created.');
       setForm(null);
       setEditingId(null);
       fetchRows();
     } catch (error) {
-      notify.errorFrom(error, 'Failed to save coupon.');
+      notify.errorFrom(error, t.actionFailed);
     } finally {
       setSaving(false);
     }
@@ -176,20 +176,20 @@ export function CouponsPage() {
 
     try {
       const res = await api.delete(`/admin/coupons/${row.id}`);
-      const payload = ensureApiSuccess(res, 'Failed to delete coupon');
+      const payload = ensureApiSuccess(res, t.actionFailed);
       notify.success((payload as { message?: string })?.message || 'Coupon removed.');
       fetchRows();
     } catch (error) {
-      notify.errorFrom(error, 'Failed to delete coupon.');
+      notify.errorFrom(error, t.actionFailed);
     }
   };
 
   const openDetails = async (id: number) => {
     try {
       const res = await api.get(`/admin/coupons/${id}`);
-      setDetails(ensureApiSuccess<CouponDetails>(res, 'Failed to load coupon') || null);
+      setDetails(ensureApiSuccess<CouponDetails>(res, t.actionFailed) || null);
     } catch (error) {
-      notify.errorFrom(error, 'Failed to load coupon details.');
+      notify.errorFrom(error, t.actionFailed);
     }
   };
 
@@ -200,7 +200,7 @@ export function CouponsPage() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-2xl font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">Coupons</h2>
+        <h2 className="text-2xl font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">{t.coupons}</h2>
         <div className="flex flex-wrap items-center gap-2">
           <select
             value={statusFilter}
@@ -229,17 +229,17 @@ export function CouponsPage() {
           </select>
           <Input className="h-9 w-[200px]" placeholder={t.searchCode} value={search} onChange={(e) => setSearch(e.target.value)} />
           <Button className="h-9" onClick={openCreate}>
-            <Plus className="me-1 h-4 w-4" /> New coupon
+            <Plus className="me-1 h-4 w-4" /> {t.newCoupon}
           </Button>
         </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-4">
         {([
-          ['Total', counts.total, 'text-[#7367f0]'],
-          ['Active', counts.active, 'text-emerald-600 dark:text-emerald-300'],
-          ['Expired', counts.expired, 'text-rose-600 dark:text-rose-300'],
-          ['Redemptions', counts.redemptions, 'text-amber-600 dark:text-amber-300'],
+          [t.total, counts.total, 'text-[#7367f0]'],
+          [t.active, counts.active, 'text-emerald-600 dark:text-emerald-300'],
+          [t.expired, counts.expired, 'text-rose-600 dark:text-rose-300'],
+          [t.redemptions, counts.redemptions, 'text-amber-600 dark:text-amber-300'],
         ] as const).map(([label, value, tone]) => (
           <Card key={label}>
             <CardContent className="p-4">
@@ -289,7 +289,7 @@ export function CouponsPage() {
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">{row.expires_at?.slice(0, 10) || '-'}</td>
                         <td className="px-4 py-3">
-                          <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${status.tone}`}>{status.label}</span>
+                          <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${status.tone}`}>{t[status.key]}</span>
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex gap-2">
@@ -329,7 +329,7 @@ export function CouponsPage() {
             <CardContent className="space-y-4 p-5">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">
-                  {editingId ? 'Edit coupon' : 'New coupon'}
+                  {editingId ? t.editCoupon : t.newCoupon}
                 </h3>
                 <Button variant="secondary" className="h-9 px-3" onClick={() => setForm(null)}>
                   <X className="h-4 w-4" />
@@ -338,11 +338,11 @@ export function CouponsPage() {
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="text-sm">
-                  <span className="text-xs text-[#8a8da8]">Code</span>
+                  <span className="text-xs text-[#8a8da8]">{t.code}</span>
                   <Input className="mt-1 font-mono" value={form.code} onChange={(e) => field('code', e.target.value)} placeholder="STUDENT50" />
                 </label>
                 <label className="text-sm">
-                  <span className="text-xs text-[#8a8da8]">Type</span>
+                  <span className="text-xs text-[#8a8da8]">{t.type}</span>
                   <select
                     value={form.type}
                     onChange={(e) => field('type', e.target.value)}
@@ -357,34 +357,34 @@ export function CouponsPage() {
                   <Input className="mt-1" type="number" value={form.value} onChange={(e) => field('value', e.target.value)} />
                 </label>
                 <label className="text-sm">
-                  <span className="text-xs text-[#8a8da8]">Max discount £ (optional)</span>
+                  <span className="text-xs text-[#8a8da8]">{t.maxDiscountOptional}</span>
                   <Input className="mt-1" type="number" value={form.max_discount} onChange={(e) => field('max_discount', e.target.value)} />
                 </label>
                 <label className="text-sm">
-                  <span className="text-xs text-[#8a8da8]">Min spend £ (optional)</span>
+                  <span className="text-xs text-[#8a8da8]">{t.minSpendOptional}</span>
                   <Input className="mt-1" type="number" value={form.min_amount} onChange={(e) => field('min_amount', e.target.value)} />
                 </label>
                 <label className="text-sm">
-                  <span className="text-xs text-[#8a8da8]">Total uses (blank = unlimited)</span>
+                  <span className="text-xs text-[#8a8da8]">{t.totalUsesHint}</span>
                   <Input className="mt-1" type="number" value={form.max_redemptions} onChange={(e) => field('max_redemptions', e.target.value)} />
                 </label>
                 <label className="text-sm">
-                  <span className="text-xs text-[#8a8da8]">Starts at (optional)</span>
+                  <span className="text-xs text-[#8a8da8]">{t.startsAtOptional}</span>
                   <Input className="mt-1" type="date" value={form.starts_at} onChange={(e) => field('starts_at', e.target.value)} />
                 </label>
                 <label className="text-sm">
-                  <span className="text-xs text-[#8a8da8]">Expires at (optional)</span>
+                  <span className="text-xs text-[#8a8da8]">{t.expiresAtOptional}</span>
                   <Input className="mt-1" type="date" value={form.expires_at} onChange={(e) => field('expires_at', e.target.value)} />
                 </label>
               </div>
 
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" checked={form.is_active} onChange={(e) => field('is_active', e.target.checked)} />
-                Active
+                {t.active}
               </label>
 
               <p className="rounded-lg bg-[#f8f7fb] p-3 text-xs text-[#8a8da8] dark:bg-[#383d56]">
-                Every coupon can be used only once per user — that limit is enforced automatically.
+                {t.couponOncePerUserNote}
               </p>
 
               <div className="flex justify-end gap-2">
@@ -413,7 +413,7 @@ export function CouponsPage() {
               </div>
 
               <div>
-                <p className="mb-2 text-sm font-semibold">Redemptions</p>
+                <p className="mb-2 text-sm font-semibold">{t.redemptions}</p>
                 {details.redemptions.length ? (
                   <div className="overflow-x-auto rounded-xl border border-[#ececf3] dark:border-[#44485f]">
                     <table className="w-full text-sm">
@@ -441,7 +441,7 @@ export function CouponsPage() {
                   </div>
                 ) : (
                   <div className="rounded-xl border border-dashed border-[#ececf3] p-3 text-sm text-[#8a8da8] dark:border-[#44485f]">
-                    This coupon has not been used yet.
+                    {t.couponNotUsedYet}
                   </div>
                 )}
               </div>

@@ -11,6 +11,12 @@ class CategoryAttributeDefinitionTranslation extends Model
         'category_attribute_definition_id',
         'language_id',
         'label',
+        'options',
+    ];
+
+    protected $casts = [
+        // value => localized label, for select/multiselect attributes.
+        'options' => 'array',
     ];
 
     public function definition(): BelongsTo

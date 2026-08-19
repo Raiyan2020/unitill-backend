@@ -102,7 +102,10 @@ class ChatService
             throw new \InvalidArgumentException('messaging_disabled');
         }
 
-        $body = trim($body ?? '');
+        // Drop invalid byte sequences before anything is stored: a client that
+        // posts malformed UTF-8 otherwise poisons the whole conversations list,
+        // because json_encode() fails on the entire response.
+        $body = self::toValidUtf8(trim($body ?? ''));
 
         if ($body === '' && !$attachmentPath) {
             throw new \InvalidArgumentException('empty_message');
@@ -353,5 +356,18 @@ class ChatService
             // logged, never allowed to fail the send that triggered it.
             report($e);
         }
+    }
+
+    /**
+     * Strips byte sequences that are not valid UTF-8, keeping every valid
+     * character (Arabic, emoji, CJK) untouched.
+     */
+    public static function toValidUtf8(string $value): string
+    {
+        if ($value === '' || mb_check_encoding($value, 'UTF-8')) {
+            return $value;
+        }
+
+        return mb_convert_encoding($value, 'UTF-8', 'UTF-8');
     }
 }

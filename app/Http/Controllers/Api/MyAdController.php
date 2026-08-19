@@ -8,8 +8,10 @@ use App\Models\Ad;
 use App\Models\AdAttributeValue;
 use App\Models\AdImage;
 use App\Models\Conversation;
+use App\Models\Payment;
 use App\Models\User;
 use App\Services\ChatService;
+use App\Services\ListingPaymentService;
 use App\Traits\HandlesListingPayments;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -213,19 +215,27 @@ class MyAdController extends Controller
             );
         }
 
-        // Reactivating starts a new 30-day listing period, so it is charged like
-        // any other. The previous intent must be cleared first — startPublication
-        // treats an existing one as "payment already in progress" and would skip
-        // creating a new one, letting the ad go live without paying again.
-        $ad->update([
-            'paused_at' => null,
-            'inactive_reason' => null,
-            'listing_fee' => null,
-            'payment_status' => 'not_required',
-            'stripe_payment_intent_id' => null,
-        ]);
+        // A pause does not consume the paid posting period: inside it,
+        // reactivating simply resumes the ad with no second fee.
+        if ($this->hasUnexpiredPaidPeriod($ad)) {
+            $ad->update([
+                'status' => 'published',
+                'paused_at' => null,
+                'inactive_reason' => null,
+            ]);
 
-        $publication = $this->startPublication($ad->fresh(), $request->input('coupon_code'));
+            $resumed = $ad->fresh();
+
+            return sendResponse(
+                [
+                    'ad' => new MyAdResource($resumed),
+                    'publication' => app(ListingPaymentService::class)->publicationState($resumed),
+                ],
+                __('api.ad.activated')
+            );
+        }
+
+        $publication = $this->startExtension($ad, $request->input('coupon_code'));
 
         if (isset($publication['coupon_error'])) {
             return sendError(
@@ -244,6 +254,68 @@ class MyAdController extends Controller
         );
     }
 
+    public function requestRefund(Request $request, string $id)
+    {
+        $ad = $this->findOwnedAd($id);
+
+        if (! $ad || $ad->payment_status !== 'paid' || ! $ad->stripe_payment_intent_id) {
+            return sendError(__('api.ad.refund_not_available'), [], 422);
+        }
+
+        if ($ad->refund_status !== null) {
+            return sendError(__('api.ad.refund_already_decided'), [], 422);
+        }
+
+        $validated = $request->validate([
+            'reason' => 'required|string|max:1000',
+        ], [
+            'reason.required' => __('api.ad.refund_reason_required'),
+        ]);
+
+        $requestedAt = now();
+
+        $ad->update([
+            'refund_status' => 'requested',
+            'refund_requested_at' => $requestedAt,
+            'refund_request_reason' => $validated['reason'],
+        ]);
+
+        Payment::where('stripe_payment_intent_id', $ad->stripe_payment_intent_id)->update([
+            'refund_status' => 'requested',
+            'refund_requested_at' => $requestedAt,
+            'refund_request_reason' => $validated['reason'],
+        ]);
+
+        return sendResponse(new MyAdResource($ad->fresh()), __('api.ad.refund_requested'));
+    }
+
+    public function refundRequests(Request $request)
+    {
+        $perPage = (int) ($request->input('per_page', 20));
+
+        $ads = Ad::query()
+            ->where('user_id', Auth::id())
+            ->whereNotNull('refund_status')
+            ->orderByDesc('refund_requested_at')
+            ->paginate($perPage);
+
+        $ads->through(fn (Ad $ad) => [
+            'id' => $ad->id,
+            'public_id' => $ad->public_id,
+            'title' => $ad->title,
+            'listing_fee' => $ad->listing_fee,
+            'currency' => $ad->currency,
+            'refund_status' => $ad->refund_status,
+            'refund_requested_at' => optional($ad->refund_requested_at)->toIso8601String(),
+            'refund_request_reason' => $ad->refund_request_reason,
+            'refund_reason' => $ad->refund_reason,
+            'refunded_at' => optional($ad->refunded_at)->toIso8601String(),
+            'refund_declined_at' => optional($ad->refund_declined_at)->toIso8601String(),
+        ]);
+
+        return sendResponse($ads);
+    }
+
     /**
      * "Sell again" on a sold ad: copies it into a brand new listing rather than
      * reviving the original.
@@ -255,6 +327,18 @@ class MyAdController extends Controller
     public function sellAgain(Request $request, string $id)
     {
         $lang = $request->header('lang') === 'ar';
+        $user = Auth::user();
+
+        if ($user->needsReverification()) {
+            return sendError(
+                $lang
+                    ? 'يجب إعادة تأكيد حالتك كطالب قبل إنشاء إعلان جديد'
+                    : 'Please re-verify your student status before creating a new listing',
+                ['needs_reverify' => true],
+                403
+            );
+        }
+
         $ad = $this->findOwnedAd($id);
 
         if (! $ad) {

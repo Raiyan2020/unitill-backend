@@ -17,9 +17,9 @@ class SettingSeeder extends Seeder
 
         Setting::create([
             'key_id' => 'post_price',
-            'title_en'=>'Post Price',
-            'title_ar'=>'سعر الاعلان',
-            'value' => '5.00',
+            'title_en'=>'Standard Post Price',
+            'title_ar'=>'سعر الاعلان القياسي',
+            'value' => '0.99',
             'set_group' => 'app',
             'is_object' => '1',
         ]);
@@ -38,6 +38,15 @@ class SettingSeeder extends Seeder
             'title_en' => 'Post Duration (days)',
             'title_ar' => 'مدة الإعلان (أيام)',
             'value' => '30',
+            'set_group' => 'app',
+            'is_object' => '1',
+        ]);
+
+        Setting::create([
+            'key_id' => 'listing_extension_price',
+            'title_en' => 'Listing Extension Price',
+            'title_ar' => 'سعر تمديد الإعلان',
+            'value' => '0.99',
             'set_group' => 'app',
             'is_object' => '1',
         ]);
@@ -131,7 +140,26 @@ class SettingSeeder extends Seeder
             'is_object' => '0',
         ]);
 
+        // Social profile URLs — served as `social_links` by GET /api/settings.
+        // Left blank on purpose: the app hides the icon row until they are set.
+        $socials = [
+            'social_facebook' => ['Facebook URL', 'رابط فيسبوك'],
+            'social_instagram' => ['Instagram URL', 'رابط إنستغرام'],
+            'social_x' => ['X (Twitter) URL', 'رابط إكس (تويتر)'],
+            'social_linkedin' => ['LinkedIn URL', 'رابط لينكدإن'],
+            'social_tiktok' => ['TikTok URL', 'رابط تيك توك'],
+            'social_youtube' => ['YouTube URL', 'رابط يوتيوب'],
+        ];
 
-
+        foreach ($socials as $key => [$titleEn, $titleAr]) {
+            Setting::create([
+                'key_id' => $key,
+                'title_en' => $titleEn,
+                'title_ar' => $titleAr,
+                'value' => '',
+                'set_group' => 'social',
+                'is_object' => '0',
+            ]);
+        }
     }
 }

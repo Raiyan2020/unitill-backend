@@ -1,0 +1,1399 @@
+diff --git a/app/Http/Controllers/Api/AdController.php b/app/Http/Controllers/Api/AdController.php
+index a109ca3..51488dc 100644
+--- a/app/Http/Controllers/Api/AdController.php
++++ b/app/Http/Controllers/Api/AdController.php
+@@ -135,6 +135,18 @@ public function index(Request $request)
+                 );
+         }
+ 
++        // Signed-in viewers see ads from their own city first, newest within each
++        // group; guests just get newest first. Skipped when the caller picked an
++        // explicit city or sort, since that is a deliberate ordering choice.
++        $prioritizedCityId = null;
++        if (empty($validated['city_id']) && empty($validated['sort'])) {
++            $prioritizedCityId = auth('sanctum')->user()?->city_id;
++        }
++
++        if ($prioritizedCityId) {
++            $query->orderByRaw('(city_id = ?) desc', [(int) $prioritizedCityId]);
++        }
++
+         AdSort::apply($query, $sort, $originLat, $originLng);
+ 
+         $this->attachFavoriteIds($request);
+@@ -169,6 +181,8 @@ public function index(Request $request)
+         $response = AdResource::collection($ads)->response()->getData(true);
+         $response['sort_options'] = AdSort::options($lang, $supportsVehicleSorts);
+         $response['current_sort'] = AdSort::normalize($sort);
++        // Lets the app label the "ads in your city" band at the top of the list.
++        $response['prioritized_city_id'] = $prioritizedCityId ? (int) $prioritizedCityId : null;
+         $response['applied_filters'] = array_filter([
+             'search' => $search !== '' ? $search : null,
+             'main_category_id' => $mainCategoryId > 0 ? $mainCategoryId : null,
+@@ -260,8 +274,6 @@ protected function definitionsForCategories(array $specCategoryIds, int $subCate
+ 
+     protected function filterOptionsForCategory(int $categoryId, string $lang): array
+     {
+-        $ar = $lang === 'ar';
+-
+         $defs = CategoryAttributeDefinition::query()
+             ->where('category_id', $categoryId)
+             ->where('is_active', true)
+@@ -277,7 +289,8 @@ protected function filterOptionsForCategory(int $categoryId, string $lang): arra
+                     'input_type' => $definition->input_type,
+                     'filter_control' => $filterControl,
+                     'post_control' => $definition->resolvedPostControl(),
+-                    'options' => $definition->options ?? [],
++                    // Label localized, value stays the raw filter key.
++                    'options' => $definition->optionsForLanguageCode($lang),
+                     'config' => $definition->config ?? [],
+                     'is_required' => (bool) $definition->is_required,
+                     'is_filterable' => (bool) $definition->is_filterable,
+@@ -293,7 +306,7 @@ protected function filterOptionsForCategory(int $categoryId, string $lang): arra
+         // price range (post-ad has a dedicated price field) and postcode+radius.
+         array_unshift($defs, [
+             'slug' => 'price',
+-            'label' => $ar ? 'السعر' : 'Price',
++            'label' => __('api.filter.price'),
+             'input_type' => 'number',
+             'filter_control' => 'range',
+             'post_control' => 'number',
+@@ -307,7 +320,7 @@ protected function filterOptionsForCategory(int $categoryId, string $lang): arra
+         ]);
+         $defs[] = [
+             'slug' => 'location',
+-            'label' => $ar ? 'المسافة (الرمز البريدي)' : 'Distance (postcode)',
++            'label' => __('api.filter.distance_postcode'),
+             'input_type' => 'string',
+             'filter_control' => 'radius',
+             'post_control' => 'none',
+@@ -327,7 +340,38 @@ public function store(StoreAdRequest $request)
+     {
+         $lang = $request->header('lang') === 'ar';
+         $user = Auth::user();
++
++        if ($user->needsReverification()) {
++            return sendError(
++                $lang
++                    ? 'يجب إعادة تأكيد حالتك كطالب قبل إنشاء إعلان جديد'
++                    : 'Please re-verify your student status before creating a new listing',
++                ['needs_reverify' => true],
++                403
++            );
++        }
++
+         $data = $request->validated();
++
++        // Spam guard: block an accidental double-submit or repost of the same
++        // listing content instead of silently creating a near-duplicate ad.
++        $isDuplicate = Ad::query()
++            ->where('user_id', $user->id)
++            ->where('title', $data['title'])
++            ->where('price', $data['price'])
++            ->where('created_at', '>=', now()->subDay())
++            ->exists();
++
++        if ($isDuplicate) {
++            return sendError(
++                $lang
++                    ? 'قمت بنشر إعلان بنفس العنوان والسعر خلال آخر 24 ساعة'
++                    : 'You already posted an ad with this title and price in the last 24 hours',
++                ['duplicate_listing' => true],
++                422
++            );
++        }
++
+         $attributes = (array) ($data['attributes'] ?? []);
+         // Attribute definitions live on the main category; resolve from both.
+         $specCategoryIds = array_values(array_filter([
+@@ -389,17 +433,7 @@ public function store(StoreAdRequest $request)
+                 (int) ($data['sub_category_id'] ?? 0)
+             );
+ 
+-            foreach ($attributes as $slug => $value) {
+-                if ($value === null || $value === '' || ! isset($definitions[$slug])) {
+-                    continue;
+-                }
+-
+-                AdAttributeValue::create([
+-                    'ad_id' => $ad->id,
+-                    'category_attribute_definition_id' => $definitions[$slug]->id,
+-                    'value' => (string) $value,
+-                ]);
+-            }
++            $this->persistAttributeValues($ad, $attributes, $definitions);
+ 
+             return $ad;
+         });
+@@ -423,7 +457,7 @@ public function store(StoreAdRequest $request)
+             'attributeValues.definition.translations',
+         ]);
+ 
+-        $listingFee = (float) (setting('post_price') ?? 0);
++        $listingFee = $ad->mainCategory?->resolvedListingFee() ?? (float) setting('post_price', '0.99');
+ 
+         return sendResponse(
+             array_replace(
+@@ -436,7 +470,9 @@ public function store(StoreAdRequest $request)
+             )
+                 + ['publication' => $publication]
+                 + ['ad' => new AdDetailResource($ad)],
+-            __('api.ad.created')
++            $publication['published']
++                ? __('api.ad.published')
++                : __('api.ad.payment_required')
+         );
+     }
+ 
+@@ -499,7 +535,17 @@ public function storeDraft(Request $request)
+     {
+         $lang = $request->header('lang') === 'ar';
+         $user = Auth::user();
+-        
++
++        if ($user->needsReverification()) {
++            return sendError(
++                $lang
++                    ? 'يجب إعادة تأكيد حالتك كطالب قبل إنشاء إعلان جديد'
++                    : 'Please re-verify your student status before creating a new listing',
++                ['needs_reverify' => true],
++                403
++            );
++        }
++
+         $cityId = $request->input('city_id');
+         if ($cityId == 1 && !\App\Models\City::where('id', 1)->exists()) {
+             $userCity = $user->city_id;
+@@ -531,7 +577,20 @@ public function storeDraft(Request $request)
+             'latitude' => 'nullable|numeric|between:-90,90',
+             'longitude' => 'nullable|numeric|between:-180,180',
+             'attributes' => 'nullable|array',
+-            'attributes.*' => 'nullable|string|max:1000',
++            'attributes.*' => [
++                'nullable',
++                function (string $attribute, mixed $value, \Closure $fail): void {
++                    $values = is_array($value) ? $value : [$value];
++
++                    foreach ($values as $item) {
++                        if (! is_scalar($item) || mb_strlen((string) $item) > 1000) {
++                            $fail("The {$attribute} field must contain text values no longer than 1000 characters.");
++
++                            return;
++                        }
++                    }
++                },
++            ],
+             // Optional on a draft — the user may not have chosen photos yet — but
+             // stored when supplied. publishDraft() is what insists on at least one.
+             'images' => 'nullable|array|max:10',
+@@ -601,17 +660,7 @@ public function storeDraft(Request $request)
+                 (int) ($validated['sub_category_id'] ?? 0)
+             );
+ 
+-            foreach ($attributes as $slug => $value) {
+-                if ($value === null || $value === '' || ! isset($definitions[$slug])) {
+-                    continue;
+-                }
+-
+-                AdAttributeValue::create([
+-                    'ad_id' => $ad->id,
+-                    'category_attribute_definition_id' => $definitions[$slug]->id,
+-                    'value' => (string) $value,
+-                ]);
+-            }
++            $this->persistAttributeValues($ad, $attributes, $definitions);
+ 
+             return $ad;
+         });
+@@ -671,6 +720,12 @@ public function publishDraft(Request $request, $id)
+             return sendError(__('api.ad.not_found'), [], 404);
+         }
+ 
++        // The only way to settle an outstanding fee, so it must accept every
++        // state that can owe one — not just drafts.
++        if (! in_array($ad->status, ['draft', 'pending', 'paused', 'expired', 'published'], true)) {
++            return sendError(__('api.ad.cannot_publish_in_status'), ['status' => $ad->status], 422);
++        }
++
+         if ($ad->images()->count() === 0) {
+             return sendError(__('api.ad.image_required'), [], 422);
+         }
+@@ -690,23 +745,94 @@ public function publishDraft(Request $request, $id)
+ 
+         return sendResponse(
+             ['publication' => $publication, 'ad' => new AdDetailResource($ad)],
+-            __('api.ad.published')
++            $publication['published']
++                ? __('api.ad.published')
++                : __('api.ad.payment_required')
+         );
+     }
+ 
+     public function completeStripePayment(Request $request, string $id, ListingPaymentService $listings)
+     {
++        $validated = $request->validate([
++            'payment_intent_id' => ['nullable', 'string', 'max:255'],
++        ]);
+         $ad = Ad::query()->where('user_id', Auth::id())->where(fn ($query) => $query->where('id', $id)->orWhere('public_id', $id))->first();
+         if (! $ad || ! $ad->stripe_payment_intent_id) {
+             return sendError('Payment for this ad was not found.', [], 404);
+         }
+ 
++        if (! empty($validated['payment_intent_id'])
++            && ! hash_equals($ad->stripe_payment_intent_id, $validated['payment_intent_id'])) {
++            return sendError('The payment does not belong to this ad.', [], 422);
++        }
++
++        if ($ad->status === 'published' && $ad->payment_status === 'paid') {
++            return sendResponse([
++                'publication' => $listings->publicationState($ad),
++                'ad' => new AdDetailResource($ad),
++            ], __('api.ad.published'));
++        }
++
+         $intent = app(StripeService::class)->paymentIntent($ad->stripe_payment_intent_id);
+         if (($intent['status'] ?? null) !== 'succeeded') {
+-            return sendError('The Stripe payment has not succeeded yet.', [], 422);
++            return sendError(__('api.ad.payment_pending'), [
++                'publication' => $listings->publicationState($ad, $intent),
++                'ad' => new AdDetailResource($ad),
++            ], 422);
++        }
++
++        $ad = $listings->publishPaidListing($intent['id'], (int) $intent['amount_received'], (string) $intent['currency'], $intent);
++
++        return sendResponse([
++            'publication' => $listings->publicationState($ad),
++            'ad' => new AdDetailResource($ad),
++        ], __('api.ad.published'));
++    }
++
++    public function paymentStatus(Request $request, string $id, ListingPaymentService $listings)
++    {
++        $ad = Ad::query()
++            ->where(fn ($query) => $query->where('id', $id)->orWhere('public_id', $id))
++            ->first();
++
++        if (! $ad) {
++            return sendError(__('api.ad.not_found'), [], 404);
++        }
++
++        if ((int) $ad->user_id !== (int) Auth::id()) {
++            return sendError('You are not allowed to view this payment.', [], 403);
++        }
++
++        $intent = null;
++        if ($ad->status !== 'published' && $ad->stripe_payment_intent_id) {
++            $intent = app(StripeService::class)->paymentIntent($ad->stripe_payment_intent_id);
+         }
+ 
+-        $ad = $listings->publishPaidListing($intent['id'], (int) $intent['amount_received'], (string) $intent['currency']);
+-        return sendResponse(['ad' => new AdDetailResource($ad)], 'Payment verified and ad published successfully');
++        return sendResponse([
++            'publication' => $listings->publicationState($ad, $intent),
++        ]);
++    }
++
++    private function persistAttributeValues(Ad $ad, array $attributes, $definitions): void
++    {
++        foreach ($attributes as $slug => $rawValue) {
++            if (! isset($definitions[$slug])) {
++                continue;
++            }
++
++            $values = is_array($rawValue) ? $rawValue : [$rawValue];
++            $values = array_values(array_unique(array_filter(
++                $values,
++                static fn ($value) => is_scalar($value) && (string) $value !== ''
++            )));
++
++            foreach ($values as $value) {
++                AdAttributeValue::create([
++                    'ad_id' => $ad->id,
++                    'category_attribute_definition_id' => $definitions[$slug]->id,
++                    'value' => (string) $value,
++                ]);
++            }
++        }
+     }
+ }
+diff --git a/app/Http/Controllers/Api/AuthController.php b/app/Http/Controllers/Api/AuthController.php
+index 70d286d..c30d0bc 100644
+--- a/app/Http/Controllers/Api/AuthController.php
++++ b/app/Http/Controllers/Api/AuthController.php
+@@ -10,16 +10,21 @@
+ use App\Mail\OtpMail;
+ use App\Models\User;
+ use App\Models\UserLoginLog;
++use App\Models\UserModerationAction;
+ use App\Services\AccountDeletionService;
+-use App\Services\TwilioService;
+ use App\Services\PushNotificationService;
++use App\Services\TermsAcceptanceService;
++use App\Services\TwilioService;
++use App\Services\UserModerationService;
+ use App\Support\LoginLogger;
+ use App\Support\MobileAuthTokenService;
++use App\Support\StudentVerificationPeriod;
+ use Illuminate\Http\Request;
+ use Illuminate\Support\Facades\Hash;
+ use Illuminate\Support\Facades\Log;
+ use Illuminate\Support\Facades\Mail;
+ use Illuminate\Support\Facades\Validator;
++use Illuminate\Validation\ValidationException;
+ 
+ class AuthController extends Controller
+ {
+@@ -75,6 +80,18 @@ protected function loginWithCredentials(ApiLoginRequest $request, bool $lang)
+             app(AccountDeletionService::class)->restore($user);
+         }
+ 
++        // A previously verified student is moved back to status 2 only when
++        // the annual deadline and 60-day grace period have both elapsed.
++        // Reuse the existing V1 verification response and endpoint so legacy
++        // clients do not need a new response contract.
++        if ($user->status === '2' && $user->student_verified_at !== null) {
++            if (! Hash::check($request->password, $user->password)) {
++                return sendError(__('api.auth.wrong_password'), [], 400);
++            }
++
++            return $this->startForcedReverification($user);
++        }
++
+         $statusError = $this->validateActiveUser($user, $lang);
+         if ($statusError) {
+             return $statusError;
+@@ -87,6 +104,40 @@ protected function loginWithCredentials(ApiLoginRequest $request, bool $lang)
+         return $this->completeLogin($user, $request, $lang, UserLoginLog::TYPE_DATA);
+     }
+ 
++    protected function startForcedReverification(User $user)
++    {
++        if (! $user->student_email) {
++            return sendError(__('api.auth.no_student_email'), [], 422);
++        }
++
++        $fixed = app()->environment('testing')
++            ? config('mobile_auth.login_otp_test_code')
++            : null;
++        $otp = (int) ($fixed ?: random_int(100000, 999999));
++
++        $user->forceFill([
++            'activation_code' => (string) $otp,
++            'activation_code_expires_at' => now()->addMinutes(15),
++            'activation_sent_at' => now(),
++        ])->save();
++
++        try {
++            Mail::to($user->student_email)->send(new OtpMail($otp));
++        } catch (\Throwable $e) {
++            Log::error('Forced reverification OTP mail failed', [
++                'user_id' => $user->id,
++                'error' => $e->getMessage(),
++            ]);
++        }
++
++        return sendResponse([
++            'needs_verification' => true,
++            'user_id' => $user->id,
++            'student_email_masked' => $this->maskEmail($user->student_email),
++            'activation_expires_at' => $user->activation_code_expires_at?->toIso8601String(),
++        ], __('api.auth.code_sent_student_email'));
++    }
++
+     protected function loginWithFingerprint(ApiLoginRequest $request, bool $lang)
+     {
+         $deviceId = MobileAuthTokenService::resolveDeviceId($request);
+@@ -180,8 +231,20 @@ protected function tokenErrorResponse(array $result, bool $lang)
+ 
+     protected function validateActiveUser(User $user, bool $lang)
+     {
++        app(UserModerationService::class)->restoreExpiredSuspension($user);
++
+         if ($user->status === '3') {
+-            return sendError(__('api.auth.account_disabled'), [], 403);
++            $latestAction = UserModerationAction::query()
++                ->where('user_id', $user->id)
++                ->whereIn('action', ['temporary_suspension', 'permanent_suspension'])
++                ->latest('id')
++                ->first();
++
++            return sendError(__('api.auth.account_disabled'), [
++                'moderation_action_id' => $latestAction?->id,
++                'moderation_reason' => $latestAction?->reason,
++                'suspended_until' => $latestAction?->ends_at?->toIso8601String(),
++            ], 403);
+         }
+ 
+         if ($user->status === '2') {
+@@ -237,6 +300,13 @@ public function register(RegisterRequest $request)
+         $data = $request->validated();
+         $lang = $request->header('lang') === 'ar';
+ 
++        if (isset($data['terms_version'])
++            && $data['terms_version'] !== app(TermsAcceptanceService::class)->current()->version) {
++            throw ValidationException::withMessages([
++                'terms_version' => ['The selected terms version is no longer current.'],
++            ]);
++        }
++
+         $base = [
+             'first_name' => $data['first_name'],
+             'last_name' => $data['last_name'],
+@@ -259,6 +329,12 @@ public function register(RegisterRequest $request)
+             'activation_sent_at' => now(),
+             'terms_accepted_at' => now(),
+         ]));
++        app(TermsAcceptanceService::class)->accept(
++            $user,
++            $request,
++            $data['terms_version'] ?? null,
++            'registration'
++        );
+         try {
+             // OTP must be sent to the UNIVERSITY email (.ac.uk) — that is what
+             // proves the user owns a valid student account.
+@@ -330,7 +406,11 @@ public function verifyStudentEmail(Request $request)
+ 
+         $user->activation_code = null;
+         $user->activation_code_expires_at = null;
++        $verifiedAt = now();
+         $user->status = '1';
++        $user->student_verified_at = $verifiedAt;
++        $user->student_reverify_due_at = StudentVerificationPeriod::dueAt($verifiedAt);
++        $user->reverify_notified_at = null;
+         $user->save();
+ 
+         $user->update([
+@@ -407,15 +487,19 @@ public function resendVerificationEmail(Request $request)
+ 
+     /**
+      * Start student status reconfirmation by emailing an OTP to the university
+-     * address on file. Students must reconfirm each term (30 Sep / 31 Mar).
++     * address on file. Students must reconfirm 12 months after their own most
++     * recent verification date.
++     *
++     * An already-verified student whose re-check is not due yet is accepted:
++     * confirmReverify just pushes the due date to the next deadline. The only
++     * refusals are a missing university email (422) and the resend cooldown (429).
+      */
+     public function sendReverifyOtp(Request $request)
+     {
+         $user = $request->user();
+-        $lang = $request->header('lang') === 'ar';
+ 
+         if (! $user->student_email) {
+-            return sendError($lang ? 'لا يوجد بريد جامعي مسجّل' : 'No university email on file', [], 422);
++            return sendError(__('api.auth.no_student_email'), [], 422);
+         }
+ 
+         if ($user->activation_sent_at) {
+@@ -424,7 +508,7 @@ public function sendReverifyOtp(Request $request)
+                 $seconds = max(0, $nextAllowed->getTimestamp() - now()->getTimestamp());
+ 
+                 return sendError(
+-                    $lang ? "يمكنك إعادة الإرسال بعد {$seconds} ثانية" : "You can resend in {$seconds} seconds",
++                    __('api.auth.resend_cooldown', ['seconds' => $seconds]),
+                     ['retry_after_seconds' => $seconds],
+                     429
+                 );
+@@ -453,11 +537,13 @@ public function sendReverifyOtp(Request $request)
+         return sendResponse([
+             'student_email_masked' => $this->maskEmail($user->student_email),
+             'activation_expires_at' => $user->activation_code_expires_at?->toIso8601String(),
+-        ], $lang ? 'تم إرسال رمز التحقق إلى بريدك الجامعي' : 'Verification code sent to your student email');
++            'needs_reverification' => $user->needsReverification(),
++            'student_reverify_due_at' => $user->student_reverify_due_at?->toIso8601String(),
++        ], __('api.auth.reverify_code_sent'));
+     }
+ 
+     /**
+-     * Complete reconfirmation and push the due date to the next term deadline.
++     * Complete reconfirmation and push the due date forward by 12 months.
+      */
+     public function confirmReverify(Request $request)
+     {
+@@ -485,8 +571,9 @@ public function confirmReverify(Request $request)
+ 
+         $user->activation_code = null;
+         $user->activation_code_expires_at = null;
+-        $user->student_verified_at = now();
+-        $user->student_reverify_due_at = \App\Support\StudentTerm::nextDeadline();
++        $verifiedAt = now();
++        $user->student_verified_at = $verifiedAt;
++        $user->student_reverify_due_at = StudentVerificationPeriod::dueAt($verifiedAt);
+         $user->reverify_notified_at = null;
+         $user->save();
+ 
+diff --git a/app/Http/Controllers/Api/ConversationController.php b/app/Http/Controllers/Api/ConversationController.php
+index e7b31fa..1e10cb8 100644
+--- a/app/Http/Controllers/Api/ConversationController.php
++++ b/app/Http/Controllers/Api/ConversationController.php
+@@ -10,6 +10,7 @@
+ use App\Models\Conversation;
+ use App\Services\ChatService;
+ use App\Support\ChatReportReason;
++use App\Support\ReportPriority;
+ use Illuminate\Http\Request;
+ use Illuminate\Support\Facades\Auth;
+ use Illuminate\Validation\Rule;
+@@ -75,30 +76,36 @@ public function index(Request $request)
+             ->response()
+             ->getData(true);
+ 
+-        return sendResponse($response);
++        return sendResponse($this->withFlatPagination($response));
++    }
++
++    /**
++     * Copy the pagination counters up next to `data`. Laravel nests them under
++     * `meta`, the documented examples show them at the top level, and clients
++     * read them from there — both are kept so neither shape breaks.
++     */
++    protected function withFlatPagination(array $response): array
++    {
++        foreach (['current_page', 'last_page', 'per_page', 'total', 'from', 'to'] as $key) {
++            if (isset($response['meta'][$key])) {
++                $response[$key] = $response['meta'][$key];
++            }
++        }
++
++        return $response;
+     }
+ 
+     public function store(Request $request)
+     {
+         $validated = $request->validate([
+             'ad_id' => 'required',
++            'message' => 'nullable|string|max:5000',
++            'client_message_id' => 'nullable|string|max:64',
+         ]);
+ 
+         $lang = $request->header('lang') === 'ar';
+         $user = Auth::user();
+ 
+-        // Students past their term deadline cannot start new conversations
+-        // until they reconfirm. Existing threads are never cut off mid-chat.
+-        if ($user->needsReverification()) {
+-            return sendError(
+-                $lang
+-                    ? 'يجب إعادة تأكيد حالتك كطالب قبل بدء محادثة'
+-                    : 'Please re-verify your student status before messaging',
+-                ['needs_reverify' => true],
+-                403
+-            );
+-        }
+-
+         $ad = Ad::query()
+             ->published()
+             ->where(function ($query) use ($validated) {
+@@ -145,6 +152,29 @@ public function store(Request $request)
+             );
+         }
+ 
++        // The opening message is optional. It is sent through the same path as
++        // any other message so it gets the same guards, broadcast and push.
++        $openingMessage = trim((string) ($validated['message'] ?? ''));
++
++        if ($openingMessage !== '') {
++            try {
++                $this->chatService->sendMessage(
++                    $conversation,
++                    $user,
++                    $openingMessage,
++                    null,
++                    null,
++                    $validated['client_message_id'] ?? null
++                );
++
++                $conversation->refresh();
++            } catch (\InvalidArgumentException $e) {
++                // The thread itself was created, so this is reported as a
++                // successful start with the message rejected, not a failure.
++                report($e);
++            }
++        }
++
+         return sendResponse(
+             new ConversationResource($conversation),
+             __('api.chat.started')
+@@ -205,28 +235,29 @@ public function messages(Request $request, string $id)
+ 
+         $response = MessageResource::collection($messages)->response()->getData(true);
+ 
+-        return sendResponse($response);
++        return sendResponse($this->withFlatPagination($response));
+     }
+ 
+     public function sendMessage(Request $request, string $id)
+     {
+         $validated = $request->validate([
+             'body' => 'nullable|string|max:5000',
+-            'attachment' => 'nullable|file|max:10240',
++            // Whitelisted rather than open: an unrestricted upload is served
++            // back out of /storage, so anything executable stays out.
++            'attachment' => [
++                'nullable',
++                'file',
++                'max:10240',
++                'mimes:jpg,jpeg,png,gif,webp,heic,heif,pdf,doc,docx,xls,xlsx,txt',
++            ],
++            'client_message_id' => 'nullable|string|max:64',
++        ], [
++            'attachment.max' => __('api.chat.attachment_too_large'),
++            'attachment.mimes' => __('api.chat.attachment_type_not_allowed'),
+         ]);
+ 
+         $lang = $request->header('lang') === 'ar';
+ 
+-        if (Auth::user()->needsReverification()) {
+-            return sendError(
+-                $lang
+-                    ? 'يجب إعادة تأكيد حالتك كطالب قبل إرسال رسالة'
+-                    : 'Please re-verify your student status before messaging',
+-                ['needs_reverify' => true],
+-                403
+-            );
+-        }
+-
+         $conversation = $this->findParticipantConversation($id);
+ 
+         if (! $conversation) {
+@@ -251,7 +282,8 @@ public function sendMessage(Request $request, string $id)
+                 Auth::user(),
+                 $validated['body'] ?? '',
+                 $attachmentPath,
+-                $attachmentType
++                $attachmentType,
++                $validated['client_message_id'] ?? null
+             );
+         } catch (\InvalidArgumentException $e) {
+             return match ($e->getMessage()) {
+@@ -365,13 +397,7 @@ public function destroy(Request $request, string $id)
+             return sendError(__('api.chat.not_found'), [], 404);
+         }
+ 
+-        $userId = Auth::id();
+-
+-        if ($conversation->buyer_id === $userId) {
+-            $conversation->update(['buyer_deleted_at' => now()]);
+-        } elseif ($conversation->seller_id === $userId) {
+-            $conversation->update(['seller_deleted_at' => now()]);
+-        }
++        $this->chatService->deleteForUser($conversation, Auth::user());
+ 
+         return sendResponse(
+             ['conversation_id' => $conversation->id],
+@@ -454,6 +480,7 @@ public function report(Request $request, string $id)
+             'type' => $validated['type'],
+             'reason' => $validated['reason'] ?? null,
+             'description' => $validated['description'] ?? null,
++            'priority' => ReportPriority::fromReason($validated['reason']),
+         ]);
+ 
+         return sendResponse(
+diff --git a/app/Http/Controllers/Api/MyAdController.php b/app/Http/Controllers/Api/MyAdController.php
+index a59982b..b35b934 100644
+--- a/app/Http/Controllers/Api/MyAdController.php
++++ b/app/Http/Controllers/Api/MyAdController.php
+@@ -8,8 +8,10 @@
+ use App\Models\AdAttributeValue;
+ use App\Models\AdImage;
+ use App\Models\Conversation;
++use App\Models\Payment;
+ use App\Models\User;
+ use App\Services\ChatService;
++use App\Services\ListingPaymentService;
+ use App\Traits\HandlesListingPayments;
+ use Illuminate\Http\Request;
+ use Illuminate\Support\Facades\Auth;
+@@ -213,19 +215,27 @@ public function activate(Request $request, string $id)
+             );
+         }
+ 
+-        // Reactivating starts a new 30-day listing period, so it is charged like
+-        // any other. The previous intent must be cleared first — startPublication
+-        // treats an existing one as "payment already in progress" and would skip
+-        // creating a new one, letting the ad go live without paying again.
+-        $ad->update([
+-            'paused_at' => null,
+-            'inactive_reason' => null,
+-            'listing_fee' => null,
+-            'payment_status' => 'not_required',
+-            'stripe_payment_intent_id' => null,
+-        ]);
++        // A pause does not consume the paid posting period: inside it,
++        // reactivating simply resumes the ad with no second fee.
++        if ($this->hasUnexpiredPaidPeriod($ad)) {
++            $ad->update([
++                'status' => 'published',
++                'paused_at' => null,
++                'inactive_reason' => null,
++            ]);
+ 
+-        $publication = $this->startPublication($ad->fresh(), $request->input('coupon_code'));
++            $resumed = $ad->fresh();
++
++            return sendResponse(
++                [
++                    'ad' => new MyAdResource($resumed),
++                    'publication' => app(ListingPaymentService::class)->publicationState($resumed),
++                ],
++                __('api.ad.activated')
++            );
++        }
++
++        $publication = $this->startExtension($ad, $request->input('coupon_code'));
+ 
+         if (isset($publication['coupon_error'])) {
+             return sendError(
+@@ -244,6 +254,68 @@ public function activate(Request $request, string $id)
+         );
+     }
+ 
++    public function requestRefund(Request $request, string $id)
++    {
++        $ad = $this->findOwnedAd($id);
++
++        if (! $ad || $ad->payment_status !== 'paid' || ! $ad->stripe_payment_intent_id) {
++            return sendError(__('api.ad.refund_not_available'), [], 422);
++        }
++
++        if ($ad->refund_status !== null) {
++            return sendError(__('api.ad.refund_already_decided'), [], 422);
++        }
++
++        $validated = $request->validate([
++            'reason' => 'required|string|max:1000',
++        ], [
++            'reason.required' => __('api.ad.refund_reason_required'),
++        ]);
++
++        $requestedAt = now();
++
++        $ad->update([
++            'refund_status' => 'requested',
++            'refund_requested_at' => $requestedAt,
++            'refund_request_reason' => $validated['reason'],
++        ]);
++
++        Payment::where('stripe_payment_intent_id', $ad->stripe_payment_intent_id)->update([
++            'refund_status' => 'requested',
++            'refund_requested_at' => $requestedAt,
++            'refund_request_reason' => $validated['reason'],
++        ]);
++
++        return sendResponse(new MyAdResource($ad->fresh()), __('api.ad.refund_requested'));
++    }
++
++    public function refundRequests(Request $request)
++    {
++        $perPage = (int) ($request->input('per_page', 20));
++
++        $ads = Ad::query()
++            ->where('user_id', Auth::id())
++            ->whereNotNull('refund_status')
++            ->orderByDesc('refund_requested_at')
++            ->paginate($perPage);
++
++        $ads->through(fn (Ad $ad) => [
++            'id' => $ad->id,
++            'public_id' => $ad->public_id,
++            'title' => $ad->title,
++            'listing_fee' => $ad->listing_fee,
++            'currency' => $ad->currency,
++            'refund_status' => $ad->refund_status,
++            'refund_requested_at' => optional($ad->refund_requested_at)->toIso8601String(),
++            'refund_request_reason' => $ad->refund_request_reason,
++            'refund_reason' => $ad->refund_reason,
++            'refunded_at' => optional($ad->refunded_at)->toIso8601String(),
++            'refund_declined_at' => optional($ad->refund_declined_at)->toIso8601String(),
++        ]);
++
++        return sendResponse($ads);
++    }
++
+     /**
+      * "Sell again" on a sold ad: copies it into a brand new listing rather than
+      * reviving the original.
+@@ -255,6 +327,18 @@ public function activate(Request $request, string $id)
+     public function sellAgain(Request $request, string $id)
+     {
+         $lang = $request->header('lang') === 'ar';
++        $user = Auth::user();
++
++        if ($user->needsReverification()) {
++            return sendError(
++                $lang
++                    ? 'يجب إعادة تأكيد حالتك كطالب قبل إنشاء إعلان جديد'
++                    : 'Please re-verify your student status before creating a new listing',
++                ['needs_reverify' => true],
++                403
++            );
++        }
++
+         $ad = $this->findOwnedAd($id);
+ 
+         if (! $ad) {
+diff --git a/app/Http/Controllers/Api/V2/AuthController.php b/app/Http/Controllers/Api/V2/AuthController.php
+index 840789c..c1a160c 100644
+--- a/app/Http/Controllers/Api/V2/AuthController.php
++++ b/app/Http/Controllers/Api/V2/AuthController.php
+@@ -231,11 +231,28 @@ public function verifyOtp(Request $request)
+         }
+ 
+         // Consume the OTP so it cannot be replayed.
+-        $user->forceFill([
++        $updates = [
+             'login_otp' => null,
+             'login_otp_expires_at' => null,
+             'login_otp_sent_at' => null,
+-        ])->save();
++        ];
++
++        // Routine monthly login OTPs prove the inbox still works right now,
++        // not that the annual reverification is done — the 12-month clock
++        // stays untouched by an ordinary login. Only reactivating a locked
++        // account counts as reverification, since that is a deliberate act
++        // of coming back after the grace period, not a routine login.
++        if ($user->student_email && $user->status === '2') {
++            $verifiedAt = now();
++            $updates += [
++                'status' => '1',
++                'student_verified_at' => $verifiedAt,
++                'student_reverify_due_at' => \App\Support\StudentVerificationPeriod::dueAt($verifiedAt),
++                'reverify_notified_at' => null,
++            ];
++        }
++
++        $user->forceFill($updates)->save();
+ 
+         return $this->completeLogin($user, $request, $lang);
+     }
+@@ -390,11 +407,27 @@ protected function completeLogin(User $user, Request $request, bool $lang)
+ 
+     protected function validateActiveUser(User $user, bool $lang)
+     {
++        app(\App\Services\UserModerationService::class)->restoreExpiredSuspension($user);
++
+         if ($user->status === '3') {
+-            return sendError(__('api.auth.account_disabled'), [], 403);
++            $latestAction = \App\Models\UserModerationAction::query()
++                ->where('user_id', $user->id)
++                ->whereIn('action', ['temporary_suspension', 'permanent_suspension'])
++                ->latest('id')
++                ->first();
++
++            return sendError(__('api.auth.account_disabled'), [
++                'moderation_action_id' => $latestAction?->id,
++                'moderation_reason' => $latestAction?->reason,
++                'suspended_until' => $latestAction?->ends_at?->toIso8601String(),
++            ], 403);
+         }
+ 
+         if ($user->status === '2') {
++            if ($user->student_verified_at !== null) {
++                return null;
++            }
++
+             return sendError(
+                 __('api.auth.verify_email_first'),
+                 [
+diff --git a/app/Http/Requests/RegisterRequest.php b/app/Http/Requests/RegisterRequest.php
+index d54d442..9957d0a 100644
+--- a/app/Http/Requests/RegisterRequest.php
++++ b/app/Http/Requests/RegisterRequest.php
+@@ -23,6 +23,7 @@ public function rules(): array
+             'student_email' => 'required|email:rfc|max:255|unique:users,student_email|different:email',
+             'password' => 'required|string|min:6|confirmed',
+             'terms_accepted' => 'required|accepted',
++            'terms_version' => 'nullable|string|max:50',
+             'phone' => 'nullable|string|max:30|unique:users,phone',
+             'country_code' => 'nullable|string|max:20',
+             'city_id' => 'nullable|integer|exists:cities,id',
+diff --git a/app/Http/Resources/AdDetailResource.php b/app/Http/Resources/AdDetailResource.php
+index 8508523..3ca492b 100644
+--- a/app/Http/Resources/AdDetailResource.php
++++ b/app/Http/Resources/AdDetailResource.php
+@@ -104,11 +104,20 @@ private function detailFields(
+                     ->groupBy(fn ($row) => $row->definition?->slug)
+                     ->map(function ($rows, $slug) use ($lang) {
+                         $first = $rows->first();
++                        $definition = $first->definition;
++                        $values = $rows->pluck('value')->filter()->values();
+ 
+                         return [
+                             'slug' => $slug,
+-                            'label' => $first->definition?->labelForLanguageCode($lang),
+-                            'value' => $rows->pluck('value')->filter()->implode(', '),
++                            'label' => $definition?->labelForLanguageCode($lang),
++                            // `value` stays the raw stored option the app filters
++                            // with; `value_label` is the localized display text.
++                            'value' => $values->implode(', '),
++                            'value_label' => $values
++                                ->map(fn ($value) => $definition
++                                    ? $definition->optionLabelForLanguageCode($lang, (string) $value)
++                                    : (string) $value)
++                                ->implode(', '),
+                         ];
+                     })
+                     ->values();
+diff --git a/app/Http/Resources/MyAdResource.php b/app/Http/Resources/MyAdResource.php
+index 990afd3..d4bba91 100644
+--- a/app/Http/Resources/MyAdResource.php
++++ b/app/Http/Resources/MyAdResource.php
+@@ -25,6 +25,11 @@ public function toArray(Request $request): array
+             'status_label' => $statusMeta['label'],
+             'status_badge' => $statusMeta['badge'],
+             'available_actions' => $statusMeta['actions'],
++            'payment_status' => $this->payment_status,
++            'listing_fee' => $this->listing_fee !== null ? (float) $this->listing_fee : null,
++            'payment_required' => $this->status === 'pending'
++                && $this->payment_status === 'requires_payment',
++            'refund_status' => $this->refund_status,
+         ];
+ 
+         if ($this->status === 'published') {
+@@ -82,7 +87,12 @@ protected function statusMeta(string $locale): array
+             'pending' => [
+                 'label' => __('api.my_ad.status_pending'),
+                 'badge' => 'pending',
+-                'actions' => ['see_details'],
++                'actions' => ['see_details', 'pay', 'delete'],
++            ],
++            'draft' => [
++                'label' => __('api.my_ad.status_draft'),
++                'badge' => 'draft',
++                'actions' => ['see_details', 'publish', 'delete'],
+             ],
+             default => [
+                 'label' => strtoupper((string) $this->status),
+diff --git a/app/Http/Resources/UserResource.php b/app/Http/Resources/UserResource.php
+index b268d90..b5c6aa0 100644
+--- a/app/Http/Resources/UserResource.php
++++ b/app/Http/Resources/UserResource.php
+@@ -2,6 +2,7 @@
+ 
+ namespace App\Http\Resources;
+ 
++use App\Models\TermsVersion;
+ use Illuminate\Http\Request;
+ use Illuminate\Http\Resources\Json\JsonResource;
+ 
+@@ -26,8 +27,6 @@ public function toArray(Request $request): array
+             return (strlen($local) <= 2 ? substr($local, 0, 1) : substr($local, 0, 2)).'***@'.$domain;
+         };
+ 
+-        $name = $lang === 'en' ? 'name_en' : 'name_ar';
+-
+         // "Show first name only" applies to everyone except the owner, who always
+         // sees their own full name inside Edit Profile.
+         $showLastName = $isOwnProfile || (bool) $this->show_last_name;
+@@ -41,12 +40,14 @@ public function toArray(Request $request): array
+             'first_name' => $this->first_name,
+             'last_name' => $showLastName ? $this->last_name : null,
+             'image' => $this->image ? getimg($this->image) : null,
+-            'phone' => $this->phone,
+-            'email' => $this->email,
+             'member_since' => $this->created_at
+                 ? $this->created_at->locale($locale)->translatedFormat('F Y')
+                 : null,
++            // Raw join timestamp so the app can format it in its own locale;
++            // `member_since` above stays for older builds.
++            'created_at' => $this->created_at?->toIso8601String(),
+             'ads_count' => (int) ($this->published_ads_count ?? 0),
++            'active_ads_count' => (int) ($this->published_ads_count ?? 0),
+             // Restored: these three are part of the published mobile contract
+             // (profile header, seller badge, rating row) and were commented out
+             // during the parallel rewrite rather than intentionally dropped.
+@@ -54,14 +55,24 @@ public function toArray(Request $request): array
+             'total_reviews' => (int) ($this->total_reviews_count ?? 0),
+             'is_trusted_seller' => (bool) $this->is_trusted_seller,
+             'device_type' => $this->device_type,
+-            'city_id' => (int) $this->city_id,
+-            'city_name' => $this->city ? $this->city->$name : null,
++            'city' => $this->city ? new CityResource($this->city) : null,
+             'status' => ($this->status === '1' || $this->status === 1)
+                 ? 'active'
+                 : (($this->status === '2' || $this->status === 2) ? 'pending_verification' : 'inactive'),
+         ];
+ 
+         if ($isOwnProfile) {
++            $currentTerms = TermsVersion::query()->where('is_current', true)->latest('effective_at')->first();
++            $currentTermsAcceptance = $currentTerms
++                ? $this->termsAcceptances()->where('terms_version_id', $currentTerms->id)->first()
++                : null;
++            $postingRestriction = $this->activeFeatureRestriction('posting');
++            $messagingRestriction = $this->activeFeatureRestriction('messaging');
++            // Contact details are the account owner's alone. They used to be in
++            // the shared block, which handed any authenticated caller another
++            // user's personal email and phone number via GET /show-profile/{id}.
++            $data['phone'] = $this->phone;
++            $data['email'] = $this->email;
+             $data['student_email'] = $this->student_email;
+             // Student re-verification lifecycle. The mobile app reads these to
+             // decide whether to show the "reconfirm your student status" prompt.
+@@ -82,6 +93,23 @@ public function toArray(Request $request): array
+                     'notify_system' => true,
+                 ],
+             ];
++            $data['terms'] = [
++                'current_version' => $currentTerms?->version,
++                'accepted' => $currentTermsAcceptance !== null,
++                'accepted_at' => $currentTermsAcceptance?->accepted_at?->toIso8601String(),
++            ];
++            $data['capabilities'] = [
++                'can_post' => $postingRestriction === null,
++                'can_message' => $messagingRestriction === null,
++            ];
++            $data['feature_restrictions'] = collect([$postingRestriction, $messagingRestriction])
++                ->filter()
++                ->map(fn ($restriction) => [
++                    'id' => $restriction->id,
++                    'feature' => $restriction->feature,
++                    'reason' => $restriction->reason,
++                    'ends_at' => $restriction->ends_at?->toIso8601String(),
++                ])->values()->all();
+         } else {
+             $data['student_email_masked'] = $mask($this->student_email);
+         }
+diff --git a/routes/api.php b/routes/api.php
+index 37e041f..c988255 100644
+--- a/routes/api.php
++++ b/routes/api.php
+@@ -1,51 +1,64 @@
+ <?php
+ 
++use App\Http\Controllers\Api\AccountSecurityController;
++use App\Http\Controllers\Api\AccountSettingsController;
++use App\Http\Controllers\Api\AdController;
++use App\Http\Controllers\Api\AdReportController;
++use App\Http\Controllers\Api\AuthController;
++use App\Http\Controllers\Api\CategoryController;
++use App\Http\Controllers\Api\CityController;
++use App\Http\Controllers\Api\ContactReasonController;
++use App\Http\Controllers\Api\ContactUsController;
++use App\Http\Controllers\Api\ConversationController;
++use App\Http\Controllers\Api\CouponController;
++use App\Http\Controllers\Api\Dashboard\AccountDeletionRequestAdminController;
++use App\Http\Controllers\Api\Dashboard\AdAdminController;
+ use App\Http\Controllers\Api\Dashboard\AdminAuthController;
+ use App\Http\Controllers\Api\Dashboard\AdminController;
+-use App\Http\Controllers\Api\Dashboard\AdAdminController;
+-use App\Http\Controllers\Api\Dashboard\AdReportAdminController;
+-use App\Http\Controllers\Api\Dashboard\ChatReportAdminController;
++use App\Http\Controllers\Api\Dashboard\AdminPushNotificationController;
++use App\Http\Controllers\Api\Dashboard\AdminSettingController;
+ use App\Http\Controllers\Api\Dashboard\AdminUserController;
++use App\Http\Controllers\Api\Dashboard\AdReportAdminController;
+ use App\Http\Controllers\Api\Dashboard\CategoryAdminController;
++use App\Http\Controllers\Api\Dashboard\ChatReportAdminController;
+ use App\Http\Controllers\Api\Dashboard\CityAdminController;
+ use App\Http\Controllers\Api\Dashboard\ContactReasonAdminController;
+ use App\Http\Controllers\Api\Dashboard\ContactUsAdminController;
+ use App\Http\Controllers\Api\Dashboard\CountryController;
+-use App\Http\Controllers\Api\Dashboard\UniversityController;
+-use App\Http\Controllers\Api\Dashboard\LegalAffairController;
++use App\Http\Controllers\Api\Dashboard\CouponAdminController;
++use App\Http\Controllers\Api\Dashboard\FeatureRestrictionAdminController;
+ use App\Http\Controllers\Api\Dashboard\LanguageController;
+-use App\Http\Controllers\Api\Dashboard\PermissionController;
++use App\Http\Controllers\Api\Dashboard\LegalAffairController;
++use App\Http\Controllers\Api\Dashboard\ModerationAdminController;
+ use App\Http\Controllers\Api\Dashboard\PaymentMethodAdminController;
++use App\Http\Controllers\Api\Dashboard\PermissionController;
+ use App\Http\Controllers\Api\Dashboard\RoleController;
+-use App\Http\Controllers\Api\Dashboard\AdminPushNotificationController;
+-use App\Http\Controllers\Api\Dashboard\AdminSettingController;
++use App\Http\Controllers\Api\Dashboard\TermsVersionAdminController;
+ use App\Http\Controllers\Api\Dashboard\TrustedSellerApplicationAdminController;
+-use Illuminate\Support\Facades\Route;
+-use App\Http\Controllers\Api\AccountSecurityController;
+-use App\Http\Controllers\Api\AccountSettingsController;
+-use App\Http\Controllers\Api\AdController;
+-use App\Http\Controllers\Api\AdReportController;
+-use App\Http\Controllers\Api\AuthController;
+-use App\Http\Controllers\Api\CategoryController;
+-use App\Http\Controllers\Api\ContactReasonController;
+-use App\Http\Controllers\Api\ContactUsController;
+-use App\Http\Controllers\Api\ConversationController;
+-use App\Http\Controllers\Api\CouponController;
++use App\Http\Controllers\Api\Dashboard\UniversityController;
++use App\Http\Controllers\Api\FavoritedController;
+ use App\Http\Controllers\Api\FcmController;
+ use App\Http\Controllers\Api\HomeController;
+ use App\Http\Controllers\Api\LanguageController as AppLanguageController;
+-use App\Http\Controllers\Api\FavoritedController;
+ use App\Http\Controllers\Api\MyAdController;
++use App\Http\Controllers\Api\PostcodeController;
++use App\Http\Controllers\Api\SellerController;
+ use App\Http\Controllers\Api\SettingController;
++use App\Http\Controllers\Api\StripeWebhookController;
++use App\Http\Controllers\Api\TermsController;
++use App\Http\Controllers\Api\TranslateController;
+ use App\Http\Controllers\Api\TrustedSellerApplicationController;
+-use App\Http\Controllers\Api\UserRatingController;
+ use App\Http\Controllers\Api\UserController;
+ use App\Http\Controllers\Api\UserDeviceController;
+-use App\Http\Controllers\Api\StripeWebhookController;
+ use App\Http\Controllers\Api\UserNotificationController;
++use App\Http\Controllers\Api\UserRatingController;
++use App\Http\Controllers\Api\V2\AccountController;
++use App\Http\Controllers\Api\V2\ModerationAppealController;
++use App\Http\Controllers\Api\V2\UserReportController;
+ use App\Http\Controllers\Api\VehicleLookupController;
+-use App\Http\Controllers\Api\Dashboard\CouponAdminController;
+-
++use Illuminate\Http\Request;
++use Illuminate\Support\Facades\Broadcast;
++use Illuminate\Support\Facades\Route;
+ 
+ /*
+ |--------------------------------------------------------------------------
+@@ -58,12 +71,10 @@
+ |
+ */
+ 
+-
+-
+ // Pusher private-channel auth for the mobile app (token-based, base url includes /api).
+ // Mirrors the default /broadcasting/auth but reachable under the API prefix.
+-Route::middleware('auth:sanctum')->post('broadcasting/auth', function (\Illuminate\Http\Request $request) {
+-    return \Illuminate\Support\Facades\Broadcast::auth($request);
++Route::middleware('auth:sanctum')->post('broadcasting/auth', function (Request $request) {
++    return Broadcast::auth($request);
+ });
+ 
+ Route::get('settings', SettingController::class);
+@@ -71,12 +82,19 @@
+ Route::get('languages', AppLanguageController::class);
+ Route::get('home', HomeController::class);
+ Route::get('categories', CategoryController::class);
+-Route::get('cities', \App\Http\Controllers\Api\CityController::class);
++Route::get('cities', CityController::class);
+ Route::get('ads', [AdController::class, 'index']);
+ Route::get('ads/{id}', [AdController::class, 'show']);
+ Route::get('ad-report-reasons', [AdReportController::class, 'reasons']);
+ Route::get('chat-report-reasons', [ConversationController::class, 'reportReasons']);
+-Route::get('legal-affairs', [\App\Http\Controllers\Api\LegalAffairController::class, 'index']);
++Route::get('legal-affairs', [App\Http\Controllers\Api\LegalAffairController::class, 'index']);
++Route::get('terms/current', [TermsController::class, 'current']);
++
++// Public-safe seller profile. GET /show-profile/{id} returns the owner-facing
++// shape and must not be used to look at other people; these two carry only what
++// a buyer may see — no email, no phone.
++Route::get('sellers/{id}', [SellerController::class, 'show'])->whereNumber('id');
++Route::get('sellers/{id}/ads', [SellerController::class, 'ads'])->whereNumber('id');
+ 
+ Route::controller(AuthController::class)->group(function () {
+     Route::post('register', 'register');
+@@ -88,14 +106,46 @@
+     Route::post('reset-password', 'resetPassword');
+ });
+ 
+-// V2 login: two-step OTP flow with a 30-day access token.
+-Route::prefix('v2')->controller(\App\Http\Controllers\Api\V2\AuthController::class)->group(function () {
++// V2 login: two-step OTP flow with a 30-day access token. Already live in the
++// published app — left completely untouched.
++Route::prefix('v2')->controller(App\Http\Controllers\Api\V2\AuthController::class)->group(function () {
+     Route::post('login', 'login');
+     Route::post('login/verify-otp', 'verifyOtp');
+     Route::post('login/resend-otp', 'resendOtp');
+     Route::post('auth/refresh', 'refresh');
+ });
+ 
++// V3 login: tokens issued directly, no OTP on a normal login. OTP only for
++// registration and locked-account recovery (see V3\AuthController). Token
++// refresh is shared with v2 — POST /v2/auth/refresh works for v3-issued
++// tokens too, since the refresh mechanism is not version-specific.
++Route::prefix('v3')->controller(App\Http\Controllers\Api\V3\AuthController::class)->group(function () {
++    Route::post('login', 'login');
++});
++
++// V2 account closure: deactivate (reversible) and delete (permanent) as two
++// separate actions. Additive only — V1's delete-account keeps its existing
++// restorable behaviour so already-published app builds are unaffected.
++Route::middleware('auth:sanctum')
++    ->prefix('v2')
++    ->controller(AccountController::class)
++    ->group(function () {
++        Route::post('deactivate-account', 'deactivate');
++        Route::delete('delete-account', 'destroy');
++    });
++
++// V2 checkout confirmation: "Start my listing immediately" must be actively
++// confirmed before a listing/extension is charged. Additive only — V1's
++// publish/extend endpoints take no such field and stay untouched.
++Route::middleware('auth:sanctum')->prefix('v2')->group(function () {
++    Route::post('ads/{id}/publish', [App\Http\Controllers\Api\V2\AdController::class, 'publish'])->middleware('feature.available:posting');
++    Route::post('my-ads/{id}/extend', [App\Http\Controllers\Api\V2\MyAdController::class, 'extend'])->middleware('feature.available:posting');
++    Route::post('users/{id}/reports', [UserReportController::class, 'store']);
++});
++
++Route::post('v2/moderation-appeals', [ModerationAppealController::class, 'store'])
++    ->middleware('throttle:5,1');
++
+ Route::prefix('admin')->controller(AdminAuthController::class)->group(function () {
+     Route::post('login', 'login');
+     Route::middleware('auth:sanctum')->post('logout', 'logout');
+@@ -106,14 +156,18 @@
+     Route::get('users/{id}', 'show')->middleware('permission:users.view');
+     Route::get('users/{id}/devices', 'devices')->middleware('permission:users.view');
+     Route::get('users/{id}/favorites', 'favorites')->middleware('permission:users.view');
++    Route::post('users', 'store')->middleware('permission:users.update');
+     Route::put('users/{id}', 'update')->middleware('permission:users.update');
+     Route::delete('users/{id}', 'destroy')->middleware('permission:users.delete');
+ });
+ 
+ Route::middleware('auth:sanctum')->prefix('admin')->controller(AdAdminController::class)->group(function () {
+     Route::get('ads', 'index')->middleware('permission:categories.view');
++    Route::get('refund-requests', 'refundRequests')->middleware('permission:categories.view');
+     Route::get('ads/{id}', 'show')->middleware('permission:categories.view');
+     Route::put('ads/{id}', 'update')->middleware('permission:categories.update');
++    Route::post('ads/{id}/refund', 'refund')->middleware('permission:categories.update');
++    Route::post('ads/{id}/refund/decline', 'declineRefund')->middleware('permission:categories.update');
+     Route::delete('ads/{id}', 'destroy')->middleware('permission:categories.delete');
+ });
+ 
+@@ -129,6 +183,29 @@
+     Route::put('chat-reports/{id}', 'update')->middleware('permission:chat_reports.update');
+ });
+ 
++Route::middleware('auth:sanctum')->prefix('admin')->controller(ModerationAdminController::class)->group(function () {
++    Route::get('users/{id}/moderation-actions', 'userActions')->middleware('permission:users.view');
++    Route::post('users/{id}/moderation-actions', 'storeAction')->middleware('permission:users.update');
++    Route::get('moderation-appeals', 'appeals')->middleware('permission:users.view');
++    Route::put('moderation-appeals/{id}', 'decideAppeal')->middleware('permission:users.update');
++});
++
++Route::middleware('auth:sanctum')->prefix('admin')->controller(FeatureRestrictionAdminController::class)->group(function () {
++    Route::get('users/{id}/feature-restrictions', 'index')->middleware('permission:users.view');
++    Route::post('users/{id}/feature-restrictions', 'store')->middleware('permission:users.update');
++    Route::delete('users/{id}/feature-restrictions/{restrictionId}', 'destroy')->middleware('permission:users.update');
++});
++
++Route::middleware('auth:sanctum')->prefix('admin')->controller(TermsVersionAdminController::class)->group(function () {
++    Route::get('terms-versions', 'index')->middleware('permission:legal_affairs.view');
++    Route::post('terms-versions', 'store')->middleware('permission:legal_affairs.update');
++});
++
++Route::middleware('auth:sanctum')->prefix('admin')->controller(AccountDeletionRequestAdminController::class)->group(function () {
++    Route::get('account-deletion-requests', 'index')->middleware('permission:users.view');
++    Route::put('account-deletion-requests/{id}', 'resolve')->middleware('permission:users.delete');
++});
++
+ Route::middleware('auth:sanctum')->prefix('admin')->controller(CouponAdminController::class)->group(function () {
+     Route::get('coupons', 'index')->middleware('permission:coupons.view');
+     Route::get('coupons/{id}', 'show')->middleware('permission:coupons.view');
+@@ -146,6 +223,8 @@
+     Route::delete('admins/{id}', 'destroy')->middleware('permission:admins.delete');
+     Route::get('profile', 'profile');
+     Route::put('profile', 'updateProfile');
++    Route::post('profile/photo', 'updateProfilePhoto');
++    Route::delete('profile/photo', 'removeProfilePhoto');
+     Route::put('profile/password', 'updatePassword');
+ });
+ 
+@@ -156,11 +235,11 @@
+     Route::delete('roles/{id}', 'destroy')->middleware('permission:roles.delete');
+ });
+ 
++// Read-only: permissions are seeded per page/action by RolePermissionSeeder, so
++// there is nothing for an admin to create or rename. Only the list survives —
++// the Roles screen uses it to populate its permission picker.
+ Route::middleware('auth:sanctum')->prefix('admin')->controller(PermissionController::class)->group(function () {
+     Route::get('permissions', 'index')->middleware('permission:permissions.view');
+-    Route::post('permissions', 'store')->middleware('permission:permissions.create');
+-    Route::put('permissions/{id}', 'update')->middleware('permission:permissions.update');
+-    Route::delete('permissions/{id}', 'destroy')->middleware('permission:permissions.delete');
+ });
+ 
+ Route::middleware('auth:sanctum')->prefix('admin')->controller(CountryController::class)->group(function () {
+@@ -244,31 +323,29 @@
+ 
+ Route::get('contact-reasons', ContactReasonController::class);
+ 
+-
+-
+-
+-
+-
+ Route::middleware('auth:sanctum')->group(function () {
+-    Route::post('ads/draft', [AdController::class, 'storeDraft']);
++    Route::post('ads/draft', [AdController::class, 'storeDraft'])->middleware('feature.available:posting');
+     Route::post('ads/{id}/images', [AdController::class, 'uploadImage']);
+-    Route::post('ads/{id}/publish', [AdController::class, 'publishDraft']);
++    Route::post('ads/{id}/publish', [AdController::class, 'publishDraft'])->middleware('feature.available:posting');
+     Route::post('ads/{id}/payment/complete', [AdController::class, 'completeStripePayment']);
+-    Route::post('ads', [AdController::class, 'store']);
++    Route::get('ads/{id}/payment/status', [AdController::class, 'paymentStatus']);
++    Route::post('ads', [AdController::class, 'store'])->middleware('feature.available:posting');
+     Route::post('ads/{id}/report', [AdReportController::class, 'store']);
+-    // Student status reconfirmation (term-based re-verification).
++    // Student status reconfirmation (annual, with a 60-day grace period).
+     Route::post('reverify/send-otp', [AuthController::class, 'sendReverifyOtp']);
+     Route::post('reverify/confirm', [AuthController::class, 'confirmReverify']);
+     Route::post('coupons/validate', [CouponController::class, 'validateCode']);
+     Route::get('my-ads', [MyAdController::class, 'index']);
+-    Route::get('my-orders', [\App\Http\Controllers\Api\OrderController::class, 'index']);
+-    Route::post('orders', [\App\Http\Controllers\Api\OrderController::class, 'store']);
++    // Route::get('my-orders', [\App\Http\Controllers\Api\OrderController::class, 'index']);
++    // Route::post('orders', [\App\Http\Controllers\Api\OrderController::class, 'store']);
+     Route::get('my-ads/{id}/buyers', [MyAdController::class, 'buyers']);
+     Route::post('my-ads/{id}/mark-sold', [MyAdController::class, 'markAsSold']);
+     Route::post('my-ads/{id}/pause', [MyAdController::class, 'pause']);
+-    Route::post('my-ads/{id}/activate', [MyAdController::class, 'activate']);
++    Route::post('my-ads/{id}/activate', [MyAdController::class, 'activate'])->middleware('feature.available:posting');
++    Route::get('my-ads/refund-requests', [MyAdController::class, 'refundRequests']);
++    Route::post('my-ads/{id}/refund-request', [MyAdController::class, 'requestRefund']);
+     // "Sell again" — copies a sold ad into a new listing and charges for it.
+-    Route::post('my-ads/{id}/sell-again', [MyAdController::class, 'sellAgain']);
++    Route::post('my-ads/{id}/sell-again', [MyAdController::class, 'sellAgain'])->middleware('feature.available:posting');
+     Route::delete('my-ads/{id}', [MyAdController::class, 'destroy']);
+     Route::get('ratings/{user_id?}', [UserRatingController::class, 'index']);
+     Route::post('ratings', [UserRatingController::class, 'store']);
+@@ -280,6 +357,8 @@
+     Route::post('auth/revoke-biometric', [AuthController::class, 'revokeBiometric']);
+     Route::post('device-identifier', [UserDeviceController::class, 'storeIdentifier']);
+     Route::post('fcm/register', [FcmController::class, 'register']);
++    Route::post('terms/accept', [TermsController::class, 'accept']);
++    Route::get('terms/history', [TermsController::class, 'history']);
+ 
+     Route::controller(UserNotificationController::class)->prefix('notifications')->group(function () {
+         Route::get('/', 'index');
+@@ -289,7 +368,7 @@
+         Route::delete('{id}', 'destroy');
+     });
+ 
+-    //profile
++    // profile
+     Route::get('show-profile/{user_id?}', [UserController::class, 'show']);
+     Route::post('update-profile', [UserController::class, 'update']);
+     // Self-service account deletion (App Store guideline 5.1.1(v)).
+@@ -313,14 +392,16 @@
+     Route::get('trusted-seller-application', [TrustedSellerApplicationController::class, 'show']);
+     Route::post('trusted-seller-application', [TrustedSellerApplicationController::class, 'store']);
+     Route::post('contact-us', ContactUsController::class);
+-
++    // User-triggered only — translates exactly the text sent, nothing automatic.
++    Route::post('translate', TranslateController::class)
++        ->middleware('throttle:30,1');
+ 
+     Route::controller(ConversationController::class)->prefix('conversations')->group(function () {
+         Route::get('/', 'index');
+-        Route::post('/', 'store');
++        Route::post('/', 'store')->middleware('feature.available:messaging');
+         Route::get('{id}', 'show');
+         Route::get('{id}/messages', 'messages');
+-        Route::post('{id}/messages', 'sendMessage');
++        Route::post('{id}/messages', 'sendMessage')->middleware('feature.available:messaging');
+         Route::post('{id}/read', 'markRead');
+         Route::post('{id}/archive', 'archive');
+         Route::post('{id}/unarchive', 'unarchive');
+@@ -329,5 +410,5 @@
+     });
+ 
+     Route::get('vehicles/lookup', [VehicleLookupController::class, 'lookup']);
+-    Route::get('/postcode/lookup', [App\Http\Controllers\Api\PostcodeController::class, 'lookup']);
++    Route::get('/postcode/lookup', [PostcodeController::class, 'lookup']);
+ });

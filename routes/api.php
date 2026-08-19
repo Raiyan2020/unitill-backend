@@ -1,51 +1,64 @@
 <?php
 
-use App\Http\Controllers\Api\Dashboard\AdminAuthController;
-use App\Http\Controllers\Api\Dashboard\AdminController;
-use App\Http\Controllers\Api\Dashboard\AdAdminController;
-use App\Http\Controllers\Api\Dashboard\AdReportAdminController;
-use App\Http\Controllers\Api\Dashboard\ChatReportAdminController;
-use App\Http\Controllers\Api\Dashboard\AdminUserController;
-use App\Http\Controllers\Api\Dashboard\CategoryAdminController;
-use App\Http\Controllers\Api\Dashboard\CityAdminController;
-use App\Http\Controllers\Api\Dashboard\ContactReasonAdminController;
-use App\Http\Controllers\Api\Dashboard\ContactUsAdminController;
-use App\Http\Controllers\Api\Dashboard\CountryController;
-use App\Http\Controllers\Api\Dashboard\UniversityController;
-use App\Http\Controllers\Api\Dashboard\LegalAffairController;
-use App\Http\Controllers\Api\Dashboard\LanguageController;
-use App\Http\Controllers\Api\Dashboard\PermissionController;
-use App\Http\Controllers\Api\Dashboard\PaymentMethodAdminController;
-use App\Http\Controllers\Api\Dashboard\RoleController;
-use App\Http\Controllers\Api\Dashboard\AdminPushNotificationController;
-use App\Http\Controllers\Api\Dashboard\AdminSettingController;
-use App\Http\Controllers\Api\Dashboard\TrustedSellerApplicationAdminController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AccountSecurityController;
 use App\Http\Controllers\Api\AccountSettingsController;
 use App\Http\Controllers\Api\AdController;
 use App\Http\Controllers\Api\AdReportController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\CityController;
 use App\Http\Controllers\Api\ContactReasonController;
 use App\Http\Controllers\Api\ContactUsController;
 use App\Http\Controllers\Api\ConversationController;
 use App\Http\Controllers\Api\CouponController;
+use App\Http\Controllers\Api\Dashboard\AccountDeletionRequestAdminController;
+use App\Http\Controllers\Api\Dashboard\AdAdminController;
+use App\Http\Controllers\Api\Dashboard\AdminAuthController;
+use App\Http\Controllers\Api\Dashboard\AdminController;
+use App\Http\Controllers\Api\Dashboard\AdminPushNotificationController;
+use App\Http\Controllers\Api\Dashboard\AdminSettingController;
+use App\Http\Controllers\Api\Dashboard\AdminUserController;
+use App\Http\Controllers\Api\Dashboard\AdReportAdminController;
+use App\Http\Controllers\Api\Dashboard\CategoryAdminController;
+use App\Http\Controllers\Api\Dashboard\ChatReportAdminController;
+use App\Http\Controllers\Api\Dashboard\CityAdminController;
+use App\Http\Controllers\Api\Dashboard\ContactReasonAdminController;
+use App\Http\Controllers\Api\Dashboard\ContactUsAdminController;
+use App\Http\Controllers\Api\Dashboard\CountryController;
+use App\Http\Controllers\Api\Dashboard\CouponAdminController;
+use App\Http\Controllers\Api\Dashboard\FeatureRestrictionAdminController;
+use App\Http\Controllers\Api\Dashboard\LanguageController;
+use App\Http\Controllers\Api\Dashboard\LegalAffairController;
+use App\Http\Controllers\Api\Dashboard\ModerationAdminController;
+use App\Http\Controllers\Api\Dashboard\PaymentMethodAdminController;
+use App\Http\Controllers\Api\Dashboard\PermissionController;
+use App\Http\Controllers\Api\Dashboard\RoleController;
+use App\Http\Controllers\Api\Dashboard\TermsVersionAdminController;
+use App\Http\Controllers\Api\Dashboard\TrustedSellerApplicationAdminController;
+use App\Http\Controllers\Api\Dashboard\UniversityController;
+use App\Http\Controllers\Api\FavoritedController;
 use App\Http\Controllers\Api\FcmController;
 use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\LanguageController as AppLanguageController;
-use App\Http\Controllers\Api\FavoritedController;
 use App\Http\Controllers\Api\MyAdController;
+use App\Http\Controllers\Api\PostcodeController;
+use App\Http\Controllers\Api\SellerController;
 use App\Http\Controllers\Api\SettingController;
+use App\Http\Controllers\Api\StripeWebhookController;
+use App\Http\Controllers\Api\TermsController;
+use App\Http\Controllers\Api\TranslateController;
 use App\Http\Controllers\Api\TrustedSellerApplicationController;
-use App\Http\Controllers\Api\UserRatingController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\UserDeviceController;
-use App\Http\Controllers\Api\StripeWebhookController;
 use App\Http\Controllers\Api\UserNotificationController;
+use App\Http\Controllers\Api\UserRatingController;
+use App\Http\Controllers\Api\V2\AccountController;
+use App\Http\Controllers\Api\V2\ModerationAppealController;
+use App\Http\Controllers\Api\V2\UserReportController;
 use App\Http\Controllers\Api\VehicleLookupController;
-use App\Http\Controllers\Api\Dashboard\CouponAdminController;
-
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -58,12 +71,10 @@ use App\Http\Controllers\Api\Dashboard\CouponAdminController;
 |
 */
 
-
-
 // Pusher private-channel auth for the mobile app (token-based, base url includes /api).
 // Mirrors the default /broadcasting/auth but reachable under the API prefix.
-Route::middleware('auth:sanctum')->post('broadcasting/auth', function (\Illuminate\Http\Request $request) {
-    return \Illuminate\Support\Facades\Broadcast::auth($request);
+Route::middleware('auth:sanctum')->post('broadcasting/auth', function (Request $request) {
+    return Broadcast::auth($request);
 });
 
 Route::get('settings', SettingController::class);
@@ -71,12 +82,20 @@ Route::post('stripe/webhook', StripeWebhookController::class);
 Route::get('languages', AppLanguageController::class);
 Route::get('home', HomeController::class);
 Route::get('categories', CategoryController::class);
-Route::get('cities', \App\Http\Controllers\Api\CityController::class);
+Route::get('cities', CityController::class);
 Route::get('ads', [AdController::class, 'index']);
 Route::get('ads/{id}', [AdController::class, 'show']);
 Route::get('ad-report-reasons', [AdReportController::class, 'reasons']);
 Route::get('chat-report-reasons', [ConversationController::class, 'reportReasons']);
-Route::get('legal-affairs', [\App\Http\Controllers\Api\LegalAffairController::class, 'index']);
+Route::get('v2/chat-report-reasons', [ConversationController::class, 'reportReasons']);
+Route::get('legal-affairs', [App\Http\Controllers\Api\LegalAffairController::class, 'index']);
+Route::get('terms/current', [TermsController::class, 'current']);
+
+// Public-safe seller profile. GET /show-profile/{id} returns the owner-facing
+// shape and must not be used to look at other people; these two carry only what
+// a buyer may see — no email, no phone.
+Route::get('sellers/{id}', [SellerController::class, 'show'])->whereNumber('id');
+Route::get('sellers/{id}/ads', [SellerController::class, 'ads'])->whereNumber('id');
 
 Route::controller(AuthController::class)->group(function () {
     Route::post('register', 'register');
@@ -88,13 +107,59 @@ Route::controller(AuthController::class)->group(function () {
     Route::post('reset-password', 'resetPassword');
 });
 
-// V2 login: two-step OTP flow with a 30-day access token.
-Route::prefix('v2')->controller(\App\Http\Controllers\Api\V2\AuthController::class)->group(function () {
+// V2 login: two-step OTP flow with a 30-day access token. Already live in the
+// published app — left completely untouched.
+Route::prefix('v2')->controller(App\Http\Controllers\Api\V2\AuthController::class)->group(function () {
     Route::post('login', 'login');
     Route::post('login/verify-otp', 'verifyOtp');
     Route::post('login/resend-otp', 'resendOtp');
     Route::post('auth/refresh', 'refresh');
 });
+
+// V3 login: tokens issued directly, no OTP on a normal login. OTP only for
+// registration and locked-account recovery (see V3\AuthController). Token
+// refresh is shared with v2 — POST /v2/auth/refresh works for v3-issued
+// tokens too, since the refresh mechanism is not version-specific.
+Route::prefix('v3')->controller(App\Http\Controllers\Api\V3\AuthController::class)->group(function () {
+    Route::post('login', 'login');
+});
+
+// V2 account closure: deactivate (reversible) and delete (permanent) as two
+// separate actions. Additive only — V1's delete-account keeps its existing
+// restorable behaviour so already-published app builds are unaffected.
+Route::middleware('auth:sanctum')
+    ->prefix('v2')
+    ->controller(AccountController::class)
+    ->group(function () {
+        Route::post('deactivate-account', 'deactivate');
+        Route::delete('delete-account', 'destroy');
+    });
+
+// V2 checkout confirmation: "Start my listing immediately" must be actively
+// confirmed before a listing/extension is charged. Additive only — V1's
+// publish/extend endpoints take no such field and stay untouched.
+Route::middleware('auth:sanctum')->prefix('v2')->group(function () {
+    // Versioned mobile contracts. The unversioned endpoints retain the exact
+    // response shape used by the already-published Flutter application.
+    Route::get('account/settings', [AccountSettingsController::class, 'show']);
+    Route::put('account/settings', [AccountSettingsController::class, 'update']);
+    Route::get('show-profile/{user_id?}', [UserController::class, 'show']);
+    Route::post('update-profile', [UserController::class, 'update']);
+    Route::post('reverify/confirm', [AuthController::class, 'confirmReverify']);
+    Route::post('ads', [AdController::class, 'store'])->middleware('feature.available:posting');
+    Route::post('ads/draft', [AdController::class, 'storeDraft'])->middleware('feature.available:posting');
+    Route::post('ads/{id}/publish', [App\Http\Controllers\Api\V2\AdController::class, 'publish'])->middleware('feature.available:posting');
+    Route::post('my-ads/{id}/activate', [MyAdController::class, 'activate'])->middleware('feature.available:posting');
+    Route::post('my-ads/{id}/sell-again', [MyAdController::class, 'sellAgain'])->middleware('feature.available:posting');
+    Route::post('my-ads/{id}/extend', [App\Http\Controllers\Api\V2\MyAdController::class, 'extend'])->middleware('feature.available:posting');
+    Route::post('conversations', [ConversationController::class, 'store'])->middleware('feature.available:messaging');
+    Route::post('conversations/{id}/messages', [ConversationController::class, 'sendMessage'])->middleware('feature.available:messaging');
+    Route::post('conversations/{id}/report', [ConversationController::class, 'report']);
+    Route::post('users/{id}/reports', [UserReportController::class, 'store']);
+});
+
+Route::post('v2/moderation-appeals', [ModerationAppealController::class, 'store'])
+    ->middleware('throttle:5,1');
 
 Route::prefix('admin')->controller(AdminAuthController::class)->group(function () {
     Route::post('login', 'login');
@@ -113,8 +178,11 @@ Route::middleware('auth:sanctum')->prefix('admin')->controller(AdminUserControll
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(AdAdminController::class)->group(function () {
     Route::get('ads', 'index')->middleware('permission:categories.view');
+    Route::get('refund-requests', 'refundRequests')->middleware('permission:categories.view');
     Route::get('ads/{id}', 'show')->middleware('permission:categories.view');
     Route::put('ads/{id}', 'update')->middleware('permission:categories.update');
+    Route::post('ads/{id}/refund', 'refund')->middleware('permission:categories.update');
+    Route::post('ads/{id}/refund/decline', 'declineRefund')->middleware('permission:categories.update');
     Route::delete('ads/{id}', 'destroy')->middleware('permission:categories.delete');
 });
 
@@ -128,6 +196,29 @@ Route::middleware('auth:sanctum')->prefix('admin')->controller(ChatReportAdminCo
     Route::get('chat-reports', 'index')->middleware('permission:chat_reports.view');
     Route::get('chat-reports/{id}', 'show')->middleware('permission:chat_reports.view');
     Route::put('chat-reports/{id}', 'update')->middleware('permission:chat_reports.update');
+});
+
+Route::middleware('auth:sanctum')->prefix('admin')->controller(ModerationAdminController::class)->group(function () {
+    Route::get('users/{id}/moderation-actions', 'userActions')->middleware('permission:users.view');
+    Route::post('users/{id}/moderation-actions', 'storeAction')->middleware('permission:users.update');
+    Route::get('moderation-appeals', 'appeals')->middleware('permission:users.view');
+    Route::put('moderation-appeals/{id}', 'decideAppeal')->middleware('permission:users.update');
+});
+
+Route::middleware('auth:sanctum')->prefix('admin')->controller(FeatureRestrictionAdminController::class)->group(function () {
+    Route::get('users/{id}/feature-restrictions', 'index')->middleware('permission:users.view');
+    Route::post('users/{id}/feature-restrictions', 'store')->middleware('permission:users.update');
+    Route::delete('users/{id}/feature-restrictions/{restrictionId}', 'destroy')->middleware('permission:users.update');
+});
+
+Route::middleware('auth:sanctum')->prefix('admin')->controller(TermsVersionAdminController::class)->group(function () {
+    Route::get('terms-versions', 'index')->middleware('permission:legal_affairs.view');
+    Route::post('terms-versions', 'store')->middleware('permission:legal_affairs.update');
+});
+
+Route::middleware('auth:sanctum')->prefix('admin')->controller(AccountDeletionRequestAdminController::class)->group(function () {
+    Route::get('account-deletion-requests', 'index')->middleware('permission:users.view');
+    Route::put('account-deletion-requests/{id}', 'resolve')->middleware('permission:users.delete');
 });
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(CouponAdminController::class)->group(function () {
@@ -159,11 +250,11 @@ Route::middleware('auth:sanctum')->prefix('admin')->controller(RoleController::c
     Route::delete('roles/{id}', 'destroy')->middleware('permission:roles.delete');
 });
 
+// Read-only: permissions are seeded per page/action by RolePermissionSeeder, so
+// there is nothing for an admin to create or rename. Only the list survives —
+// the Roles screen uses it to populate its permission picker.
 Route::middleware('auth:sanctum')->prefix('admin')->controller(PermissionController::class)->group(function () {
     Route::get('permissions', 'index')->middleware('permission:permissions.view');
-    Route::post('permissions', 'store')->middleware('permission:permissions.create');
-    Route::put('permissions/{id}', 'update')->middleware('permission:permissions.update');
-    Route::delete('permissions/{id}', 'destroy')->middleware('permission:permissions.delete');
 });
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(CountryController::class)->group(function () {
@@ -225,6 +316,7 @@ Route::middleware('auth:sanctum')->prefix('admin')->controller(ContactReasonAdmi
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(ContactUsAdminController::class)->group(function () {
     Route::get('contact-us', 'index')->middleware('permission:contact_us.view');
+    Route::put('contact-us/{id}', 'update')->middleware('permission:contact_us.view');
 });
 
 Route::middleware('auth:sanctum')->prefix('admin')->controller(TrustedSellerApplicationAdminController::class)->group(function () {
@@ -247,20 +339,15 @@ Route::middleware('auth:sanctum')->prefix('admin')->controller(AdminSettingContr
 
 Route::get('contact-reasons', ContactReasonController::class);
 
-
-
-
-
-
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('ads/draft', [AdController::class, 'storeDraft']);
+    Route::post('ads/draft', [AdController::class, 'storeDraft'])->middleware('feature.available:posting');
     Route::post('ads/{id}/images', [AdController::class, 'uploadImage']);
-    Route::post('ads/{id}/publish', [AdController::class, 'publishDraft']);
+    Route::post('ads/{id}/publish', [AdController::class, 'publishDraft'])->middleware('feature.available:posting');
     Route::post('ads/{id}/payment/complete', [AdController::class, 'completeStripePayment']);
     Route::get('ads/{id}/payment/status', [AdController::class, 'paymentStatus']);
-    Route::post('ads', [AdController::class, 'store']);
+    Route::post('ads', [AdController::class, 'store'])->middleware('feature.available:posting');
     Route::post('ads/{id}/report', [AdReportController::class, 'store']);
-    // Student status reconfirmation (term-based re-verification).
+    // Student status reconfirmation (annual, with a 60-day grace period).
     Route::post('reverify/send-otp', [AuthController::class, 'sendReverifyOtp']);
     Route::post('reverify/confirm', [AuthController::class, 'confirmReverify']);
     Route::post('coupons/validate', [CouponController::class, 'validateCode']);
@@ -270,9 +357,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('my-ads/{id}/buyers', [MyAdController::class, 'buyers']);
     Route::post('my-ads/{id}/mark-sold', [MyAdController::class, 'markAsSold']);
     Route::post('my-ads/{id}/pause', [MyAdController::class, 'pause']);
-    Route::post('my-ads/{id}/activate', [MyAdController::class, 'activate']);
+    Route::post('my-ads/{id}/activate', [MyAdController::class, 'activate'])->middleware('feature.available:posting');
+    Route::get('my-ads/refund-requests', [MyAdController::class, 'refundRequests']);
+    Route::post('my-ads/{id}/refund-request', [MyAdController::class, 'requestRefund']);
     // "Sell again" — copies a sold ad into a new listing and charges for it.
-    Route::post('my-ads/{id}/sell-again', [MyAdController::class, 'sellAgain']);
+    Route::post('my-ads/{id}/sell-again', [MyAdController::class, 'sellAgain'])->middleware('feature.available:posting');
     Route::delete('my-ads/{id}', [MyAdController::class, 'destroy']);
     Route::get('ratings/{user_id?}', [UserRatingController::class, 'index']);
     Route::post('ratings', [UserRatingController::class, 'store']);
@@ -284,6 +373,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('auth/revoke-biometric', [AuthController::class, 'revokeBiometric']);
     Route::post('device-identifier', [UserDeviceController::class, 'storeIdentifier']);
     Route::post('fcm/register', [FcmController::class, 'register']);
+    Route::post('terms/accept', [TermsController::class, 'accept']);
+    Route::get('terms/history', [TermsController::class, 'history']);
 
     Route::controller(UserNotificationController::class)->prefix('notifications')->group(function () {
         Route::get('/', 'index');
@@ -293,7 +384,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('{id}', 'destroy');
     });
 
-    //profile
+    // profile
     Route::get('show-profile/{user_id?}', [UserController::class, 'show']);
     Route::post('update-profile', [UserController::class, 'update']);
     // Self-service account deletion (App Store guideline 5.1.1(v)).
@@ -317,14 +408,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('trusted-seller-application', [TrustedSellerApplicationController::class, 'show']);
     Route::post('trusted-seller-application', [TrustedSellerApplicationController::class, 'store']);
     Route::post('contact-us', ContactUsController::class);
-
+    // User-triggered only — translates exactly the text sent, nothing automatic.
+    Route::post('translate', TranslateController::class)
+        ->middleware('throttle:30,1');
 
     Route::controller(ConversationController::class)->prefix('conversations')->group(function () {
         Route::get('/', 'index');
-        Route::post('/', 'store');
+        Route::post('/', 'store')->middleware('feature.available:messaging');
         Route::get('{id}', 'show');
         Route::get('{id}/messages', 'messages');
-        Route::post('{id}/messages', 'sendMessage');
+        Route::post('{id}/messages', 'sendMessage')->middleware('feature.available:messaging');
         Route::post('{id}/read', 'markRead');
         Route::post('{id}/archive', 'archive');
         Route::post('{id}/unarchive', 'unarchive');
@@ -333,5 +426,5 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::get('vehicles/lookup', [VehicleLookupController::class, 'lookup']);
-    Route::get('/postcode/lookup', [App\Http\Controllers\Api\PostcodeController::class, 'lookup']);
+    Route::get('/postcode/lookup', [PostcodeController::class, 'lookup']);
 });

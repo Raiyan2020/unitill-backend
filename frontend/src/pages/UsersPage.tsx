@@ -247,7 +247,7 @@ export function UsersPage() {
                             <button
                               type="button"
                               className="inline-flex items-center"
-                              title="View verification details"
+                              title={t.viewVerificationDetails}
                               onClick={() => navigate(`/user-verifications/user/${row.id}`)}
                             >
                               <BadgeCheck className="h-3.5 w-3.5 text-[#00a3ff]" />
@@ -284,12 +284,12 @@ export function UsersPage() {
                             <Edit className="h-4 w-4" />
                           </Button>
                           <Link to={`/users/${row.id}/devices`}>
-                            <Button size="icon" variant="secondary" title="Device sessions">
+                            <Button size="icon" variant="secondary" title={t.deviceSessions}>
                               <Smartphone className="h-4 w-4" />
                             </Button>
                           </Link>
                           <Link to={`/users/${row.id}/favorites`}>
-                            <Button size="icon" variant="secondary" title="Favorite ads">
+                            <Button size="icon" variant="secondary" title={t.favoriteAds}>
                               <Heart className="h-4 w-4" />
                             </Button>
                           </Link>

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Ad;
+use App\Models\Payment;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 
@@ -39,9 +40,9 @@ class ListingPaymentService
     }
 
     /** Publish exactly once, after Stripe has reported a successful intent. */
-    public function publishPaidListing(string $intentId, int $amount, string $currency): Ad
+    public function publishPaidListing(string $intentId, int $amount, string $currency, ?array $intent = null): Ad
     {
-        return DB::transaction(function () use ($intentId, $amount, $currency) {
+        $ad = DB::transaction(function () use ($intentId, $amount, $currency) {
             $ad = Ad::query()->where('stripe_payment_intent_id', $intentId)->lockForUpdate()->firstOrFail();
             if ($ad->payment_status === 'paid') {
                 return $ad;
@@ -60,5 +61,13 @@ class ListingPaymentService
 
             return $ad->fresh();
         });
+
+        Payment::where('stripe_payment_intent_id', $intentId)->update([
+            'status' => 'paid',
+            'paid_at' => now(),
+            'payment_method_type' => $intent['payment_method_types'][0] ?? null,
+        ]);
+
+        return $ad;
     }
 }

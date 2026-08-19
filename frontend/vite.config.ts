@@ -4,8 +4,9 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  // Built files are published to public/dist and served from /dist regardless of
-  // which /admin/* URL rendered the shell, so asset URLs must be absolute /dist/*.
+  // Laravel serves the dashboard shell at /admin/* while the compiled files live
+  // in public/dist. Keep assets on /dist so Apache can serve them directly from
+  // the same domain without colliding with Laravel's /api and public routes.
   base: '/dist/',
   build: {
     outDir: '../public/dist',
@@ -15,6 +16,10 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
+      '/storage': {
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,
       },

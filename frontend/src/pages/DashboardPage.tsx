@@ -44,7 +44,7 @@ export function DashboardPage() {
       setLoading(true);
       try {
         const res = await api.get('/admin/dashboard/stats');
-        const data = ensureApiSuccess<DashboardStats>(res, 'Failed to load dashboard stats');
+        const data = ensureApiSuccess<DashboardStats>(res, t.actionFailed);
         setStats({
           users_count: Number(data?.users_count || 0),
           active_ads_count: Number(data?.active_ads_count || 0),
@@ -54,7 +54,7 @@ export function DashboardPage() {
           last_10_days: Array.isArray(data?.last_10_days) ? data.last_10_days : [],
         });
       } catch (error) {
-        notify.errorFrom(error, 'Failed to load dashboard stats.');
+        notify.errorFrom(error, t.actionFailed);
       } finally {
         setLoading(false);
       }
