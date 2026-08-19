@@ -5,11 +5,17 @@ namespace Database\Seeders;
 use App\Models\Language;
 use App\Models\LegalAffair;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class LegalAffairSeeder extends Seeder
 {
     public function run(): void
     {
+
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        DB::table('legal_affair_translations')->truncate(); // Replace with your actual translation table name if different
+        LegalAffair::query()->truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
         $languages = Language::query()->active()->get(['id', 'code'])->keyBy('code');
 
         if ($languages->isEmpty()) {
