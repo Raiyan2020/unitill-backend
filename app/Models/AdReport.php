@@ -13,7 +13,13 @@ class AdReport extends Model
         'reason',
         'comment',
         'status',
+        'priority',
+        'decision_reason',
+        'resolved_by',
+        'resolved_at',
     ];
+
+    protected $casts = ['resolved_at' => 'datetime'];
 
     public function user(): BelongsTo
     {
@@ -23,5 +29,10 @@ class AdReport extends Model
     public function ad(): BelongsTo
     {
         return $this->belongsTo(Ad::class);
+    }
+
+    public function resolvedBy(): BelongsTo
+    {
+        return $this->belongsTo(Admin::class, 'resolved_by');
     }
 }

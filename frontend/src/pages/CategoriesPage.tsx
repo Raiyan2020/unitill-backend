@@ -5,7 +5,7 @@ import { TableFooter, TableLoadingRow } from '../components/table/TableHelpers';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
-import { api } from '../lib/api';
+import { api, backendOrigin } from '../lib/api';
 import { ensureApiSuccess } from '../lib/api-response';
 import { digitsOnly, toInteger } from '../lib/form';
 import { useNotify } from '../lib/notify';
@@ -19,6 +19,7 @@ type Row = {
   sort: number;
   image: string | null;
   image_url: string | null;
+  listing_fee: number | null;
   translations: Record<string, string>;
 };
 type PaginatedResponse<T> = { data: T[]; total: number };
@@ -44,7 +45,7 @@ export function CategoriesPage() {
   const [deleting, setDeleting] = useState<Row | null>(null);
   const [saving, setSaving] = useState(false);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [form, setForm] = useState({ status: 'active', sort: '0', translations: {} as Record<string, string> });
+  const [form, setForm] = useState({ status: 'active', sort: '0', listingFee: '', translations: {} as Record<string, string> });
   const didInitSearch = useRef(false);
 
   const fetchRows = async () => {
@@ -93,7 +94,7 @@ export function CategoriesPage() {
   const openCreate = () => {
     setEditing(null);
     setImageFile(null);
-    setForm({ status: 'active', sort: '0', translations: emptyTranslations() });
+    setForm({ status: 'active', sort: '0', listingFee: '', translations: emptyTranslations() });
     setFormOpen(true);
   };
 
@@ -102,7 +103,7 @@ export function CategoriesPage() {
     languages.forEach((l) => { mapped[l.code] = row.translations?.[l.code] || ''; });
     setEditing(row);
     setImageFile(null);
-    setForm({ status: row.status, sort: String(row.sort || 0), translations: mapped });
+    setForm({ status: row.status, sort: String(row.sort || 0), listingFee: row.listing_fee !== null ? String(row.listing_fee) : '', translations: mapped });
     setFormOpen(true);
   };
 
@@ -117,6 +118,7 @@ export function CategoriesPage() {
       const payload = new FormData();
       payload.append('status', form.status);
       payload.append('sort', String(toInteger(form.sort)));
+      payload.append('listing_fee', form.listingFee.trim());
       Object.entries(form.translations).forEach(([code, value]) => payload.append(`translations[${code}]`, value));
       if (imageFile) payload.append('image', imageFile);
 
@@ -154,8 +156,6 @@ export function CategoriesPage() {
   };
 
   const pagesCount = Math.max(1, Math.ceil(total / pageSize));
-  const backendOrigin = (import.meta.env.VITE_BACKEND_ORIGIN as string | undefined) || 'http://127.0.0.1:8000';
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
@@ -180,14 +180,15 @@ export function CategoriesPage() {
                   <th className="px-4 py-3 text-start">{t.name}</th>
                   <th className="px-4 py-3 text-start">{t.status}</th>
                   <th className="px-4 py-3 text-start">{t.sort}</th>
+                  <th className="px-4 py-3 text-start">{t.listingFee}</th>
                   <th className="px-4 py-3 text-start">{t.actions}</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <TableLoadingRow colSpan={6} />
+                  <TableLoadingRow colSpan={7} />
                 ) : rows.length === 0 ? (
-                  <tr><td className="px-4 py-6 text-center text-sm text-[#8a8da8]" colSpan={6}>{t.noDataFound}</td></tr>
+                  <tr><td className="px-4 py-6 text-center text-sm text-[#8a8da8]" colSpan={7}>{t.noDataFound}</td></tr>
                 ) : rows.map((row) => (
                   <tr key={row.id} className="border-t border-[#ececf3] dark:border-[#44485f]">
                     <td className="px-4 py-3">
@@ -205,6 +206,7 @@ export function CategoriesPage() {
                     <td className="px-4 py-3">{row.translations?.en || row.translations?.ar || '-'}</td>
                     <td className="px-4 py-3">{row.status}</td>
                     <td className="px-4 py-3">{row.sort}</td>
+                    <td className="px-4 py-3">{row.listing_fee !== null ? `£${row.listing_fee.toFixed(2)}` : t.listingFeeStandard}</td>
                     <td className="px-4 py-3">
                       <div className="flex gap-2">
                         <Button size="icon" variant="secondary" title={t.subCategories} onClick={() => navigate(`/categories/${row.id}/subcategories`)}>
@@ -232,7 +234,7 @@ export function CategoriesPage() {
                 <Button variant="ghost" size="icon" onClick={() => setFormOpen(false)}><X className="h-4 w-4" /></Button>
               </CardHeader>
               <CardContent className="max-h-[78vh] space-y-4 overflow-y-auto p-4 md:max-h-[84vh] md:p-6">
-                <div className="grid gap-3 md:grid-cols-3">
+                <div className="grid gap-3 md:grid-cols-4">
                   <label className="space-y-1.5">
                     <span className="text-xs text-[#8a8da8]">{editing ? t.changeImage : t.image}</span>
                     <Input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files?.[0] ?? null)} />
@@ -240,6 +242,17 @@ export function CategoriesPage() {
                   <label className="space-y-1.5">
                     <span className="text-xs text-[#8a8da8]">{t.sort}</span>
                     <Input placeholder={t.sort} inputMode="numeric" value={form.sort} onChange={(e) => setForm((s) => ({ ...s, sort: digitsOnly(e.target.value) }))} />
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-xs text-[#8a8da8]">{t.listingFee}</span>
+                    <Input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder={t.listingFeeStandard}
+                      value={form.listingFee}
+                      onChange={(e) => setForm((s) => ({ ...s, listingFee: e.target.value }))}
+                    />
                   </label>
                   <label className="space-y-1.5">
                     <span className="text-xs text-[#8a8da8]">{t.status}</span>

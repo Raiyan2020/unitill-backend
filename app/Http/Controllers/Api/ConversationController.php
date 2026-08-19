@@ -10,6 +10,7 @@ use App\Models\ChatReport;
 use App\Models\Conversation;
 use App\Services\ChatService;
 use App\Support\ChatReportReason;
+use App\Support\ReportPriority;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -104,18 +105,6 @@ class ConversationController extends Controller
 
         $lang = $request->header('lang') === 'ar';
         $user = Auth::user();
-
-        // Students past their term deadline cannot start new conversations
-        // until they reconfirm. Existing threads are never cut off mid-chat.
-        if ($user->needsReverification()) {
-            return sendError(
-                $lang
-                    ? 'يجب إعادة تأكيد حالتك كطالب قبل بدء محادثة'
-                    : 'Please re-verify your student status before messaging',
-                ['needs_reverify' => true],
-                403
-            );
-        }
 
         $ad = Ad::query()
             ->published()
@@ -269,23 +258,13 @@ class ConversationController extends Controller
 
         $lang = $request->header('lang') === 'ar';
 
-        if (Auth::user()->needsReverification()) {
-            return sendError(
-                $lang
-                    ? 'يجب إعادة تأكيد حالتك كطالب قبل إرسال رسالة'
-                    : 'Please re-verify your student status before messaging',
-                ['needs_reverify' => true],
-                403
-            );
-        }
-
         $conversation = $this->findParticipantConversation($id);
 
         if (! $conversation) {
             return sendError(__('api.chat.not_found'), [], 404);
         }
 
-        if (empty(trim($validated['body'] ?? '')) && !$request->hasFile('attachment')) {
+        if (empty(trim($validated['body'] ?? '')) && ! $request->hasFile('attachment')) {
             return sendError(__('api.chat.message_empty'), [], 422);
         }
 
@@ -432,7 +411,10 @@ class ConversationController extends Controller
     public function reportReasons(Request $request)
     {
         return sendResponse(
-            ChatReportReason::options($request->header('lang', 'en'))
+            ChatReportReason::options(
+                $request->header('lang', 'en'),
+                $request->is('api/v2/*')
+            )
         );
     }
 
@@ -501,6 +483,7 @@ class ConversationController extends Controller
             'type' => $validated['type'],
             'reason' => $validated['reason'] ?? null,
             'description' => $validated['description'] ?? null,
+            'priority' => ReportPriority::fromReason($validated['reason']),
         ]);
 
         return sendResponse(

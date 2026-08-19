@@ -47,6 +47,7 @@ class CategoryAdminController extends Controller
                 'sort' => (int) $row->sort,
                 'image' => $row->image,
                 'image_url' => $row->image ? (str_starts_with($row->image, 'http') ? $row->image : asset('storage/' . ltrim($row->image, '/'))) : null,
+                'listing_fee' => $row->listing_fee !== null ? (float) $row->listing_fee : null,
                 'translations' => $translations,
             ];
         });
@@ -56,12 +57,15 @@ class CategoryAdminController extends Controller
 
     public function store(Request $request)
     {
+        $this->normalizeListingFee($request);
+
         $validator = Validator::make($request->all(), [
             'parent_id' => 'nullable|integer|exists:categories,id',
             'translations' => 'required|array|min:1',
             'status' => ['required', Rule::in(['active', 'inactive'])],
             'sort' => 'nullable|integer|min:0',
             'image' => 'nullable|image|max:5120',
+            'listing_fee' => 'nullable|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -80,6 +84,7 @@ class CategoryAdminController extends Controller
             'status' => $data['status'],
             'sort' => (int) ($data['sort'] ?? 0),
             'image' => $imagePath,
+            'listing_fee' => $data['listing_fee'] ?? null,
         ]);
 
         $this->upsertTranslations($row, $data['translations']);
@@ -94,11 +99,14 @@ class CategoryAdminController extends Controller
             return sendError('Category not found', [], 404);
         }
 
+        $this->normalizeListingFee($request);
+
         $validator = Validator::make($request->all(), [
             'translations' => 'sometimes|required|array|min:1',
             'status' => ['sometimes', 'required', Rule::in(['active', 'inactive'])],
             'sort' => 'sometimes|nullable|integer|min:0',
             'image' => 'sometimes|nullable|image|max:5120',
+            'listing_fee' => 'sometimes|nullable|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -151,6 +159,13 @@ class CategoryAdminController extends Controller
 
         $path = Storage::disk('public')->path($row->image);
         return response()->file($path);
+    }
+
+    private function normalizeListingFee(Request $request): void
+    {
+        if ($request->input('listing_fee') === '') {
+            $request->merge(['listing_fee' => null]);
+        }
     }
 
     private function upsertTranslations(Category $row, array $translations): void

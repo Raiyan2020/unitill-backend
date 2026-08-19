@@ -119,6 +119,13 @@ brand-new account with it — it will be empty, with no previous history.
 
 Both need a valid bearer token, and both revoke every session when they succeed.
 
+## Public Google Play deletion request
+
+A logged-out user can now request deletion at `{{web_url}}/delete-account`. Add this
+URL to Google Play Console and expose it as an external-browser link in mobile
+Settings. The public form creates a pending request; completing it from the admin
+dashboard invokes the same permanent V2 purge behaviour described above.
+
 ---
 
 ## Postman

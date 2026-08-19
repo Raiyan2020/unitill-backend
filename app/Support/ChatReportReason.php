@@ -5,14 +5,30 @@ namespace App\Support;
 class ChatReportReason
 {
     public const HARASSMENT_OR_ABUSE = 'harassment_or_abuse';
+
     public const SPAM_OR_SCAM = 'spam_or_scam';
+
     public const INAPPROPRIATE_CONTENT = 'inappropriate_content';
+
     public const THREATS_OR_VIOLENCE = 'threats_or_violence';
+
     public const IMPERSONATION = 'impersonation';
+
     public const PAYMENT_OUTSIDE_APP = 'payment_outside_app';
+
+    public const CHILD_SEXUAL_ABUSE_OR_EXPLOITATION = 'child_sexual_abuse_or_exploitation';
+
+    public const IMMEDIATE_DANGER = 'immediate_danger';
+
+    public const TERRORISM_RELATED = 'terrorism_related';
+
+    public const SERIOUS_VIOLENCE = 'serious_violence';
+
+    public const CREDIBLE_THREAT = 'credible_threat';
+
     public const OTHER = 'other';
 
-    public static function allowed(): array
+    public static function legacyAllowed(): array
     {
         return [
             self::HARASSMENT_OR_ABUSE,
@@ -25,7 +41,23 @@ class ChatReportReason
         ];
     }
 
-    public static function options(string $lang = 'en'): array
+    public static function seriousSafety(): array
+    {
+        return [
+            self::CHILD_SEXUAL_ABUSE_OR_EXPLOITATION,
+            self::IMMEDIATE_DANGER,
+            self::TERRORISM_RELATED,
+            self::SERIOUS_VIOLENCE,
+            self::CREDIBLE_THREAT,
+        ];
+    }
+
+    public static function allowed(): array
+    {
+        return array_merge(self::legacyAllowed(), self::seriousSafety());
+    }
+
+    public static function options(string $lang = 'en', bool $includeSeriousSafety = true): array
     {
         $translations = [
             self::HARASSMENT_OR_ABUSE => [
@@ -70,6 +102,41 @@ class ChatReportReason
                 'es' => 'Solicitar pago fuera de la aplicación',
                 'zh' => '要求在应用外付款',
             ],
+            self::CHILD_SEXUAL_ABUSE_OR_EXPLOITATION => [
+                'en' => 'Child sexual abuse or exploitation',
+                'ar' => 'اعتداء أو استغلال جنسي للأطفال',
+                'fr' => 'Abus ou exploitation sexuelle d’enfants',
+                'es' => 'Abuso o explotación sexual infantil',
+                'zh' => '儿童性虐待或剥削',
+            ],
+            self::IMMEDIATE_DANGER => [
+                'en' => 'Immediate danger',
+                'ar' => 'خطر فوري',
+                'fr' => 'Danger immédiat',
+                'es' => 'Peligro inmediato',
+                'zh' => '紧迫危险',
+            ],
+            self::TERRORISM_RELATED => [
+                'en' => 'Terrorism-related content',
+                'ar' => 'محتوى متعلق بالإرهاب',
+                'fr' => 'Contenu lié au terrorisme',
+                'es' => 'Contenido relacionado con terrorismo',
+                'zh' => '涉恐内容',
+            ],
+            self::SERIOUS_VIOLENCE => [
+                'en' => 'Serious violence',
+                'ar' => 'عنف خطير',
+                'fr' => 'Violence grave',
+                'es' => 'Violencia grave',
+                'zh' => '严重暴力',
+            ],
+            self::CREDIBLE_THREAT => [
+                'en' => 'Credible threat',
+                'ar' => 'تهديد موثوق',
+                'fr' => 'Menace crédible',
+                'es' => 'Amenaza creíble',
+                'zh' => '可信威胁',
+            ],
             self::OTHER => [
                 'en' => 'Other',
                 'ar' => 'سبب آخر',
@@ -80,7 +147,8 @@ class ChatReportReason
         ];
 
         $results = [];
-        foreach (self::allowed() as $value) {
+        $allowed = $includeSeriousSafety ? self::allowed() : self::legacyAllowed();
+        foreach ($allowed as $value) {
             $results[] = [
                 'value' => $value,
                 'label' => $translations[$value][$lang] ?? $translations[$value]['en'],

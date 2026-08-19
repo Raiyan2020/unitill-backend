@@ -23,6 +23,7 @@ class RegisterRequest extends FormRequest
             'student_email' => 'required|email:rfc|max:255|unique:users,student_email|different:email',
             'password' => 'required|string|min:6|confirmed',
             'terms_accepted' => 'required|accepted',
+            'terms_version' => 'nullable|string|max:50',
             'phone' => 'nullable|string|max:30|unique:users,phone',
             'country_code' => 'nullable|string|max:20',
             'city_id' => 'nullable|integer|exists:cities,id',

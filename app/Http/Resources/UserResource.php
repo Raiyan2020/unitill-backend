@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\TermsVersion;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -17,6 +18,7 @@ class UserResource extends JsonResource
         $lang = $request->header('lang', 'en');
         $locale = $lang === 'ar' ? 'ar' : 'en';
         $isOwnProfile = $request->user()?->id === $this->id;
+        $isV2Response = $request->is('api/v2/*');
         $mask = function (?string $e) {
             if (! $e || ! str_contains($e, '@')) {
                 return null;
@@ -86,6 +88,32 @@ class UserResource extends JsonResource
                     'notify_system' => true,
                 ],
             ];
+            if ($isV2Response) {
+                $currentTerms = TermsVersion::query()->where('is_current', true)->latest('effective_at')->first();
+                $currentTermsAcceptance = $currentTerms
+                    ? $this->termsAcceptances()->where('terms_version_id', $currentTerms->id)->first()
+                    : null;
+                $postingRestriction = $this->activeFeatureRestriction('posting');
+                $messagingRestriction = $this->activeFeatureRestriction('messaging');
+
+                $data['terms'] = [
+                    'current_version' => $currentTerms?->version,
+                    'accepted' => $currentTermsAcceptance !== null,
+                    'accepted_at' => $currentTermsAcceptance?->accepted_at?->toIso8601String(),
+                ];
+                $data['capabilities'] = [
+                    'can_post' => $postingRestriction === null,
+                    'can_message' => $messagingRestriction === null,
+                ];
+                $data['feature_restrictions'] = collect([$postingRestriction, $messagingRestriction])
+                    ->filter()
+                    ->map(fn ($restriction) => [
+                        'id' => $restriction->id,
+                        'feature' => $restriction->feature,
+                        'reason' => $restriction->reason,
+                        'ends_at' => $restriction->ends_at?->toIso8601String(),
+                    ])->values()->all();
+            }
         } else {
             $data['student_email_masked'] = $mask($this->student_email);
         }

@@ -2,6 +2,12 @@
 
 return [
 
+    /* Student verification is renewed from each user's own verification date. */
+    'student_reverification_months' => (int) env('STUDENT_REVERIFICATION_MONTHS', 12),
+
+    /* Users remain active for this many days after verification becomes due. */
+    'student_reverification_grace_days' => (int) env('STUDENT_REVERIFICATION_GRACE_DAYS', 60),
+
     /*
     |--------------------------------------------------------------------------
     | Access Token TTL (minutes)
@@ -51,8 +57,11 @@ return [
     |--------------------------------------------------------------------------
     | Refresh Token TTL (days)
     |--------------------------------------------------------------------------
+    | Longer than the 12-month verification period plus its 60-day grace window.
+    | Access tokens remain short-lived and are rotated normally; student status
+    | is enforced by the independent annual verification lifecycle.
     */
-    'refresh_token_ttl' => (int) env('MOBILE_REFRESH_TOKEN_TTL', 30),
+    'refresh_token_ttl' => (int) env('MOBILE_REFRESH_TOKEN_TTL', 425),
 
     /*
     |--------------------------------------------------------------------------

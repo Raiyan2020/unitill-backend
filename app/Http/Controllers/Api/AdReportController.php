@@ -7,6 +7,7 @@ use App\Http\Requests\StoreAdReportRequest;
 use App\Models\Ad;
 use App\Models\AdReport;
 use App\Support\AdReportReason;
+use App\Support\ReportPriority;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -62,6 +63,7 @@ class AdReportController extends Controller
             'reason' => $request->input('reason'),
             'comment' => $request->input('comment'),
             'status' => 'pending',
+            'priority' => ReportPriority::fromReason($request->input('reason')),
         ]);
 
         return sendResponse([

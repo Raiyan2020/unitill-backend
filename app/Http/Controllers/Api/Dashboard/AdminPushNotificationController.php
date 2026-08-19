@@ -60,6 +60,8 @@ class AdminPushNotificationController extends Controller
         return sendResponse([
             'all_users_topic' => $this->pushNotifications->allUsersTopic(),
             'estimated_all_audience' => $this->pushNotifications->estimatedAllAudienceCount(),
+            'marketing_topic' => $this->pushNotifications->marketingTopic(),
+            'estimated_marketing_audience' => $this->pushNotifications->estimatedMarketingAudienceCount(),
             'firebase_configured' => app(\App\Services\FirebaseService::class)->isConfigured(),
         ]);
     }
@@ -67,7 +69,7 @@ class AdminPushNotificationController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'audience' => ['required', Rule::in(['all', 'user'])],
+            'audience' => ['required', Rule::in(['all', 'user', 'marketing'])],
             'user_id' => 'required_if:audience,user|nullable|integer|exists:users,id',
             'title' => 'required|string|max:191',
             'body' => 'required|string|max:2000',
@@ -82,6 +84,15 @@ class AdminPushNotificationController extends Controller
 
         if ($validated['audience'] === 'all') {
             $log = $this->pushNotifications->sendToAll(
+                $validated['title'],
+                $validated['body'],
+                $data,
+                $adminId
+            );
+        } elseif ($validated['audience'] === 'marketing') {
+            // Marketing broadcasts need their own consent — never sent under
+            // the "all" audience's notify_system gate.
+            $log = $this->pushNotifications->sendMarketingToAll(
                 $validated['title'],
                 $validated['body'],
                 $data,

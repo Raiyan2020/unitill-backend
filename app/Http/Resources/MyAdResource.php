@@ -29,6 +29,7 @@ class MyAdResource extends JsonResource
             'listing_fee' => $this->listing_fee !== null ? (float) $this->listing_fee : null,
             'payment_required' => $this->status === 'pending'
                 && $this->payment_status === 'requires_payment',
+            'refund_status' => $this->refund_status,
         ];
 
         if ($this->status === 'published') {

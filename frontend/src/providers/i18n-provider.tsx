@@ -10,6 +10,8 @@ export type Dictionary = {
   ads: string;
   adReports: string;
   chatReports: string;
+  userReports: string;
+  moderationAppeals: string;
   coupons: string;
   userVerifications: string;
   admins: string;
@@ -25,12 +27,52 @@ export type Dictionary = {
   categories: string;
   subCategories: string;
   legalAffairs: string;
+  termsVersions: string;
+  termsVersionsSubtitle: string;
+  publishNewTerms: string;
+  version: string;
+  termsContent: string;
+  newTermsWarning: string;
+  publish: string;
+  effectiveAt: string;
+  acceptances: string;
+  current: string;
+  previousVersion: string;
+  requiredFields: string;
+  publishTermsConfirmation: string;
+  termsPublished: string;
+  accountDeletionRequests: string;
+  accountDeletionSubtitle: string;
+  completed: string;
+  completeDeletionWarning: string;
+  rejectDeletionConfirmation: string;
+  resolutionNote: string;
+  requestResolved: string;
+  noReasonProvided: string;
+  completePermanentDeletion: string;
+  noDeletionRequests: string;
+  featureRestrictions: string;
+  posting: string;
+  messaging: string;
+  restrictionReason: string;
+  durationDaysOptional: string;
+  applyRestriction: string;
+  reasonRequired: string;
+  featureRestrictionApplied: string;
+  liftRestrictionConfirmation: string;
+  liftReason: string;
+  featureRestrictionLifted: string;
+  lifted: string;
+  restricted: string;
+  liftRestriction: string;
+  noFeatureRestrictions: string;
   contactReasons: string;
   contactUs: string;
   pushNotifications: string;
   sendNotification: string;
   sendToAll: string;
   sendToUser: string;
+  sendToMarketing: string;
   audience: string;
   notificationTitle: string;
   notificationBody: string;
@@ -73,6 +115,29 @@ export type Dictionary = {
   code: string;
   slug: string;
   sort: string;
+  listingFee: string;
+  listingFeeStandard: string;
+  paymentStatus: string;
+  refund: string;
+  refundStatus: string;
+  refundReason: string;
+  refundReasonPlaceholder: string;
+  issueRefund: string;
+  declineRefund: string;
+  refunded: string;
+  refundDeclined: string;
+  refundRequested: string;
+  refundRequests: string;
+  manageInRefundRequests: string;
+  notRefunded: string;
+  confirmRefund: string;
+  confirmDeclineRefund: string;
+  refundConfirmation: string;
+  declineRefundConfirmation: string;
+  refundIssued: string;
+  refundDeclinedNotice: string;
+  noPaidPayment: string;
+  userNotifiedNote: string;
   state: string;
   section: string;
   isDefault: string;
@@ -316,6 +381,42 @@ export type Dictionary = {
   emailInvalid: string;
   paymentUnsettledShort: string;
   menu: string;
+
+  // Priority + moderation labels (report review pages, user details, appeals).
+  priority: string;
+  allPriorities: string;
+  priorityNormal: string;
+  priorityUrgent: string;
+  priorityCritical: string;
+  moderationAction: string;
+  modWarning: string;
+  modTemporarySuspension: string;
+  modPermanentSuspension: string;
+  modReactivated: string;
+  modSuspensionExpired: string;
+  durationInDays: string;
+  decisionReason: string;
+  applyAction: string;
+  saving: string;
+  moderationActionRecorded: string;
+  warnings: string;
+  suspendedUntil: string;
+  moderationDecisionLog: string;
+  noModerationDecisions: string;
+  systemLabel: string;
+  untilLabel: string;
+  appealStatusPending: string;
+  appealStatusAccepted: string;
+  appealStatusRejected: string;
+  appealStatusAll: string;
+  decisionLabel: string;
+  appealLabel: string;
+  accept: string;
+  reject: string;
+  decisionRecorded: string;
+  unableToLoadAppeals: string;
+  unableToSaveDecision: string;
+  noAppealsFound: string;
 };
 
 const dictionaries: Record<Locale, Dictionary> = {
@@ -326,6 +427,8 @@ const dictionaries: Record<Locale, Dictionary> = {
     ads: 'Ads',
     adReports: 'Ad Reports',
     chatReports: 'Chat Reports',
+    userReports: 'User Reports',
+    moderationAppeals: 'Moderation Appeals',
     coupons: 'Coupons',
     userVerifications: 'User Verifications',
     admins: 'Admins',
@@ -341,12 +444,52 @@ const dictionaries: Record<Locale, Dictionary> = {
     categories: 'Categories',
     subCategories: 'Sub Categories',
     legalAffairs: 'Legal Affairs',
+    termsVersions: 'Terms Versions',
+    termsVersionsSubtitle: 'Publish terms and audit acceptance counts by version.',
+    publishNewTerms: 'Publish New Terms',
+    version: 'Version',
+    termsContent: 'Terms content',
+    newTermsWarning: 'Publishing makes this version current. Existing users must accept it separately.',
+    publish: 'Publish',
+    effectiveAt: 'Effective at',
+    acceptances: 'Acceptances',
+    current: 'Current',
+    previousVersion: 'Previous',
+    requiredFields: 'Version, English title, and English content are required.',
+    publishTermsConfirmation: 'Publish this as the new current terms version?',
+    termsPublished: 'New terms version published.',
+    accountDeletionRequests: 'Account Deletion Requests',
+    accountDeletionSubtitle: 'Review public, login-free requests and complete permanent deletion.',
+    completed: 'Completed',
+    completeDeletionWarning: 'This permanently deletes the matched account and cannot be undone. Continue?',
+    rejectDeletionConfirmation: 'Reject this account deletion request?',
+    resolutionNote: 'Resolution note (optional)',
+    requestResolved: 'Deletion request resolved.',
+    noReasonProvided: 'No reason provided.',
+    completePermanentDeletion: 'Complete permanent deletion',
+    noDeletionRequests: 'No account deletion requests found.',
+    featureRestrictions: 'Feature Restrictions',
+    posting: 'Posting',
+    messaging: 'Messaging',
+    restrictionReason: 'Restriction reason',
+    durationDaysOptional: 'Days (optional)',
+    applyRestriction: 'Apply restriction',
+    reasonRequired: 'A reason is required.',
+    featureRestrictionApplied: 'Feature restriction applied.',
+    liftRestrictionConfirmation: 'Lift this feature restriction?',
+    liftReason: 'Reason for lifting (optional)',
+    featureRestrictionLifted: 'Feature restriction lifted.',
+    lifted: 'Lifted',
+    restricted: 'Restricted',
+    liftRestriction: 'Lift restriction',
+    noFeatureRestrictions: 'No feature restrictions recorded.',
     contactReasons: 'Contact Reasons',
     contactUs: 'Contact Us',
     pushNotifications: 'Push Notifications',
     sendNotification: 'Send Notification',
     sendToAll: 'All users',
     sendToUser: 'Single user',
+    sendToMarketing: 'Marketing-opted-in users',
     audience: 'Audience',
     notificationTitle: 'Title',
     notificationBody: 'Body',
@@ -388,6 +531,29 @@ const dictionaries: Record<Locale, Dictionary> = {
     code: 'Code',
     slug: 'Slug',
     sort: 'Sort',
+    listingFee: 'Listing fee (£)',
+    listingFeeStandard: 'Standard price',
+    paymentStatus: 'Payment status',
+    refund: 'Refund',
+    refundStatus: 'Refund status',
+    refundReason: 'Refund reason',
+    refundReasonPlaceholder: 'Why is this refund being issued?',
+    issueRefund: 'Issue refund',
+    declineRefund: 'Decline',
+    refunded: 'Refunded',
+    refundDeclined: 'Declined',
+    refundRequested: 'Requested',
+    refundRequests: 'Refund Requests',
+    manageInRefundRequests: 'Manage this from',
+    notRefunded: 'Not refunded',
+    confirmRefund: 'Confirm refund',
+    confirmDeclineRefund: 'Decline refund request',
+    refundConfirmation: 'This will refund the seller through Stripe and cannot be undone. Continue?',
+    declineRefundConfirmation: 'The seller will be told their refund request was declined, with this reason. Continue?',
+    refundIssued: 'Refund issued.',
+    refundDeclinedNotice: 'Refund request declined.',
+    noPaidPayment: 'This ad has no paid Stripe payment to refund.',
+    userNotifiedNote: 'The seller is notified automatically (push + in-app) as soon as you confirm.',
     state: 'State',
     section: 'Section',
     isDefault: 'Default',
@@ -628,6 +794,41 @@ const dictionaries: Record<Locale, Dictionary> = {
     emailInvalid: "Enter a valid email address, for example name@example.com",
     paymentUnsettledShort: "fee unpaid",
     menu: "Menu",
+
+    priority: "Priority",
+    allPriorities: "All priorities",
+    priorityNormal: "Normal",
+    priorityUrgent: "Urgent",
+    priorityCritical: "Critical",
+    moderationAction: "Moderation action",
+    modWarning: "Warning",
+    modTemporarySuspension: "Temporary suspension",
+    modPermanentSuspension: "Permanent suspension",
+    modReactivated: "Reactivate",
+    modSuspensionExpired: "Suspension expired",
+    durationInDays: "Duration in days",
+    decisionReason: "Decision reason",
+    applyAction: "Apply action",
+    saving: "Saving…",
+    moderationActionRecorded: "Moderation action recorded.",
+    warnings: "Warnings",
+    suspendedUntil: "Suspended until",
+    moderationDecisionLog: "Moderation Decision Log",
+    noModerationDecisions: "No moderation decisions recorded",
+    systemLabel: "System",
+    untilLabel: "until",
+    appealStatusPending: "Pending",
+    appealStatusAccepted: "Accepted",
+    appealStatusRejected: "Rejected",
+    appealStatusAll: "All",
+    decisionLabel: "Decision",
+    appealLabel: "Appeal",
+    accept: "Accept",
+    reject: "Reject",
+    decisionRecorded: "Decision recorded.",
+    unableToLoadAppeals: "Unable to load appeals.",
+    unableToSaveDecision: "Unable to save decision.",
+    noAppealsFound: "No appeals found",
   },
   ar: {
     appName: 'لوحة يونيتل',
@@ -636,6 +837,8 @@ const dictionaries: Record<Locale, Dictionary> = {
     ads: 'الإعلانات',
     adReports: 'بلاغات الإعلانات',
     chatReports: 'بلاغات المحادثات',
+    userReports: 'بلاغات المستخدمين',
+    moderationAppeals: 'استئنافات الإشراف',
     coupons: 'الكوبونات',
     userVerifications: 'طلبات التوثيق',
     admins: 'المديرين',
@@ -651,12 +854,52 @@ const dictionaries: Record<Locale, Dictionary> = {
     categories: 'الأقسام',
     subCategories: 'الأقسام الفرعية',
     legalAffairs: 'الشؤون القانونية',
+    termsVersions: 'إصدارات الشروط',
+    termsVersionsSubtitle: 'نشر الشروط ومراجعة عدد الموافقات لكل إصدار.',
+    publishNewTerms: 'نشر شروط جديدة',
+    version: 'الإصدار',
+    termsContent: 'نص الشروط',
+    newTermsWarning: 'سيصبح هذا الإصدار هو الحالي، ويجب على المستخدمين الحاليين قبوله بشكل مستقل.',
+    publish: 'نشر',
+    effectiveAt: 'تاريخ السريان',
+    acceptances: 'الموافقات',
+    current: 'الحالي',
+    previousVersion: 'سابق',
+    requiredFields: 'الإصدار والعنوان والنص الإنجليزي مطلوبة.',
+    publishTermsConfirmation: 'هل تريد نشر هذا الإصدار باعتباره الشروط الحالية؟',
+    termsPublished: 'تم نشر إصدار الشروط الجديد.',
+    accountDeletionRequests: 'طلبات حذف الحساب',
+    accountDeletionSubtitle: 'مراجعة الطلبات العامة وإتمام الحذف الدائم دون تسجيل دخول.',
+    completed: 'مكتمل',
+    completeDeletionWarning: 'سيؤدي ذلك إلى حذف الحساب المطابق نهائياً ولا يمكن التراجع عنه. هل تريد المتابعة؟',
+    rejectDeletionConfirmation: 'هل تريد رفض طلب حذف الحساب؟',
+    resolutionNote: 'ملاحظة المعالجة (اختياري)',
+    requestResolved: 'تمت معالجة طلب الحذف.',
+    noReasonProvided: 'لم يتم تقديم سبب.',
+    completePermanentDeletion: 'إتمام الحذف الدائم',
+    noDeletionRequests: 'لا توجد طلبات حذف حساب.',
+    featureRestrictions: 'قيود الميزات',
+    posting: 'النشر',
+    messaging: 'المراسلة',
+    restrictionReason: 'سبب التقييد',
+    durationDaysOptional: 'الأيام (اختياري)',
+    applyRestriction: 'تطبيق التقييد',
+    reasonRequired: 'السبب مطلوب.',
+    featureRestrictionApplied: 'تم تطبيق قيد الميزة.',
+    liftRestrictionConfirmation: 'هل تريد رفع هذا التقييد؟',
+    liftReason: 'سبب الرفع (اختياري)',
+    featureRestrictionLifted: 'تم رفع قيد الميزة.',
+    lifted: 'مرفوع',
+    restricted: 'مقيّد',
+    liftRestriction: 'رفع التقييد',
+    noFeatureRestrictions: 'لا توجد قيود ميزات مسجلة.',
     contactReasons: 'أسباب التواصل',
     contactUs: 'اتصل بنا',
     pushNotifications: 'الإشعارات',
     sendNotification: 'إرسال إشعار',
     sendToAll: 'جميع المستخدمين',
     sendToUser: 'مستخدم واحد',
+    sendToMarketing: 'المستخدمون الموافقون على التسويق',
     audience: 'الفئة المستهدفة',
     notificationTitle: 'العنوان',
     notificationBody: 'النص',
@@ -698,6 +941,29 @@ const dictionaries: Record<Locale, Dictionary> = {
     code: 'الرمز',
     slug: 'المعرّف النصي',
     sort: 'الترتيب',
+    listingFee: 'سعر الإعلان (£)',
+    listingFeeStandard: 'السعر القياسي',
+    paymentStatus: 'حالة الدفع',
+    refund: 'استرداد',
+    refundStatus: 'حالة الاسترداد',
+    refundReason: 'سبب الاسترداد',
+    refundReasonPlaceholder: 'ما سبب إصدار هذا الاسترداد؟',
+    issueRefund: 'إصدار استرداد',
+    declineRefund: 'رفض',
+    refunded: 'تم الاسترداد',
+    refundDeclined: 'مرفوض',
+    refundRequested: 'مطلوب',
+    refundRequests: 'طلبات الاسترداد',
+    manageInRefundRequests: 'يمكنك إدارة هذا من صفحة',
+    notRefunded: 'لم يتم الاسترداد',
+    confirmRefund: 'تأكيد الاسترداد',
+    confirmDeclineRefund: 'رفض طلب الاسترداد',
+    refundConfirmation: 'سيتم استرداد المبلغ للبائع عبر Stripe ولا يمكن التراجع عن هذا الإجراء. هل تريد المتابعة؟',
+    declineRefundConfirmation: 'سيتم إبلاغ البائع برفض طلب الاسترداد مع هذا السبب. هل تريد المتابعة؟',
+    refundIssued: 'تم إصدار الاسترداد.',
+    refundDeclinedNotice: 'تم رفض طلب الاسترداد.',
+    noPaidPayment: 'لا يوجد دفع مسدد عبر Stripe لهذا الإعلان لاستراده.',
+    userNotifiedNote: 'سيتم إشعار البائع تلقائياً (إشعار فوري وداخل التطبيق) فور التأكيد.',
     state: 'الحالة',
     section: 'القسم',
     isDefault: 'افتراضي',
@@ -938,6 +1204,41 @@ const dictionaries: Record<Locale, Dictionary> = {
     emailInvalid: "أدخل بريداً إلكترونياً صحيحاً، مثال: name@example.com",
     paymentUnsettledShort: "الرسوم غير مدفوعة",
     menu: "القائمة",
+
+    priority: "الأولوية",
+    allPriorities: "كل الأولويات",
+    priorityNormal: "عادية",
+    priorityUrgent: "عاجلة",
+    priorityCritical: "حرجة",
+    moderationAction: "إجراء الإشراف",
+    modWarning: "تحذير",
+    modTemporarySuspension: "إيقاف مؤقت",
+    modPermanentSuspension: "إيقاف دائم",
+    modReactivated: "إعادة تفعيل",
+    modSuspensionExpired: "انتهاء مدة الإيقاف",
+    durationInDays: "المدة بالأيام",
+    decisionReason: "سبب القرار",
+    applyAction: "تطبيق الإجراء",
+    saving: "جارٍ الحفظ...",
+    moderationActionRecorded: "تم تسجيل إجراء الإشراف.",
+    warnings: "عدد التحذيرات",
+    suspendedUntil: "موقوف حتى",
+    moderationDecisionLog: "سجل قرارات الإشراف",
+    noModerationDecisions: "لا توجد قرارات مسجلة",
+    systemLabel: "النظام",
+    untilLabel: "حتى",
+    appealStatusPending: "قيد الانتظار",
+    appealStatusAccepted: "مقبول",
+    appealStatusRejected: "مرفوض",
+    appealStatusAll: "الكل",
+    decisionLabel: "القرار",
+    appealLabel: "الاستئناف",
+    accept: "قبول",
+    reject: "رفض",
+    decisionRecorded: "تم تسجيل القرار.",
+    unableToLoadAppeals: "تعذّر تحميل الاستئنافات.",
+    unableToSaveDecision: "تعذّر حفظ القرار.",
+    noAppealsFound: "لا توجد استئنافات",
   },
 };
 

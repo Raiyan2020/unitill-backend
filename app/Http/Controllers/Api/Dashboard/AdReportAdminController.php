@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Models\AdReport;
 use App\Support\AdReportReason;
+use App\Support\ReportPriority;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -19,6 +20,7 @@ class AdReportAdminController extends Controller
         $search = trim((string) $request->input('search', ''));
         $status = (string) $request->input('status', '');
         $reason = (string) $request->input('reason', '');
+        $priority = (string) $request->input('priority', '');
 
         $query = AdReport::query()
             ->with([
@@ -27,6 +29,7 @@ class AdReportAdminController extends Controller
             ])
             // Pending first — those are the ones waiting on a decision
             ->orderByRaw("FIELD(status, 'pending', 'reviewed', 'dismissed')")
+            ->orderByRaw("FIELD(priority, 'critical', 'urgent', 'normal')")
             ->orderByDesc('id');
 
         if (in_array($status, self::STATUSES, true)) {
@@ -35,6 +38,10 @@ class AdReportAdminController extends Controller
 
         if ($reason !== '') {
             $query->where('reason', $reason);
+        }
+
+        if (in_array($priority, ReportPriority::allowed(), true)) {
+            $query->where('priority', $priority);
         }
 
         if ($search !== '') {
@@ -63,7 +70,7 @@ class AdReportAdminController extends Controller
         ], 'Ad reports fetched');
     }
 
-    public function show(int $id)
+    public function show(Request $request, int $id)
     {
         $report = AdReport::with([
             'user:id,name,first_name,last_name,email',
@@ -102,13 +109,20 @@ class AdReportAdminController extends Controller
 
         $validator = Validator::make($request->all(), [
             'status' => ['required', Rule::in(self::STATUSES)],
+            'decision_reason' => [Rule::requiredIf(fn () => $request->input('status') !== 'pending'), 'nullable', 'string', 'max:3000'],
         ]);
 
         if ($validator->fails()) {
             return sendError($validator->errors()->first(), $validator->errors()->toArray(), 422);
         }
 
-        $report->update(['status' => $request->input('status')]);
+        $isResolved = $request->input('status') !== 'pending';
+        $report->update([
+            'status' => $request->input('status'),
+            'decision_reason' => $isResolved ? $validator->validated()['decision_reason'] : null,
+            'resolved_by' => $isResolved ? $request->user()?->id : null,
+            'resolved_at' => $isResolved ? now() : null,
+        ]);
 
         return sendResponse(
             $this->present($report->fresh(['user', 'ad']), (string) $request->header('lang', 'en')),
@@ -139,6 +153,10 @@ class AdReportAdminController extends Controller
             'reason_label' => AdReportReason::label($report->reason, $lang),
             'comment' => $report->comment,
             'status' => $report->status,
+            'priority' => $report->priority,
+            'decision_reason' => $report->decision_reason,
+            'resolved_by' => $report->resolved_by,
+            'resolved_at' => optional($report->resolved_at)->toDateTimeString(),
             'created_at' => optional($report->created_at)->toDateTimeString(),
             'ad' => $report->ad ? [
                 'id' => $report->ad->id,

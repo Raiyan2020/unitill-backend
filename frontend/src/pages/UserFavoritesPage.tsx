@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { TableFooter, TableLoadingRow } from '../components/table/TableHelpers';
-import { api } from '../lib/api';
+import { api, backendOrigin } from '../lib/api';
 import { ensureApiSuccess } from '../lib/api-response';
 import { useNotify } from '../lib/notify';
 import { useI18n } from '../providers/i18n-provider';
@@ -36,8 +36,6 @@ export function UserFavoritesPage() {
   const [total, setTotal] = useState(0);
 
   const uid = Number(id || 0);
-  const backendOrigin = ((import.meta.env.VITE_BACKEND_ORIGIN as string | undefined) || 'http://127.0.0.1:8000').replace(/\/+$/, '');
-
   const resolveImage = (row: FavoriteAdRow) => {
     if (row.cover_image_url) return row.cover_image_url;
     if (!row.cover_image) return '';

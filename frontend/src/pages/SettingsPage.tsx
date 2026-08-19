@@ -8,6 +8,11 @@ import { ensureApiSuccess } from '../lib/api-response';
 import { useNotify } from '../lib/notify';
 import { useI18n } from '../providers/i18n-provider';
 
+// Price settings are historically stored as "object" settings, but they must
+// stay compact, editable number inputs.
+const NUMBER_SETTINGS = ['post_price', 'listing_extension_price', 'free_ads_per_user'];
+const DECIMAL_SETTINGS = ['post_price', 'listing_extension_price'];
+
 type SettingRow = {
   id: number;
   key_id: string;
@@ -58,7 +63,7 @@ export function SettingsPage() {
     () =>
       [...rows]
         .sort((a, b) => {
-          const order = ['post_price', 'free_ads_per_user'];
+          const order = ['post_price', 'listing_extension_price', 'free_ads_per_user'];
           const aIndex = order.indexOf(a.key_id);
           const bIndex = order.indexOf(b.key_id);
           return (aIndex === -1 ? order.length : aIndex) - (bIndex === -1 ? order.length : bIndex);
@@ -66,10 +71,8 @@ export function SettingsPage() {
         .map((row) => ({
         key: row.key_id,
         label: locale === 'ar' ? row.title_ar || row.title_en || row.key_id : row.title_en || row.title_ar || row.key_id,
-        // Price was historically stored as an "object" setting, but both
-        // listing controls must remain compact, editable number inputs.
-        isObject: ['post_price', 'free_ads_per_user'].includes(row.key_id) ? false : row.is_object,
-        isNumber: ['post_price', 'free_ads_per_user'].includes(row.key_id),
+        isObject: NUMBER_SETTINGS.includes(row.key_id) ? false : row.is_object,
+        isNumber: NUMBER_SETTINGS.includes(row.key_id),
       })),
     [rows, locale],
   );
@@ -135,7 +138,7 @@ export function SettingsPage() {
                       <Input
                         type={field.isNumber ? 'number' : 'text'}
                         min={field.isNumber ? '0' : undefined}
-                        step={field.key === 'post_price' ? '0.01' : field.isNumber ? '1' : undefined}
+                        step={DECIMAL_SETTINGS.includes(field.key) ? '0.01' : field.isNumber ? '1' : undefined}
                         value={values[field.key] ?? ''}
                         disabled={!isEditing}
                         onChange={(e) => setValues((prev) => ({ ...prev, [field.key]: e.target.value }))}

@@ -17,9 +17,9 @@ class SettingSeeder extends Seeder
 
         Setting::create([
             'key_id' => 'post_price',
-            'title_en'=>'Post Price',
-            'title_ar'=>'سعر الاعلان',
-            'value' => '5.00',
+            'title_en'=>'Standard Post Price',
+            'title_ar'=>'سعر الاعلان القياسي',
+            'value' => '0.99',
             'set_group' => 'app',
             'is_object' => '1',
         ]);
@@ -38,6 +38,15 @@ class SettingSeeder extends Seeder
             'title_en' => 'Post Duration (days)',
             'title_ar' => 'مدة الإعلان (أيام)',
             'value' => '30',
+            'set_group' => 'app',
+            'is_object' => '1',
+        ]);
+
+        Setting::create([
+            'key_id' => 'listing_extension_price',
+            'title_en' => 'Listing Extension Price',
+            'title_ar' => 'سعر تمديد الإعلان',
+            'value' => '0.99',
             'set_group' => 'app',
             'is_object' => '1',
         ]);

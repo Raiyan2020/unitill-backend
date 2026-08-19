@@ -16,6 +16,11 @@ class PushNotificationService
         return (string) config('fcm.all_users_topic', 'unitill_all');
     }
 
+    public function marketingTopic(): string
+    {
+        return (string) config('fcm.marketing_topic', 'unitill_marketing');
+    }
+
     public function syncUserTopicSubscription(User $user, ?string $deviceToken = null): void
     {
         $token = $deviceToken ?: $user->device_token;
@@ -30,6 +35,14 @@ class PushNotificationService
             $this->firebase->subscribeTokenToTopic($token, $topic);
         } else {
             $this->firebase->unsubscribeTokenFromTopic($token, $topic);
+        }
+
+        $marketingTopic = $this->marketingTopic();
+
+        if ($user->notify_marketing) {
+            $this->firebase->subscribeTokenToTopic($token, $marketingTopic);
+        } else {
+            $this->firebase->unsubscribeTokenFromTopic($token, $marketingTopic);
         }
     }
 
@@ -58,6 +71,36 @@ class PushNotificationService
         ]);
 
         $this->createInboxForAllUsers($log);
+
+        return $log;
+    }
+
+    /**
+     * Marketing broadcast — unlike {@see sendToAll}, both the push and the
+     * in-app inbox entry are restricted to users who gave separate marketing
+     * consent (notify_marketing), never just notify_system.
+     */
+    public function sendMarketingToAll(string $title, string $body, array $data = [], ?int $adminId = null): PushNotification
+    {
+        $topic = $this->marketingTopic();
+        $result = $this->firebase->sendNotificationToTopic($topic, $title, $body, $data);
+
+        $recipientsCount = $this->estimatedMarketingAudienceCount();
+
+        $log = PushNotification::query()->create([
+            'admin_id' => $adminId,
+            'audience' => PushNotification::AUDIENCE_MARKETING,
+            'topic' => $topic,
+            'title' => $title,
+            'body' => $body,
+            'data' => $data ?: null,
+            'status' => $result['success'] ? PushNotification::STATUS_SENT : PushNotification::STATUS_FAILED,
+            'fcm_message_id' => self::asText($result['message_id'] ?? null),
+            'error_message' => self::asText($result['error'] ?? null),
+            'recipients_count' => $recipientsCount,
+        ]);
+
+        $this->createInboxForMarketingUsers($log);
 
         return $log;
     }
@@ -176,13 +219,33 @@ class PushNotificationService
             ->count();
     }
 
+    public function estimatedMarketingAudienceCount(): int
+    {
+        return User::query()
+            ->where('status', '1')
+            ->whereNotNull('device_token')
+            ->where('notify_marketing', true)
+            ->count();
+    }
+
     protected function createInboxForAllUsers(PushNotification $log): void
+    {
+        $this->createInboxForUsers(User::query()->where('status', '1'), $log);
+    }
+
+    protected function createInboxForMarketingUsers(PushNotification $log): void
+    {
+        $this->createInboxForUsers(
+            User::query()->where('status', '1')->where('notify_marketing', true),
+            $log
+        );
+    }
+
+    protected function createInboxForUsers($query, PushNotification $log): void
     {
         $now = now();
 
-        User::query()
-            ->where('status', '1')
-            ->select('id')
+        $query->select('id')
             ->chunkById(200, function ($users) use ($log, $now) {
                 $rows = $users->map(fn (User $user) => [
                     'user_id' => $user->id,
