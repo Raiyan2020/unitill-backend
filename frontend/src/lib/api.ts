@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getAuthToken } from './auth';
+import { clearAuthToken, getAuthToken } from './auth';
 
 export const api = axios.create({
   // One origin serves both the dashboard and Laravel API. Vite proxies this
@@ -28,3 +28,18 @@ api.interceptors.request.use((config) => {
 
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error?.response?.status === 401) {
+      clearAuthToken();
+
+      if (window.location.pathname !== '/login') {
+        window.location.replace('/login');
+      }
+    }
+
+    return Promise.reject(error);
+  },
+);
