@@ -11,7 +11,7 @@ class VehicleLookupController extends Controller
     public function lookup(Request $request, VehicleApiService $service)
     {
         $request->validate([
-            'plate' => 'required|string|regex:/^[A-Z]{2}[0-9]{2}[A-Z]{3}$/|max:7',
+            'plate' => ['required', 'string', 'regex:/^[A-Z]{2}[0-9]{2}\s?[A-Z]{3}$/'],
         ]);
 
         $ar = $request->header('lang') === 'ar';
