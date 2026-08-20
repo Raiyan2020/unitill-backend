@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Models\UniversityDomain;
+use App\Models\University;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -61,23 +61,7 @@ class RegisterRequest extends FormRequest
      */
     private function isRegisteredUniversityDomain(string $host): bool
     {
-        // Build the list of candidate domains: the host itself and each of its
-        // parent domains, so a single indexed lookup covers subdomains too.
-        $candidates = [];
-        $parts = explode('.', $host);
-        for ($i = 0; $i < count($parts) - 1; $i++) {
-            $candidates[] = implode('.', array_slice($parts, $i));
-        }
-
-        if (empty($candidates)) {
-            return false;
-        }
-
-        return UniversityDomain::query()
-            ->where('status', 'active')
-            ->whereIn('domain', $candidates)
-            ->whereHas('university', fn ($q) => $q->where('status', 'active'))
-            ->exists();
+        return University::resolveForEmailHost($host) !== null;
     }
 
     /**

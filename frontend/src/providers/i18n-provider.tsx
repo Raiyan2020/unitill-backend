@@ -183,6 +183,7 @@ export type Dictionary = {
   allTypes: string;
   selectRole: string;
   selectCountry: string;
+  selectCity: string;
   percentage: string;
   fixedAmount: string;
   nativeName: string;
@@ -303,6 +304,7 @@ export type Dictionary = {
   stateHint: string;
   domainHint: string;
   universityNameRequired: string;
+  universityCityRequired: string;
   atLeastOneTranslation: string;
   passwordRequired: string;
   passwordConfirmationMismatch: string;
@@ -598,6 +600,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     allTypes: 'All types',
     selectRole: 'Select role',
     selectCountry: 'Select country',
+    selectCity: 'Select city',
     percentage: 'Percentage (%)',
     fixedAmount: 'Fixed amount (£)',
     nativeName: 'Native name',
@@ -716,6 +719,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     stateHint: "State (e.g. CA)",
     domainHint: "e.g. harvard.edu",
     universityNameRequired: "University name is required.",
+    universityCityRequired: "Select the university's city — it's used to auto-fill a matching student's location.",
     atLeastOneTranslation: "At least one translation is required.",
     passwordRequired: "Password is required.",
     passwordConfirmationMismatch: "Password confirmation does not match.",
@@ -1008,6 +1012,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     allTypes: 'كل الأنواع',
     selectRole: 'اختر الدور',
     selectCountry: 'اختر الدولة',
+    selectCity: 'اختر المدينة',
     percentage: 'نسبة مئوية (%)',
     fixedAmount: 'مبلغ ثابت (£)',
     nativeName: 'الاسم بلغته الأصلية',
@@ -1126,6 +1131,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     stateHint: "الولاية (مثال: CA)",
     domainHint: "مثال: harvard.edu",
     universityNameRequired: "اسم الجامعة مطلوب.",
+    universityCityRequired: "اختر مدينة الجامعة — تُستخدم لتحديد موقع الطالب تلقائياً.",
     atLeastOneTranslation: "مطلوب ترجمة واحدة على الأقل.",
     passwordRequired: "كلمة المرور مطلوبة.",
     passwordConfirmationMismatch: "تأكيد كلمة المرور غير مطابق.",

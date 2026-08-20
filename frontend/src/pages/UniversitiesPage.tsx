@@ -15,11 +15,14 @@ type UniversityRow = {
   name: string;
   country_code: string;
   state: string | null;
+  city_id: number | null;
   city: string | null;
   status: 'active' | 'inactive';
   sort: number;
   domains: string[];
 };
+
+type CityOption = { id: number; name: string };
 
 type PaginatedResponse<T> = { data: T[]; total: number };
 
@@ -27,7 +30,7 @@ const emptyForm = {
   name: '',
   country_code: 'GB',
   state: '',
-  city: '',
+  city_id: '',
   status: 'active',
   sort: '0',
   domains: [] as string[],
@@ -37,6 +40,7 @@ export function UniversitiesPage() {
   const notify = useNotify();
   const { t } = useI18n();
   const [rows, setRows] = useState<UniversityRow[]>([]);
+  const [cities, setCities] = useState<CityOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -68,6 +72,23 @@ export function UniversitiesPage() {
   }, [page, pageSize]);
 
   useEffect(() => {
+    (async () => {
+      try {
+        // Public endpoint (no admin permission gate) — this is reference
+        // data for a picker, not something that needs cities.view on top of
+        // universities.*, and a missing permission here previously left the
+        // dropdown silently empty.
+        const res = await api.get('/cities');
+        const payload = ensureApiSuccess<CityOption[]>(res, t.actionFailed);
+        setCities(payload || []);
+      } catch (error) {
+        notify.errorFrom(error, t.actionFailed);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     if (!didInitSearch.current) {
       didInitSearch.current = true;
       return;
@@ -93,7 +114,7 @@ export function UniversitiesPage() {
       name: row.name,
       country_code: row.country_code || 'US',
       state: row.state || '',
-      city: row.city || '',
+      city_id: row.city_id ? String(row.city_id) : '',
       status: row.status,
       sort: String(row.sort ?? 0),
       domains: [...(row.domains || [])],
@@ -122,13 +143,17 @@ export function UniversitiesPage() {
       notify.error(t.universityNameRequired);
       return;
     }
+    if (!form.city_id) {
+      notify.error(t.universityCityRequired);
+      return;
+    }
     setSaving(true);
     try {
       const payload = {
         name: form.name.trim(),
         country_code: (form.country_code || 'US').toUpperCase(),
         state: form.state.trim() || null,
-        city: form.city.trim() || null,
+        city_id: form.city_id ? Number(form.city_id) : null,
         status: form.status,
         sort: toInteger(form.sort),
         domains: form.domains,
@@ -269,7 +294,16 @@ export function UniversitiesPage() {
             <CardContent className="grid gap-3 md:grid-cols-2">
               <Input placeholder={t.name} className="md:col-span-2" value={form.name} onChange={(e) => setForm((s) => ({ ...s, name: e.target.value }))} />
               <Input placeholder={t.stateHint} value={form.state} onChange={(e) => setForm((s) => ({ ...s, state: e.target.value }))} />
-              <Input placeholder={t.city} value={form.city} onChange={(e) => setForm((s) => ({ ...s, city: e.target.value }))} />
+              <select
+                value={form.city_id}
+                onChange={(e) => setForm((s) => ({ ...s, city_id: e.target.value }))}
+                className="h-10 rounded-xl border border-[#dbdbe8] bg-white px-3 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]"
+              >
+                <option value="">{t.selectCity} *</option>
+                {cities.map((city) => (
+                  <option key={city.id} value={city.id}>{city.name}</option>
+                ))}
+              </select>
               <Input placeholder={t.countryCodeHint} value={form.country_code} onChange={(e) => setForm((s) => ({ ...s, country_code: e.target.value }))} />
               <Input placeholder={t.sort} inputMode="numeric" value={form.sort} onChange={(e) => setForm((s) => ({ ...s, sort: digitsOnly(e.target.value) }))} />
 

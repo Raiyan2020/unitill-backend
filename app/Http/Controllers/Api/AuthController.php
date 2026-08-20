@@ -8,6 +8,7 @@ use App\Http\Requests\RefreshTokenRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Mail\OtpMail;
+use App\Models\University;
 use App\Models\User;
 use App\Models\UserLoginLog;
 use App\Models\UserModerationAction;
@@ -308,6 +309,14 @@ class AuthController extends Controller
             ]);
         }
 
+        // The student's city comes from their university, not a manual pick —
+        // RegisterRequest already required student_email to match an active
+        // university domain, so this only misses if that university has no
+        // city mapped yet (see the university city_id backfill migration).
+        $studentEmailHost = strtolower(trim(substr(strrchr((string) ($data['student_email'] ?? ''), '@') ?: '', 1)));
+        $university = University::resolveForEmailHost($studentEmailHost);
+        $cityId = $university?->city_id ?? $data['city_id'] ?? null;
+
         $base = [
             'first_name' => $data['first_name'],
             'last_name' => $data['last_name'],
@@ -315,7 +324,7 @@ class AuthController extends Controller
             'email' => $data['email'],
             'phone' => $data['phone'] ?? null,
             'country_code' => $data['country_code'] ?? null,
-            'city_id' => $data['city_id'] ?? null,
+            'city_id' => $cityId,
             'password' => $data['password'],
             'device_token' => $data['device_token'] ?? null,
             'device_token_updated_at' => ! empty($data['device_token']) ? now() : null,
