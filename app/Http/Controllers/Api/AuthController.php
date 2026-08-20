@@ -322,7 +322,10 @@ class AuthController extends Controller
             'device_type' => $data['device_type'] ?? null,
         ];
 
-        $otp = 123456;
+        $fixed = app()->environment('testing')
+            ? config('mobile_auth.login_otp_test_code')
+            : null;
+        $otp = (int) ($fixed ?: random_int(100000, 999999));
         $user = User::create(array_merge($base, [
             'student_email' => $data['student_email'] ?? null,
             'status' => '2',
@@ -468,7 +471,10 @@ class AuthController extends Controller
             }
         }
 
-        $otp = 123456;
+        $fixed = app()->environment('testing')
+            ? config('mobile_auth.login_otp_test_code')
+            : null;
+        $otp = (int) ($fixed ?: random_int(100000, 999999));
         $user->activation_code = (string) $otp;
         $user->activation_code_expires_at = now()->addMinutes(15);
         $user->activation_sent_at = now();
@@ -634,7 +640,10 @@ class AuthController extends Controller
             return sendError(__('api.auth.user_not_found'), [], 404);
         }
 
-        $otp = 123456;
+        $fixed = app()->environment('testing')
+            ? config('mobile_auth.login_otp_test_code')
+            : null;
+        $otp = (int) ($fixed ?: random_int(100000, 999999));
 
         $user->reset_code = (string) $otp;
 
