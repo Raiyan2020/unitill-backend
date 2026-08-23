@@ -76,6 +76,7 @@ return [
         'refund_not_available' => 'Este anuncio no tiene ningún pago realizado para solicitar un reembolso.',
         'refund_already_decided' => 'Ya existe una solicitud de reembolso para este anuncio.',
         'refund_reason_required' => 'Indícanos por qué solicitas el reembolso.',
+        'refund_window_expired' => 'Las solicitudes de reembolso solo se aceptan dentro de los 14 días posteriores a la publicación de este anuncio.',
         'refund_requested' => 'Tu solicitud de reembolso se ha enviado a UniTill.',
         'cannot_publish_in_status' => 'Este anuncio no se puede publicar en su estado actual.',
         'payment_unsettled' => 'Este anuncio no se puede publicar hasta que se abone la tarifa de publicación. Aun así puedes marcarlo como rechazado, borrador o caducado.',

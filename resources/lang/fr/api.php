@@ -76,6 +76,7 @@ return [
         'refund_not_available' => 'Cette annonce n\'a aucun paiement réglé pour lequel demander un remboursement.',
         'refund_already_decided' => 'Une demande de remboursement existe déjà pour cette annonce.',
         'refund_reason_required' => 'Merci d\'indiquer la raison de votre demande de remboursement.',
+        'refund_window_expired' => 'Les demandes de remboursement ne sont acceptées que dans les 14 jours suivant la publication de cette annonce.',
         'refund_requested' => 'Votre demande de remboursement a été envoyée à UniTill.',
         'cannot_publish_in_status' => 'Cette annonce ne peut pas être publiée dans son état actuel.',
         'payment_unsettled' => 'Cette annonce ne peut pas être publiée tant que les frais de publication ne sont pas réglés. Vous pouvez toutefois la passer en rejetée, brouillon ou expirée.',

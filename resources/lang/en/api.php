@@ -76,6 +76,7 @@ return [
         'refund_not_available' => 'This ad has no paid payment to request a refund for.',
         'refund_already_decided' => 'A refund request for this ad already exists.',
         'refund_reason_required' => 'Please tell us why you are requesting a refund.',
+        'refund_window_expired' => 'Refund requests are only accepted within 14 days of publishing this listing.',
         'refund_requested' => 'Your refund request was sent to UniTill.',
         'cannot_publish_in_status' => 'This listing cannot be published in its current state.',
         'payment_unsettled' => 'This ad cannot be published until its listing fee is paid. You can still set it to rejected, draft or expired.',

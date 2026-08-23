@@ -194,6 +194,30 @@ class AdRefundTest extends TestCase
         $this->postJson("/api/my-ads/{$ad->id}/refund-request", ['reason' => 'test'])->assertStatus(422);
     }
 
+    public function test_user_cannot_request_a_refund_after_14_days(): void
+    {
+        [$user, $ad] = $this->paidAd();
+        $ad->update(['published_at' => now()->subDays(15)]);
+
+        Sanctum::actingAs($user);
+
+        $this->postJson("/api/my-ads/{$ad->id}/refund-request", ['reason' => 'test'])->assertStatus(422);
+
+        $this->assertNull($ad->fresh()->refund_status);
+    }
+
+    public function test_user_can_request_a_refund_within_14_days(): void
+    {
+        [$user, $ad] = $this->paidAd();
+        $ad->update(['published_at' => now()->subDays(13)]);
+
+        Sanctum::actingAs($user);
+
+        $this->postJson("/api/my-ads/{$ad->id}/refund-request", ['reason' => 'test'])
+            ->assertOk()
+            ->assertJsonPath('data.refund_status', 'requested');
+    }
+
     public function test_user_can_list_their_own_refund_requests(): void
     {
         [$user, $ad] = $this->paidAd();

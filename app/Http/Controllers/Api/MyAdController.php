@@ -266,6 +266,10 @@ class MyAdController extends Controller
             return sendError(__('api.ad.refund_already_decided'), [], 422);
         }
 
+        if (! $ad->published_at || $ad->published_at->lt(now()->subDays(14))) {
+            return sendError(__('api.ad.refund_window_expired'), [], 422);
+        }
+
         $validated = $request->validate([
             'reason' => 'required|string|max:1000',
         ], [

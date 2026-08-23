@@ -76,6 +76,7 @@ return [
         'refund_not_available' => '此广告没有可申请退款的已付款项。',
         'refund_already_decided' => '该广告已存在一个退款申请。',
         'refund_reason_required' => '请说明您申请退款的原因。',
+        'refund_window_expired' => '仅接受在该商品信息发布后 14 天内提出的退款申请。',
         'refund_requested' => '您的退款申请已发送给 UniTill。',
         'cannot_publish_in_status' => '该广告在当前状态下无法发布。',
         'payment_unsettled' => '该广告在发布费用结清前无法上线。你仍可将其设为已拒绝、草稿或已过期。',
