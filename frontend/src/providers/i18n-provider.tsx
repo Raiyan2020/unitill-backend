@@ -968,7 +968,7 @@ const dictionaries: Record<Locale, Dictionary> = {
     refundDeclinedNotice: 'تم رفض طلب الاسترداد.',
     noPaidPayment: 'لا يوجد دفع مسدد عبر Stripe لهذا الإعلان لاستراده.',
     userNotifiedNote: 'سيتم إشعار البائع تلقائياً (إشعار فوري وداخل التطبيق) فور التأكيد.',
-    state: 'الحالة',
+    state: 'المنطقة',
     section: 'القسم',
     isDefault: 'افتراضي',
     native: 'الاسم الأصلي',

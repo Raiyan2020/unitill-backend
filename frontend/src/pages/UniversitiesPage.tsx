@@ -227,7 +227,6 @@ export function UniversitiesPage() {
                 <tr>
                   <th className="px-4 py-3 text-start">{t.id}</th>
                   <th className="px-4 py-3 text-start">{t.name}</th>
-                  <th className="px-4 py-3 text-start">{t.state}</th>
                   <th className="px-4 py-3 text-start">{t.city}</th>
                   <th className="px-4 py-3 text-start">{t.domains}</th>
                   <th className="px-4 py-3 text-start">{t.status}</th>
@@ -236,14 +235,13 @@ export function UniversitiesPage() {
               </thead>
               <tbody>
                 {loading ? (
-                  <TableLoadingRow colSpan={7} />
+                  <TableLoadingRow colSpan={6} />
                 ) : rows.length === 0 ? (
-                  <tr><td className="px-4 py-6 text-center text-sm text-[#8a8da8]" colSpan={7}>{t.noDataFound}</td></tr>
+                  <tr><td className="px-4 py-6 text-center text-sm text-[#8a8da8]" colSpan={6}>{t.noDataFound}</td></tr>
                 ) : rows.map((row) => (
                   <tr key={row.id} className="border-t border-[#ececf3] dark:border-[#44485f]">
                     <td className="px-4 py-3">{row.id}</td>
                     <td className="px-4 py-3 font-medium">{row.name}</td>
-                    <td className="px-4 py-3">{row.state || '-'}</td>
                     <td className="px-4 py-3">{row.city || '-'}</td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
