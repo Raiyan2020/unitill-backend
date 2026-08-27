@@ -115,7 +115,7 @@ class AdminUserController extends Controller
         }
 
         $this->tokens->revokeAllForUser($user);
-        $user->delete();
+        $user->forceDelete();
 
         return sendResponse([], 'User deleted');
     }

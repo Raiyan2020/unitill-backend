@@ -9,6 +9,8 @@ class ContactUsMessage extends Model
 {
     protected $fillable = [
         'user_id',
+        'guest_name',
+        'guest_email',
         'contact_reason_id',
         'message',
         'status',

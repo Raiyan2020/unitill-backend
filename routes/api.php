@@ -338,6 +338,10 @@ Route::middleware('auth:sanctum')->prefix('admin')->controller(AdminSettingContr
 });
 
 Route::get('contact-reasons', ContactReasonController::class);
+// Public: no auth:sanctum. When a bearer token is present the controller
+// still attaches the user (via the "sanctum" guard resolved on demand);
+// otherwise it falls back to the guest_name/guest_email fields.
+Route::post('contact-us', ContactUsController::class);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('ads/draft', [AdController::class, 'storeDraft'])->middleware('feature.available:posting');
@@ -407,7 +411,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('logout-other-devices', [AccountSecurityController::class, 'logoutOtherDevices']);
     Route::get('trusted-seller-application', [TrustedSellerApplicationController::class, 'show']);
     Route::post('trusted-seller-application', [TrustedSellerApplicationController::class, 'store']);
-    Route::post('contact-us', ContactUsController::class);
     // User-triggered only — translates exactly the text sent, nothing automatic.
     Route::post('translate', TranslateController::class)
         ->middleware('throttle:30,1');

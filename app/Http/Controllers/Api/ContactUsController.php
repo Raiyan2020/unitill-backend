@@ -14,9 +14,12 @@ class ContactUsController extends Controller
     public function __invoke(ContactUsRequest $request)
     {
         $data = $request->validated();
+        $user = $request->user('sanctum');
 
         $message = ContactUsMessage::create([
-            'user_id' => $request->user()->id,
+            'user_id' => $user?->id,
+            'guest_name' => $user ? null : $data['guest_name'],
+            'guest_email' => $user ? null : $data['guest_email'],
             'contact_reason_id' => $data['contact_reason_id'],
             'message' => $data['message'],
         ]);

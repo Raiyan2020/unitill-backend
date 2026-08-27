@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Mail\ContactUsMail;
 use App\Models\Ad;
+use App\Models\Admin;
 use App\Models\Category;
 use App\Models\CategoryAttributeDefinition;
 use App\Models\CategoryAttributeDefinitionTranslation;
@@ -11,6 +12,7 @@ use App\Models\CategoryTranslation;
 use App\Models\City;
 use App\Models\ContactReason;
 use App\Models\ContactReasonTranslation;
+use App\Models\ContactUsMessage;
 use App\Models\Country;
 use App\Models\Language;
 use App\Models\Setting;
@@ -237,6 +239,77 @@ class BackendRequiredChangesTest extends TestCase
         Mail::assertNothingSent();
     }
 
+    public function test_contact_us_accepts_a_guest_submission_without_a_bearer_token(): void
+    {
+        Mail::fake();
+        Setting::updateOrCreate(['key_id' => 'contact_email'], ['value' => 'support@unitill.test']);
+
+        $reason = ContactReason::create(['sort_order' => 96, 'is_active' => true]);
+        ContactReasonTranslation::create([
+            'contact_reason_id' => $reason->id,
+            'language_id' => $this->language('en')->id,
+            'name' => 'General inquiry',
+        ]);
+
+        // No Sanctum::actingAs() — this call is unauthenticated on purpose.
+        $response = $this->postJson('/api/contact-us', [
+            'contact_reason_id' => $reason->id,
+            'message' => 'I cannot log in to my account.',
+            'guest_name' => 'Jane Guest',
+            'guest_email' => 'jane.guest@example.com',
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.mail_sent', true);
+
+        $id = $response->json('data.id');
+        $message = ContactUsMessage::find($id);
+        $this->assertNull($message->user_id);
+        $this->assertSame('Jane Guest', $message->guest_name);
+        $this->assertSame('jane.guest@example.com', $message->guest_email);
+
+        Mail::assertSent(ContactUsMail::class, fn (ContactUsMail $mail) => $mail->hasTo('support@unitill.test'));
+    }
+
+    public function test_contact_us_rejects_a_guest_submission_missing_name_or_email(): void
+    {
+        $reason = ContactReason::create(['sort_order' => 95, 'is_active' => true]);
+        ContactReasonTranslation::create([
+            'contact_reason_id' => $reason->id,
+            'language_id' => $this->language('en')->id,
+            'name' => 'General inquiry',
+        ]);
+
+        $this->postJson('/api/contact-us', [
+            'contact_reason_id' => $reason->id,
+            'message' => 'No way to reach me back.',
+        ])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors(['guest_name', 'guest_email'], 'data');
+    }
+
+    public function test_contact_us_from_a_logged_in_user_does_not_require_guest_fields(): void
+    {
+        $reason = ContactReason::create(['sort_order' => 94, 'is_active' => true]);
+        ContactReasonTranslation::create([
+            'contact_reason_id' => $reason->id,
+            'language_id' => $this->language('en')->id,
+            'name' => 'General inquiry',
+        ]);
+
+        $user = $this->user();
+        Sanctum::actingAs($user);
+
+        $response = $this->postJson('/api/contact-us', [
+            'contact_reason_id' => $reason->id,
+            'message' => 'Question about my listing.',
+        ])->assertOk();
+
+        $message = ContactUsMessage::find($response->json('data.id'));
+        $this->assertSame($user->id, $message->user_id);
+        $this->assertNull($message->guest_name);
+        $this->assertNull($message->guest_email);
+    }
+
     // ---- #10 reactivation ---------------------------------------------------
 
     public function test_reactivating_a_paid_in_period_ad_is_free_and_immediate(): void
@@ -261,6 +334,26 @@ class BackendRequiredChangesTest extends TestCase
         $this->assertSame('published', $fresh->status);
         $this->assertSame('paid', $fresh->payment_status);
         $this->assertNull($fresh->paused_at);
+    }
+
+    // ---- admin user deletion is a hard delete --------------------------------
+
+    public function test_admin_deleting_a_user_removes_the_row_not_just_soft_deletes_it(): void
+    {
+        $this->withoutMiddleware(\Spatie\Permission\Middleware\PermissionMiddleware::class);
+
+        $user = $this->user();
+        Sanctum::actingAs(Admin::create([
+            'name' => 'Deletion Admin',
+            'email' => Str::uuid().'@example.test',
+            'password' => Hash::make('password'),
+        ]));
+
+        $this->deleteJson("/api/admin/users/{$user->id}")->assertOk();
+
+        // A soft delete would leave the row behind with deleted_at set —
+        // assert it is gone even from an unscoped query.
+        $this->assertDatabaseMissing('users', ['id' => $user->id]);
     }
 
     public function test_api_login_from_a_stateful_origin_is_not_csrf_blocked(): void

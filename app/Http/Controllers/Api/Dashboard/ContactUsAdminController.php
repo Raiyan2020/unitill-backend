@@ -25,6 +25,8 @@ class ContactUsAdminController extends Controller
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
                 $q->where('message', 'like', "%{$search}%")
+                    ->orWhere('guest_name', 'like', "%{$search}%")
+                    ->orWhere('guest_email', 'like', "%{$search}%")
                     ->orWhereHas('user', function ($uq) use ($search) {
                         $uq->where('name', 'like', "%{$search}%")
                             ->orWhere('email', 'like', "%{$search}%");
@@ -41,8 +43,9 @@ class ContactUsAdminController extends Controller
             return [
                 'id' => $row->id,
                 'user_id' => $row->user_id,
-                'user_name' => $row->user?->name ?? '-',
-                'user_email' => $row->user?->email ?? '-',
+                'user_name' => $row->user?->name ?? $row->guest_name ?? '-',
+                'user_email' => $row->user?->email ?? $row->guest_email ?? '-',
+                'is_guest' => $row->user_id === null,
                 // Follows the dashboard language; nameForLanguageCode already
                 // falls back to English when a translation is missing.
                 'reason' => $row->contactReason?->nameForLanguageCode($lang) ?: '-',

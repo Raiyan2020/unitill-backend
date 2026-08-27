@@ -17,12 +17,16 @@
         <tr>
             <td style="padding:8px 0;color:#6b7280;border-top:1px solid #e5e7eb;">From</td>
             <td style="padding:8px 0;border-top:1px solid #e5e7eb;">
-                {{ $sender?->name ?: $sender?->first_name ?: 'Unknown user' }} (ID {{ $sender?->id ?: '—' }})
+                @if($sender)
+                    {{ $sender->name ?: $sender->first_name ?: 'Unknown user' }} (ID {{ $sender->id }})
+                @else
+                    {{ $contactMessage->guest_name ?: 'Guest' }} (not signed in)
+                @endif
             </td>
         </tr>
         <tr>
             <td style="padding:8px 0;color:#6b7280;border-top:1px solid #e5e7eb;">Email</td>
-            <td style="padding:8px 0;border-top:1px solid #e5e7eb;">{{ $sender?->email ?: '—' }}</td>
+            <td style="padding:8px 0;border-top:1px solid #e5e7eb;">{{ $sender?->email ?: $contactMessage->guest_email ?: '—' }}</td>
         </tr>
         <tr>
             <td style="padding:8px 0;color:#6b7280;border-top:1px solid #e5e7eb;">Student email</td>

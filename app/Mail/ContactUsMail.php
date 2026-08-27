@@ -26,13 +26,15 @@ class ContactUsMail extends Mailable
     {
         $reason = $this->contactMessage->contactReason?->nameForLanguageCode('en') ?: 'Contact Us';
         $sender = $this->contactMessage->user;
+        $replyEmail = $sender?->email ?: $this->contactMessage->guest_email;
+        $replyName = $sender ? ($sender->name ?: $sender->first_name) : $this->contactMessage->guest_name;
 
         $envelope = new Envelope(
             subject: '['.setting('app_name', 'UniTill').'] '.$reason.' — #'.$this->contactMessage->id,
         );
 
-        if ($sender?->email) {
-            $envelope->replyTo = [new Address($sender->email, (string) ($sender->name ?: $sender->first_name))];
+        if ($replyEmail) {
+            $envelope->replyTo = [new Address($replyEmail, (string) $replyName)];
         }
 
         return $envelope;
