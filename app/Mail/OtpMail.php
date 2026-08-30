@@ -28,7 +28,7 @@ class OtpMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'رمز التحقق OTP',
+            subject: 'OTP Verification',
         );
     }
 
