@@ -110,4 +110,23 @@ class CouponRedemptionService
             throw $e;
         }
     }
+
+    /**
+     * Undoes a redemption tied to an ad whose payment attempt is dead, so
+     * the code (or a different one) can be applied again. Only call this
+     * once the attempt is confirmed over — never while it could still
+     * succeed.
+     */
+    public function release(int $adId): void
+    {
+        DB::transaction(function () use ($adId) {
+            $redemption = CouponRedemption::where('ad_id', $adId)->lockForUpdate()->latest('id')->first();
+            if (! $redemption) {
+                return;
+            }
+
+            $redemption->coupon()->decrement('redemptions_count');
+            $redemption->delete();
+        });
+    }
 }

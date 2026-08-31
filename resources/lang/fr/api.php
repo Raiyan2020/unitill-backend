@@ -73,6 +73,7 @@ return [
         'sold_cannot_delete' => 'Une annonce vendue ne peut pas être supprimée',
         'deleted' => 'Annonce supprimée avec succès',
         'coupon_failed' => 'Le code promo n\'a pas pu être appliqué.',
+        'coupon_removed_expired' => 'Votre code promo n\'est plus valide et a été retiré. Le prix affiché est désormais le montant d\'origine.',
         'refund_not_available' => 'Cette annonce n\'a aucun paiement réglé pour lequel demander un remboursement.',
         'refund_already_decided' => 'Une demande de remboursement existe déjà pour cette annonce.',
         'refund_reason_required' => 'Merci d\'indiquer la raison de votre demande de remboursement.',

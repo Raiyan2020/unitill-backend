@@ -73,6 +73,7 @@ return [
         'sold_cannot_delete' => 'Un anuncio vendido no se puede eliminar',
         'deleted' => 'Anuncio eliminado correctamente',
         'coupon_failed' => 'No se ha podido aplicar el código de descuento.',
+        'coupon_removed_expired' => 'Tu cupón ya no es válido y fue eliminado. El precio mostrado es ahora el importe original.',
         'refund_not_available' => 'Este anuncio no tiene ningún pago realizado para solicitar un reembolso.',
         'refund_already_decided' => 'Ya existe una solicitud de reembolso para este anuncio.',
         'refund_reason_required' => 'Indícanos por qué solicitas el reembolso.',

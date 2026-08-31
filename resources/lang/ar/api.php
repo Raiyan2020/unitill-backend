@@ -73,6 +73,7 @@ return [
         'sold_cannot_delete' => 'لا يمكن حذف إعلان مباع',
         'deleted' => 'تم حذف الإعلان',
         'coupon_failed' => 'تعذّر تطبيق كود الخصم',
+        'coupon_removed_expired' => 'كود الخصم لم يعد صالحًا وتم إزالته. السعر المعروض الآن هو السعر الأصلي.',
         'refund_not_available' => 'لا يوجد دفع مسدد لهذا الإعلان لطلب استرداده.',
         'refund_already_decided' => 'يوجد بالفعل طلب استرداد لهذا الإعلان.',
         'refund_reason_required' => 'يرجى ذكر سبب طلب الاسترداد.',

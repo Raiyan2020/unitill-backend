@@ -73,6 +73,7 @@ return [
         'sold_cannot_delete' => 'A sold ad cannot be deleted',
         'deleted' => 'Ad deleted successfully',
         'coupon_failed' => 'The coupon code could not be applied.',
+        'coupon_removed_expired' => 'Your coupon is no longer valid and was removed. The price shown is now the original amount.',
         'refund_not_available' => 'This ad has no paid payment to request a refund for.',
         'refund_already_decided' => 'A refund request for this ad already exists.',
         'refund_reason_required' => 'Please tell us why you are requesting a refund.',

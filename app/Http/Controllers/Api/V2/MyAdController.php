@@ -36,7 +36,7 @@ class MyAdController extends Controller
 
         $ad->update(['publish_confirmed_at' => now()]);
 
-        $publication = $this->startExtension($ad, $request->input('coupon_code'));
+        $publication = $this->startExtension($ad, $request->input('coupon_code'), $request->has('coupon_code'));
 
         if (isset($publication['coupon_error'])) {
             return sendError(

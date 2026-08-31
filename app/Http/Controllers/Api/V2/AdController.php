@@ -47,7 +47,7 @@ class AdController extends Controller
 
         $ad->update(['publish_confirmed_at' => now()]);
 
-        $publication = $this->startPublication($ad->fresh(), $request->input('coupon_code'));
+        $publication = $this->startPublication($ad->fresh(), $request->input('coupon_code'), null, 'listing', $request->has('coupon_code'));
         if (isset($publication['coupon_error'])) {
             return sendError(__('api.ad.coupon_failed'), ['coupon_code' => $publication['coupon_error']], 422);
         }

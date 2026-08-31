@@ -73,6 +73,7 @@ return [
         'sold_cannot_delete' => '已售出的广告无法删除',
         'deleted' => '广告已删除',
         'coupon_failed' => '优惠码无法使用。',
+        'coupon_removed_expired' => '您的优惠码已失效并已被移除。目前显示的是原价。',
         'refund_not_available' => '此广告没有可申请退款的已付款项。',
         'refund_already_decided' => '该广告已存在一个退款申请。',
         'refund_reason_required' => '请说明您申请退款的原因。',

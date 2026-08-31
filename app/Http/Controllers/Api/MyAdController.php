@@ -235,7 +235,7 @@ class MyAdController extends Controller
             );
         }
 
-        $publication = $this->startExtension($ad, $request->input('coupon_code'));
+        $publication = $this->startExtension($ad, $request->input('coupon_code'), $request->has('coupon_code'));
 
         if (isset($publication['coupon_error'])) {
             return sendError(
@@ -400,7 +400,7 @@ class MyAdController extends Controller
 
         // A relist is a fresh 30-day listing, so it goes through the same fee
         // path as any new ad: free quota, then coupon, then Stripe.
-        $publication = $this->startPublication($copy, $request->input('coupon_code'));
+        $publication = $this->startPublication($copy, $request->input('coupon_code'), null, 'listing', $request->has('coupon_code'));
 
         if (isset($publication['coupon_error'])) {
             return sendError(

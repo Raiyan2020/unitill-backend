@@ -445,7 +445,7 @@ class AdController extends Controller
         // Posting always enters the publication flow: there is no admin approval
         // step, so the ad goes live as soon as the fee is settled — covered by the
         // free quota, zeroed by a coupon, or paid via Stripe.
-        $publication = $this->startPublication($ad, $request->input('coupon_code'));
+        $publication = $this->startPublication($ad, $request->input('coupon_code'), null, 'listing', $request->has('coupon_code'));
         if (isset($publication['coupon_error'])) {
             return sendError(__('api.ad.coupon_failed'), ['coupon_code' => $publication['coupon_error']], 422);
         }
@@ -734,7 +734,7 @@ class AdController extends Controller
             return sendError(__('api.ad.image_required'), [], 422);
         }
 
-        $publication = $this->startPublication($ad, $request->input('coupon_code'));
+        $publication = $this->startPublication($ad, $request->input('coupon_code'), null, 'listing', $request->has('coupon_code'));
         if (isset($publication['coupon_error'])) {
             return sendError(__('api.ad.coupon_failed'), ['coupon_code' => $publication['coupon_error']], 422);
         }
@@ -759,9 +759,24 @@ class AdController extends Controller
     {
         $validated = $request->validate([
             'payment_intent_id' => ['nullable', 'string', 'max:255'],
+            'coupon_code' => ['nullable', 'string', 'max:255'],
         ]);
         $ad = Ad::query()->where('user_id', Auth::id())->where(fn ($query) => $query->where('id', $id)->orWhere('public_id', $id))->first();
-        if (! $ad || ! $ad->stripe_payment_intent_id) {
+        if (! $ad) {
+            return sendError('Payment for this ad was not found.', [], 404);
+        }
+
+        // Already settled — via Stripe, or via a coupon that fully covered the
+        // fee during a retry (see resolveRetryRequest), which never creates a
+        // Stripe intent at all. Check this before requiring one to exist.
+        if ($ad->status === 'published') {
+            return sendResponse([
+                'publication' => $listings->publicationState($ad),
+                'ad' => new AdDetailResource($ad),
+            ], __('api.ad.published'));
+        }
+
+        if (! $ad->stripe_payment_intent_id) {
             return sendError('Payment for this ad was not found.', [], 404);
         }
 
@@ -770,27 +785,36 @@ class AdController extends Controller
             return sendError('The payment does not belong to this ad.', [], 422);
         }
 
-        if ($ad->status === 'published' && $ad->payment_status === 'paid') {
+        $intent = app(StripeService::class)->paymentIntent($ad->stripe_payment_intent_id);
+        $status = $intent['status'] ?? null;
+
+        if ($status === 'succeeded') {
+            $ad = $listings->publishPaidListing($intent['id'], (int) $intent['amount_received'], (string) $intent['currency'], $intent);
+
             return sendResponse([
                 'publication' => $listings->publicationState($ad),
                 'ad' => new AdDetailResource($ad),
             ], __('api.ad.published'));
         }
 
-        $intent = app(StripeService::class)->paymentIntent($ad->stripe_payment_intent_id);
-        if (($intent['status'] ?? null) !== 'succeeded') {
-            return sendError(__('api.ad.payment_pending'), [
-                'publication' => $listings->publicationState($ad, $intent),
-                'ad' => new AdDetailResource($ad),
-            ], 422);
+        // Delegates to the same coupon-aware retry logic used by publish/extend
+        // and the status endpoint below — one place decides whether a coupon
+        // swap/detach is safe and whether the intent needs recreating.
+        $originalIntentId = $ad->stripe_payment_intent_id;
+        $publication = $this->resolveRetryRequest($ad, $request->input('coupon_code'), $request->has('coupon_code'), $ad->status);
+        $intentWasReplaced = ($publication['payment_intent_id'] ?? null) !== $originalIntentId;
+
+        if ($intentWasReplaced) {
+            return sendResponse([
+                'publication' => $publication,
+                'ad' => new AdDetailResource($ad->fresh()),
+            ], __('api.ad.payment_required'));
         }
 
-        $ad = $listings->publishPaidListing($intent['id'], (int) $intent['amount_received'], (string) $intent['currency'], $intent);
-
-        return sendResponse([
-            'publication' => $listings->publicationState($ad),
+        return sendError(__('api.ad.payment_pending'), [
+            'publication' => $publication,
             'ad' => new AdDetailResource($ad),
-        ], __('api.ad.published'));
+        ], 422);
     }
 
     public function paymentStatus(Request $request, string $id, ListingPaymentService $listings)
@@ -807,13 +831,17 @@ class AdController extends Controller
             return sendError('You are not allowed to view this payment.', [], 403);
         }
 
-        $intent = null;
         if ($ad->status !== 'published' && $ad->stripe_payment_intent_id) {
-            $intent = app(StripeService::class)->paymentIntent($ad->stripe_payment_intent_id);
+            // Same shared logic: always surfaces the coupon, auto-detaches one
+            // that expired since it was applied, and never hands back a dead
+            // (cancelled) intent's client_secret.
+            $publication = $this->resolveRetryRequest($ad, null, false, $ad->status);
+
+            return sendResponse(['publication' => $publication]);
         }
 
         return sendResponse([
-            'publication' => $listings->publicationState($ad, $intent),
+            'publication' => $listings->publicationState($ad),
         ]);
     }
 
