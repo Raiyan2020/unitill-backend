@@ -56,8 +56,9 @@ class HomeController extends Controller
         $this->attachFavoriteIds($request);
 
         $perPage = max(1, min((int) $request->input('per_page', 20), 50));
+        $allCitiesPerPage = max(1, min((int) $request->input('all_cities_per_page', $perPage), 50));
         $ads = $cityQuery->paginate($perPage, ['*'], 'page');
-        $adsAllCities = $allCitiesQuery->paginate($perPage, ['*'], 'all_cities_page');
+        $adsAllCities = $allCitiesQuery->paginate($allCitiesPerPage, ['*'], 'all_cities_page');
 
         $recentAds = AdResource::collection($ads)->response()->getData(true);
         $recentAds['sort_options'] = AdSort::options($lang);

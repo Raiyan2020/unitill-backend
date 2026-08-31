@@ -77,6 +77,14 @@ paging one doesn't affect the other:
 - `recent_ads` → `?page=2`
 - `recent_ads_all_cities` → `?all_cities_page=2`
 
+Page **size** is independent too:
+
+- `per_page` (optional, default 20, max 50) controls `recent_ads`.
+- `all_cities_per_page` (optional, default: same value as `per_page`, max 50)
+  controls `recent_ads_all_cities` — send it separately if you want a
+  different page size for the two bands, e.g.
+  `?per_page=20&all_cities_per_page=10`.
+
 `per_page` (shared, optional, default 20, max 50) applies to both bands
 equally.
 
@@ -137,12 +145,20 @@ client-side, or keep using the main list understanding it's now city-scoped.
 - Main list → `?page=2` (unchanged param name)
 - `recent_ads_all_cities` → `?all_cities_page=2`
 
+Page **size** is independent too:
+
+- `per_page` (optional, default 20, max 50) controls the main list.
+- `all_cities_per_page` (optional, default: same value as `per_page`, max 50)
+  controls `recent_ads_all_cities` — send it separately for a different page
+  size, e.g. `?per_page=20&all_cities_per_page=10`.
+
 ---
 
 ## What this does NOT change
 
-- Request params: no new required params on either endpoint. `city_id` was
-  and still is optional on both.
+- Request params: no new *required* params on either endpoint. `city_id` was
+  and still is optional on both; the only new params are optional
+  (`all_cities_per_page`, and `all_cities_page` for paging).
 - `AdResource` item shape: unchanged on every ad object in both bands.
 - Sorting logic/options (`AdSort`): unchanged, just applied to two query
   branches instead of one.
@@ -163,5 +179,8 @@ client-side, or keep using the main list understanding it's now city-scoped.
   still spans every city.
 - **Paging**: fetch `?page=2` and confirm it only advances the primary band;
   fetch `?all_cities_page=2` and confirm it only advances the secondary band.
+- **Page size**: fetch `?per_page=20&all_cities_per_page=5` and confirm
+  `recent_ads`/main list returns up to 20 items while `recent_ads_all_cities`
+  returns up to 5, and their `meta.per_page` values reflect that.
 - **`GET /ads` with other filters** (`search`, `category_id`, `price_min`,
   etc.): confirm both bands respect them identically, differing only by city.

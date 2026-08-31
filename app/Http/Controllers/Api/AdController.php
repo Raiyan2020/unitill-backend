@@ -44,6 +44,7 @@ class AdController extends Controller
             'price_max' => 'nullable|numeric|min:0',
             'is_negotiable' => 'nullable|boolean',
             'per_page' => 'nullable|integer|min:1|max:50',
+            'all_cities_per_page' => 'nullable|integer|min:1|max:50',
             'filters' => 'nullable',
             'postcode' => 'nullable|string|max:12',
             'radius_km' => 'nullable|numeric|min:0.1|max:500',
@@ -52,6 +53,7 @@ class AdController extends Controller
         $lang = $request->header('lang', 'en');
         $sort = $validated['sort'] ?? 'newest';
         $perPage = (int) ($validated['per_page'] ?? 20);
+        $allCitiesPerPage = (int) ($validated['all_cities_per_page'] ?? $perPage);
         $search = trim((string) ($validated['search'] ?? $validated['q'] ?? ''));
         $attributeFilters = AdFilters::extractFromRequest($request);
 
@@ -156,7 +158,7 @@ class AdController extends Controller
         $this->attachFavoriteIds($request);
 
         $ads = $primaryQuery->paginate($perPage, ['*'], 'page');
-        $recentAdsAllCities = $allCitiesQuery->paginate($perPage, ['*'], 'all_cities_page');
+        $recentAdsAllCities = $allCitiesQuery->paginate($allCitiesPerPage, ['*'], 'all_cities_page');
 
         // Some subcategories (Laptops, Tablets, Mobile phones, Computers, Home
         // Electronics) carry their own attributes; the rest inherit the main
