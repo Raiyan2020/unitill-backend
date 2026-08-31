@@ -809,20 +809,7 @@ class AdController extends Controller
 
         $intent = null;
         if ($ad->status !== 'published' && $ad->stripe_payment_intent_id) {
-            // A dead intent (declined/abandoned/cancelled) must never be handed
-            // back here — Stripe's PaymentSheet SDK refuses to even open against
-            // a "canceled" PaymentIntent, so serving a stale client_secret hard
-            // -crashes the app's payment screen. Replace it with a fresh intent
-            // first if the stored one is no longer usable.
-            $ad = $this->releaseDeadPaymentAttempt($ad);
-
-            $intent = $ad->stripe_payment_intent_id
-                ? app(StripeService::class)->paymentIntent($ad->stripe_payment_intent_id)
-                : app(StripeService::class)->createListingPaymentIntent($ad);
-
-            if (! $ad->stripe_payment_intent_id) {
-                $ad->update(['stripe_payment_intent_id' => $intent['id']]);
-            }
+            $intent = app(StripeService::class)->paymentIntent($ad->stripe_payment_intent_id);
         }
 
         return sendResponse([
