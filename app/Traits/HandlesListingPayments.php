@@ -3,7 +3,6 @@
 namespace App\Traits;
 
 use App\Models\Ad;
-use App\Models\CouponRedemption;
 use App\Models\Payment;
 use App\Models\User;
 use App\Services\ListingPaymentService;
@@ -19,15 +18,6 @@ trait HandlesListingPayments
         // "pending", a draft being published goes back to "draft". Hardcoding one
         // of them would turn the other into something it never was.
         $originalStatus = $ad->status;
-
-        // A previous attempt's intent may have already died (card declined,
-        // user backed out, etc.) without us hearing about it — the webhook
-        // only fires on success. If so, release its coupon redemption before
-        // the transaction below runs, so a retry can apply a different code
-        // (or the same one again) instead of being stuck on the first result.
-        if ($ad->stripe_payment_intent_id && $ad->status !== 'published') {
-            $ad = $this->releaseDeadPaymentAttempt($ad);
-        }
 
         $result = DB::transaction(function () use ($ad, $couponCode, $feeOverride) {
             $lockedAd = Ad::query()->lockForUpdate()->findOrFail($ad->id);
@@ -52,24 +42,9 @@ trait HandlesListingPayments
             }
 
             // A Stripe intent locks the amount. Do not apply a second coupon
-            // if the client retries the publish request. But the earlier
-            // redemption (if any) already discounted listing_fee above, so
-            // surface it again here — otherwise a retry after a cancelled/
-            // failed payment silently drops the "coupon applied" state and
-            // the app hides the discount code UI as if none was ever used.
+            // if the client retries the publish request.
             if ($lockedAd->stripe_payment_intent_id) {
-                $redemption = CouponRedemption::with('coupon')
-                    ->where('ad_id', $lockedAd->id)
-                    ->latest('id')
-                    ->first();
-
-                $coupon = $redemption ? [
-                    'applied' => true,
-                    'code' => $redemption->coupon->code,
-                    'discount_amount' => (float) $redemption->discount_amount,
-                ] : null;
-
-                return ['published' => false, 'ad' => $lockedAd->fresh(), 'coupon' => $coupon];
+                return ['published' => false, 'ad' => $lockedAd->fresh()];
             }
 
             $coupon = null;
@@ -172,44 +147,6 @@ trait HandlesListingPayments
                 'paid_at' => $paidAt,
             ]
         );
-    }
-
-    /**
-     * Checks Stripe for a pending intent's real status and, only if it's
-     * genuinely dead — or abandoned but still cancelable — clears it and
-     * frees up any coupon redemption tied to this ad so a retry starts
-     * clean. "processing" is deliberately excluded: Stripe itself refuses
-     * to cancel money already in flight, and neither should we release the
-     * coupon behind it.
-     */
-    protected function releaseDeadPaymentAttempt(Ad $ad): Ad
-    {
-        try {
-            $intent = app(StripeService::class)->paymentIntent($ad->stripe_payment_intent_id);
-        } catch (\Throwable) {
-            return $ad;
-        }
-
-        $status = $intent['status'] ?? null;
-        if (! in_array($status, ['requires_payment_method', 'requires_action', 'canceled'], true)) {
-            return $ad;
-        }
-
-        if ($status !== 'canceled') {
-            try {
-                app(StripeService::class)->cancel($ad->stripe_payment_intent_id);
-            } catch (\Throwable) {
-                // Already progressed past a cancelable state between our check and
-                // this call (e.g. the user completed 3DS in that instant) — leave
-                // the coupon and intent alone rather than release under a live charge.
-                return $ad;
-            }
-        }
-
-        app(CouponRedemptionService::class)->release($ad->id);
-        $ad->update(['stripe_payment_intent_id' => null]);
-
-        return $ad->fresh();
     }
 
     protected function freeAdsRemaining(int $userId): int

@@ -80,28 +80,4 @@ class StripeService
 
         return $response->json();
     }
-
-    /**
-     * Voids an intent that's abandoned but not yet dead on Stripe's side
-     * (requires_action). Only meaningful for cancelable statuses — Stripe
-     * itself rejects cancelling one that's processing or already succeeded,
-     * which is exactly the money-in-flight case we must never touch.
-     */
-    public function cancel(string $id): array
-    {
-        $secret = config('services.stripe.secret');
-        if (! $secret) {
-            throw new RuntimeException('Stripe is not configured. Set STRIPE_SECRET in the environment.');
-        }
-
-        $response = Http::asForm()
-            ->withBasicAuth($secret, '')
-            ->post("https://api.stripe.com/v1/payment_intents/{$id}/cancel");
-
-        if (! $response->successful()) {
-            throw new RuntimeException($response->json('error.message') ?: 'Unable to cancel the Stripe payment.');
-        }
-
-        return $response->json();
-    }
 }
