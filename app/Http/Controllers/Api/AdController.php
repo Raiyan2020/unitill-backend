@@ -84,8 +84,10 @@ class AdController extends Controller
             });
         }
 
-        if (! empty($validated['city_id'])) {
-            $query->where('city_id', (int) $validated['city_id']);
+        $cityId = $validated['city_id'] ?? Auth::guard('sanctum')->user()?->city_id;
+
+        if (! empty($cityId)) {
+            $query->where('city_id', (int) $cityId);
         }
 
         if (isset($validated['price_min'])) {
