@@ -110,4 +110,24 @@ class CouponRedemptionService
             throw $e;
         }
     }
+
+    /**
+     * Undoes a redemption tied to an ad whose payment never went through, so
+     * the code (or a different one) can be applied again on retry. Only ever
+     * call this once the payment attempt is confirmed dead (failed/cancelled)
+     * — never while it could still succeed, or a coupon could be freed while
+     * a charge for the discounted amount is still in flight.
+     */
+    public function release(int $adId): void
+    {
+        DB::transaction(function () use ($adId) {
+            $redemption = CouponRedemption::where('ad_id', $adId)->lockForUpdate()->latest('id')->first();
+            if (! $redemption) {
+                return;
+            }
+
+            $redemption->coupon()->decrement('redemptions_count');
+            $redemption->delete();
+        });
+    }
 }
