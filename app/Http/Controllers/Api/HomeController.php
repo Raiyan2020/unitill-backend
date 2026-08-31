@@ -22,6 +22,7 @@ class HomeController extends Controller
 
         $request->validate([
             'sort' => ['nullable', Rule::in(AdSort::allowed())],
+            'city_id' => 'nullable|integer|exists:cities,id',
         ]);
 
         $sort = AdSort::normalize($request->input('sort'));

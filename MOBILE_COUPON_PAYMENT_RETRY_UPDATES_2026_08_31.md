@@ -121,3 +121,56 @@ distinction, same endpoints.
    sheet before showing it again.
 5. If `coupon_warning` is present on any response (including a plain status check), surface it —
    most commonly this fires when a coupon quietly expired between the first attempt and now.
+
+## Testing this in Postman
+
+The existing `ads/{id}/payment/complete` and `ads/{id}/publish` requests in the collection still
+work unchanged. To exercise the new coupon behavior, add `coupon_code` to the request body — the
+collection itself doesn't need new requests, just a body edit on the ones you already have.
+
+**Body tab → raw → JSON** (not form-data — a disabled/unchecked form field is the same as
+omitting the key entirely, which will *not* trigger a coupon change):
+
+```
+POST {{base_url}}/ads/:id/payment/complete
+Content-Type: application/json
+Authorization: Bearer {{token}}
+```
+```json
+{
+  "payment_intent_id": "pi_3UAUn1LLcWlWwAF70qPg3EWK",
+  "coupon_code": "NEWCODE20"
+}
+```
+
+To remove the coupon instead of swapping it, same request with:
+```json
+{
+  "coupon_code": null
+}
+```
+
+To just retry/check status without touching the coupon, drop the `coupon_code` key entirely (not
+send it as `""`/`null` — that counts as an explicit removal, see above).
+
+**What to look for in the response** — the fields that are new since this update, all inside
+`data.publication`:
+
+| Before this update | After this update |
+|---|---|
+| `coupon` was `null` on every retry, even if a coupon really was applied | `coupon` now reflects the real state: `{"applied": true, "code": "...", "discount_amount": ...}` or `null` if none |
+| No `coupon_warning` field existed | `coupon_warning` — a message to show the user when the price just changed unexpectedly (expired coupon auto-removed, or the code you just sent didn't apply) |
+| No `coupon_error` field existed | `coupon_error` — the raw reason code (`invalid`, `expired`, `exhausted`, `already_used`, `not_started`, `min_amount`) when a submitted `coupon_code` failed |
+| A `canceled` PaymentIntent could be returned as-is, breaking the mobile PaymentSheet | `payment_intent_id`/`client_secret` are now always for a usable intent — re-read both from every response |
+| Retrying never reduced the price below what Stripe could actually charge | If a coupon drops the fee below Stripe's minimum (e.g. a few pence), the response comes back with `"published": true, "amount": 0, "payment_status": "paid"` and no `client_secret` at all — treat that as an immediate success, not a payment step |
+
+Quick end-to-end test sequence in Postman:
+1. Create/publish an ad with a coupon that gives a small discount → note the `client_secret`.
+2. Fail the payment on purpose (a Stripe test card that declines, e.g. `4000000000000002`).
+3. Call `payment/complete` again with a **different** valid `coupon_code` in the body → confirm
+   `coupon.code` changed and `payment_intent_id`/`client_secret` are both different from step 1.
+4. Call it again with `"coupon_code": null` → confirm `coupon` is now `null` and `amount` is back
+   to the full listing fee.
+5. Manually expire/deactivate a coupon from the admin dashboard while it's still attached to a
+   pending ad, then call `GET ads/{id}/payment/status` with no body → confirm `coupon` becomes
+   `null` on its own and `coupon_warning` explains why.
