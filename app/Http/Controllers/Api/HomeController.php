@@ -34,32 +34,46 @@ class HomeController extends Controller
             ->orderBy('sort')
             ->get();
 
-        $adsQuery = Ad::query()
+        $baseQuery = Ad::query()
             ->published()
             ->with([
                 'city.translations',
                 'mainCategory.translations',
             ]);
 
-        AdSort::apply($adsQuery, $sort);
-
+        // Primary band: viewer's own city when known.
+        $cityQuery = clone $baseQuery;
         if ($cityId) {
-            $adsQuery->where('city_id', $cityId);
+            $cityQuery->where('city_id', $cityId);
         }
+
+        // Second band: same ads pool, never restricted by city.
+        $allCitiesQuery = clone $baseQuery;
+
+        AdSort::apply($cityQuery, $sort);
+        AdSort::apply($allCitiesQuery, $sort);
 
         $this->attachFavoriteIds($request);
 
         $perPage = max(1, min((int) $request->input('per_page', 20), 50));
-        $ads = $adsQuery->paginate($perPage);
+        $ads = $cityQuery->paginate($perPage, ['*'], 'page');
+        $adsAllCities = $allCitiesQuery->paginate($perPage, ['*'], 'all_cities_page');
 
         $recentAds = AdResource::collection($ads)->response()->getData(true);
         $recentAds['sort_options'] = AdSort::options($lang);
         $recentAds['current_sort'] = $sort;
 
+        $recentAdsAllCities = AdResource::collection($adsAllCities)->response()->getData(true);
+        $recentAdsAllCities['sort_options'] = AdSort::options($lang);
+        $recentAdsAllCities['current_sort'] = $sort;
+
         return sendResponse([
             'location' => $this->resolveLocation($cityId, $lang),
             'categories' => CategoryResource::collection($categories),
             'recent_ads' => $recentAds,
+            // Same filters/sort as recent_ads, but spanning every city, paginated
+            // independently (page param "all_cities_page").
+            'recent_ads_all_cities' => $recentAdsAllCities,
         ]);
     }
 

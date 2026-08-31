@@ -84,12 +84,6 @@ class AdController extends Controller
             });
         }
 
-        $cityId = $validated['city_id'] ?? Auth::guard('sanctum')->user()?->city_id;
-
-        if (! empty($cityId)) {
-            $query->where('city_id', (int) $cityId);
-        }
-
         if (isset($validated['price_min'])) {
             $query->where('price', '>=', (float) $validated['price_min']);
         }
@@ -140,23 +134,29 @@ class AdController extends Controller
                 );
         }
 
-        // Signed-in viewers see ads from their own city first, newest within each
-        // group; guests just get newest first. Skipped when the caller picked an
-        // explicit city or sort, since that is a deliberate ordering choice.
-        $prioritizedCityId = null;
-        if (empty($validated['city_id']) && empty($validated['sort'])) {
-            $prioritizedCityId = auth('sanctum')->user()?->city_id;
+        // City section: explicit city_id param wins, otherwise the authenticated
+        // viewer's own city. Guests with no city_id get no city section at all.
+        $cityId = $validated['city_id'] ?? Auth::guard('sanctum')->user()?->city_id;
+        $cityId = $cityId ? (int) $cityId : null;
+
+        // Primary band: viewer's own city when known, else the same as the
+        // all-cities band below.
+        $primaryQuery = clone $query;
+        if ($cityId) {
+            $primaryQuery->where('city_id', $cityId);
         }
 
-        if ($prioritizedCityId) {
-            $query->orderByRaw('(city_id = ?) desc', [(int) $prioritizedCityId]);
-        }
+        // Second band: same filters, but never restricted by city — a general
+        // "recent ads" feed spanning every city.
+        $allCitiesQuery = clone $query;
 
-        AdSort::apply($query, $sort, $originLat, $originLng);
+        AdSort::apply($primaryQuery, $sort, $originLat, $originLng);
+        AdSort::apply($allCitiesQuery, $sort, $originLat, $originLng);
 
         $this->attachFavoriteIds($request);
 
-        $ads = $query->paginate($perPage);
+        $ads = $primaryQuery->paginate($perPage, ['*'], 'page');
+        $recentAdsAllCities = $allCitiesQuery->paginate($perPage, ['*'], 'all_cities_page');
 
         // Some subcategories (Laptops, Tablets, Mobile phones, Computers, Home
         // Electronics) carry their own attributes; the rest inherit the main
@@ -187,7 +187,11 @@ class AdController extends Controller
         $response['sort_options'] = AdSort::options($lang, $supportsVehicleSorts);
         $response['current_sort'] = AdSort::normalize($sort);
         // Lets the app label the "ads in your city" band at the top of the list.
-        $response['prioritized_city_id'] = $prioritizedCityId ? (int) $prioritizedCityId : null;
+        $response['prioritized_city_id'] = $cityId;
+        // Second band: same filters, spanning every city, paginated independently
+        // (page param "all_cities_page") so the app can request more of either
+        // band without disturbing the other's position.
+        $response['recent_ads_all_cities'] = AdResource::collection($recentAdsAllCities)->response()->getData(true);
         $response['applied_filters'] = array_filter([
             'search' => $search !== '' ? $search : null,
             'main_category_id' => $mainCategoryId > 0 ? $mainCategoryId : null,
