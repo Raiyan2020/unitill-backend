@@ -616,6 +616,10 @@ class AuthController extends Controller
 
         $user->currentAccessToken()?->delete();
 
+        // Otherwise the "seen within last 2 minutes" window keeps showing the
+        // user online in chat for a while after they explicitly signed out.
+        $user->forceFill(['last_seen_at' => null])->saveQuietly();
+
         return sendResponse(
             null,
             __('api.session.logout_success')
