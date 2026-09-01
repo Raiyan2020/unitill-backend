@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 
@@ -9,6 +10,10 @@ use Illuminate\Http\Request;
  * Stamps users.last_seen_at on authenticated API traffic so is_online can be
  * derived from it (see ChatParticipantResource). Skipped when it was updated
  * within the last minute so an active user doesn't write on every request.
+ *
+ * Sanctum tokens aren't tied to one model: $request->user() can come back as
+ * an Admin on dashboard routes, which has no last_seen_at column — must be
+ * scoped to User or that update fails with a "column not found" error.
  */
 class TrackUserLastSeen
 {
@@ -16,7 +21,7 @@ class TrackUserLastSeen
     {
         $user = $request->user();
 
-        if ($user && (! $user->last_seen_at || $user->last_seen_at->lt(now()->subMinute()))) {
+        if ($user instanceof User && (! $user->last_seen_at || $user->last_seen_at->lt(now()->subMinute()))) {
             $user->forceFill(['last_seen_at' => now()])->saveQuietly();
         }
 
