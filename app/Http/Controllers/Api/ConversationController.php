@@ -39,8 +39,8 @@ class ConversationController extends Controller
             ->where('status', $tab === 'archived' ? 'archived' : 'active')
             ->with([
                 'ad:id,public_id,title,cover_image,price,currency,status',
-                'buyer:id,first_name,last_name,name,image',
-                'seller:id,first_name,last_name,name,image',
+                'buyer:id,first_name,last_name,name,image,last_seen_at',
+                'seller:id,first_name,last_name,name,image,last_seen_at',
             ]);
 
         if ($search !== '') {
@@ -195,8 +195,8 @@ class ConversationController extends Controller
 
         $conversation->load([
             'ad:id,public_id,title,cover_image,price,currency,status,user_id',
-            'buyer:id,first_name,last_name,name,image',
-            'seller:id,first_name,last_name,name,image',
+            'buyer:id,first_name,last_name,name,image,last_seen_at',
+            'seller:id,first_name,last_name,name,image,last_seen_at',
         ]);
 
         return sendResponse(new ConversationResource($conversation));
@@ -222,7 +222,7 @@ class ConversationController extends Controller
         $perPage = (int) ($validated['per_page'] ?? 30);
 
         $query = $conversation->messages()
-            ->with('sender:id,first_name,last_name,name,image')
+            ->with('sender:id,first_name,last_name,name,image,last_seen_at')
             ->orderByDesc('id');
 
         if (! empty($validated['before_id'])) {

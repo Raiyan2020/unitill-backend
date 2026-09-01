@@ -35,8 +35,8 @@ class ConversationUpdated implements ShouldBroadcastNow
     {
         $this->conversation->loadMissing([
             'ad:id,public_id,title,cover_image,price,currency,status',
-            'buyer:id,first_name,last_name,name,image',
-            'seller:id,first_name,last_name,name,image',
+            'buyer:id,first_name,last_name,name,image,last_seen_at',
+            'seller:id,first_name,last_name,name,image,last_seen_at',
         ]);
 
         return (new ConversationResource($this->conversation))

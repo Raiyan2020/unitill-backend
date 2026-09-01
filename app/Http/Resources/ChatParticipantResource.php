@@ -15,8 +15,20 @@ class ChatParticipantResource extends JsonResource
             'name' => $this->displayName(),
             'initials' => $this->initials(),
             'image' => $this->image ? getimg($this->image) : null,
-            'is_online' => false,
+            'is_online' => $this->isOnline(),
         ];
+    }
+
+    /**
+     * Online means "seen on the API within the presence window", stamped by
+     * TrackUserLastSeen on every authenticated request. Wider than the
+     * middleware's own write-throttle so a user isn't shown offline between
+     * two requests a few seconds apart.
+     */
+    protected function isOnline(): bool
+    {
+        return $this->last_seen_at !== null
+            && $this->last_seen_at->gt(now()->subMinutes(2));
     }
 
     protected function displayName(): string

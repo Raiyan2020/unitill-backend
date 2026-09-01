@@ -75,8 +75,8 @@ class ChatService
 
         return $conversation->load([
             'ad:id,public_id,title,cover_image,price,currency,status,user_id',
-            'buyer:id,first_name,last_name,name,image',
-            'seller:id,first_name,last_name,name,image',
+            'buyer:id,first_name,last_name,name,image,last_seen_at',
+            'seller:id,first_name,last_name,name,image,last_seen_at',
         ]);
     }
 
@@ -143,7 +143,7 @@ class ChatService
                     'seller_deleted_at' => null,
                 ]);
 
-                return $message->load('sender:id,first_name,last_name,name,image');
+                return $message->load('sender:id,first_name,last_name,name,image,last_seen_at');
             });
         } catch (QueryException $e) {
             // Two retries racing each other: the unique index rejects the loser,
@@ -183,7 +183,7 @@ class ChatService
             ->where('conversation_id', $conversation->id)
             ->where('sender_id', $sender->id)
             ->where('client_message_id', $clientMessageId)
-            ->with('sender:id,first_name,last_name,name,image')
+            ->with('sender:id,first_name,last_name,name,image,last_seen_at')
             ->first();
     }
 

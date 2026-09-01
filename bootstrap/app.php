@@ -8,6 +8,7 @@ use App\Http\Middleware\RedirectIfNotAdmin;
 use App\Http\Middleware\RedirectIfNotSchool;
 use App\Http\Middleware\SetApiLocale;
 use App\Http\Middleware\SetLanguage;
+use App\Http\Middleware\TrackUserLastSeen;
 use App\Http\Middleware\ValidateSignature;
 use App\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Auth\AuthenticationException;
@@ -75,6 +76,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // messages both resolve in the caller's language.
         $middleware->api(prepend: [
             SetApiLocale::class,
+        ]);
+
+        $middleware->api(append: [
+            TrackUserLastSeen::class,
         ]);
 
         $middleware->replace(

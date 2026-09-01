@@ -93,6 +93,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'password_updated_at' => 'datetime',
+        'last_seen_at' => 'datetime',
         'privacy_settings_enabled' => 'boolean',
         'show_last_name' => 'boolean',
         'show_approximate_location' => 'boolean',
