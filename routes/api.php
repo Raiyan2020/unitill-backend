@@ -161,7 +161,7 @@ Route::middleware('auth:sanctum')->prefix('v2')->group(function () {
     // a hosted Checkout webview, independent of the native app's merchantIdentifier
     // config. Confirmed working; issue isolated to the app. Disabled, not deleted,
     // in case it's needed again. See PaymentDiagnosticsController.
-    //Route::post('payments/apple-pay-test', [App\Http\Controllers\Api\V2\PaymentDiagnosticsController::class, 'applePayCheckout']);
+    Route::post('payments/apple-pay-test', [App\Http\Controllers\Api\V2\PaymentDiagnosticsController::class, 'applePayCheckout']);
 });
 
 Route::post('v2/moderation-appeals', [ModerationAppealController::class, 'store'])
