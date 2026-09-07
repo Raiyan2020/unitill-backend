@@ -62,6 +62,47 @@ class StripeService
         return $response->json();
     }
 
+    /**
+     * Diagnostic only: a hosted Stripe Checkout page, unrelated to any Ad.
+     * Used to prove Apple Pay works on the account/domain when the native
+     * app's PaymentSheet doesn't show it — Checkout decides Apple Pay
+     * eligibility from the browser/webview and the account's web payment
+     * method domains, a completely separate path from the app's
+     * merchantIdentifier config. Never wired into the real publish flow.
+     */
+    public function createDiagnosticCheckoutSession(string $successUrl, string $cancelUrl): array
+    {
+        $secret = config('services.stripe.secret');
+        if (! $secret) {
+            throw new RuntimeException('Stripe is not configured. Set STRIPE_SECRET in the environment.');
+        }
+
+        $currency = strtolower(config('services.stripe.currency', 'gbp'));
+        $amount = (int) round($this->minimumChargeAmount($currency) * 100);
+
+        $response = Http::asForm()
+            ->withBasicAuth($secret, '')
+            ->post('https://api.stripe.com/v1/checkout/sessions', [
+                'mode' => 'payment',
+                'success_url' => $successUrl,
+                'cancel_url' => $cancelUrl,
+                'line_items' => [[
+                    'quantity' => 1,
+                    'price_data' => [
+                        'currency' => $currency,
+                        'unit_amount' => $amount,
+                        'product_data' => ['name' => 'UniTill Apple Pay test'],
+                    ],
+                ]],
+            ]);
+
+        if (! $response->successful()) {
+            throw new RuntimeException($response->json('error.message') ?: 'Unable to create the Stripe Checkout session.');
+        }
+
+        return $response->json();
+    }
+
     public function refund(string $paymentIntentId, ?int $amount = null): array
     {
         $secret = config('services.stripe.secret');
