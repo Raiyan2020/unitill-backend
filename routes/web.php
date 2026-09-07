@@ -61,7 +61,9 @@ Route::get('/admin/{any?}', function () {
 // comparison) to see whether that surface can render Google Pay / Apple Pay at
 // all. Stripe Checkout gates wallets on the same browser signals this page
 // reports (PaymentRequest API, secure context, Google Pay readiness).
-Route::get('/payments/webview-check', fn () => view('payments.webview-check'))->name('payments.webview-check');
+// Confirmed Google Pay renders on Android Chrome; disabled, not deleted, like
+// the Apple Pay pages above, so it can be re-enabled for future support cases.
+//Route::get('/payments/webview-check', fn () => view('payments.webview-check'))->name('payments.webview-check');
 
 // Fallback آمن للـ API والويب (يعيد 404 حقيقي بدلاً من إرجاع HTML بالخطأ)
 Route::fallback(function (Request $request) {
