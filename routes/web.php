@@ -57,6 +57,12 @@ Route::get('/admin/{any?}', function () {
 //Route::get('/payments/test-success', fn () => response('Payment successful — Apple Pay works on this Stripe account/domain. You can close this window.'));
 //Route::get('/payments/test-cancel', fn () => response('Payment cancelled. You can close this window.'));
 
+// Diagnostic-only: open inside the app's WebView (and in Chrome / Safari for
+// comparison) to see whether that surface can render Google Pay / Apple Pay at
+// all. Stripe Checkout gates wallets on the same browser signals this page
+// reports (PaymentRequest API, secure context, Google Pay readiness).
+Route::get('/payments/webview-check', fn () => view('payments.webview-check'))->name('payments.webview-check');
+
 // Fallback آمن للـ API والويب (يعيد 404 حقيقي بدلاً من إرجاع HTML بالخطأ)
 Route::fallback(function (Request $request) {
     if ($request->is('api/*')) {
