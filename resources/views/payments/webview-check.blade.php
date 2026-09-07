@@ -64,7 +64,7 @@ async function prGooglePay() {
   try {
     const req = new PaymentRequest(
       [{ supportedMethods: 'https://google.com/pay', data: { apiVersion: 2, apiVersionMinor: 0, environment: 'PRODUCTION',
-          allowedPaymentMethods: [{ type: 'CARD', parameters: { allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'], allowedCardNetworks: ['VISA', 'MASTERCARD', 'AMEX'] } }] } }],
+          allowedPaymentMethods: [{ type: 'CARD', parameters: { allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'], allowedCardNetworks: ['VISA', 'MASTERCARD', 'AMEX', 'DISCOVER', 'JCB', 'MAESTRO', 'ELECTRON', 'ELO', 'ELO_DEBIT', 'INTERAC'] } }] } }],
       { total: { label: 'Test', amount: { currency: 'GBP', value: '0.30' } } }
     );
     const can = await req.canMakePayment();
@@ -83,7 +83,8 @@ async function gpayJs() {
   try {
     const client = new google.payments.api.PaymentsClient({ environment: 'PRODUCTION' });
     const res = await client.isReadyToPay({ apiVersion: 2, apiVersionMinor: 0, existingPaymentMethodRequired: true,
-      allowedPaymentMethods: [{ type: 'CARD', parameters: { allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'], allowedCardNetworks: ['VISA', 'MASTERCARD', 'AMEX'] } }] });
+      allowedPaymentMethods: [{ type: 'CARD', parameters: { allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'], allowedCardNetworks: ['VISA', 'MASTERCARD', 'AMEX', 'DISCOVER', 'JCB', 'MAESTRO', 'ELECTRON', 'ELO', 'ELO_DEBIT', 'INTERAC'] } }] });
+    R.isReadyToPayRaw = res;
     gpayResult = !!(res.result && res.paymentMethodPresent);
     set('gpay', res.result ? (res.paymentMethodPresent ? 'YES — supported AND a card is saved in this Google account' : 'Supported, but NO card saved in this Google account — Stripe hides Google Pay in that case') : 'No — isReadyToPay = false', res.result ? (res.paymentMethodPresent ? 'ok' : 'warn') : 'bad');
   } catch (e) {
