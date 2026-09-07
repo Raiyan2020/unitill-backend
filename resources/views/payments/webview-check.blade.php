@@ -38,6 +38,7 @@
 // browser signals, so if they fail here, no Stripe-side setting will help.
 const R = {};
 const set = (id, text, cls) => { const el = document.getElementById(id); el.textContent = text; el.className = 'v ' + (cls || ''); R[id] = text; };
+let gpayResult = null;
 
 const ua = navigator.userAgent;
 set('ua', ua);
@@ -67,22 +68,24 @@ async function prGooglePay() {
       { total: { label: 'Test', amount: { currency: 'GBP', value: '0.30' } } }
     );
     const can = await req.canMakePayment();
-    set('prgpay', can ? 'YES — Google Pay is ready in this surface' : 'No — API exists but Google Pay not ready (no saved card / not signed in / unsupported surface)', can ? 'ok' : 'bad');
-    return can;
+    let enrolled = null;
+    if (can && typeof req.hasEnrolledInstrument === 'function') { try { enrolled = await req.hasEnrolledInstrument(); } catch (e) { enrolled = 'n/a (' + e.message + ')'; } }
+    const ready = can && enrolled !== false;
+    set('prgpay', !can ? 'No — Google Pay not available in this surface' : (enrolled === false ? 'Supported, but hasEnrolledInstrument() = false: no saved card / not signed in' : 'YES — Google Pay available' + (enrolled === true ? ' with a saved card' : ' (card presence: ' + enrolled + ')')), !can ? 'bad' : (enrolled === false ? 'warn' : 'ok'));
+    return ready;
   } catch (e) {
     set('prgpay', 'Error: ' + (e && e.message ? e.message : e), 'bad');
     return false;
   }
 }
 
-let gpayResult = null;
 async function gpayJs() {
   try {
     const client = new google.payments.api.PaymentsClient({ environment: 'PRODUCTION' });
-    const res = await client.isReadyToPay({ apiVersion: 2, apiVersionMinor: 0,
+    const res = await client.isReadyToPay({ apiVersion: 2, apiVersionMinor: 0, existingPaymentMethodRequired: true,
       allowedPaymentMethods: [{ type: 'CARD', parameters: { allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'], allowedCardNetworks: ['VISA', 'MASTERCARD', 'AMEX'] } }] });
-    gpayResult = res.result;
-    set('gpay', res.result ? 'YES — isReadyToPay = true' : 'No — isReadyToPay = false', res.result ? 'ok' : 'bad');
+    gpayResult = !!(res.result && res.paymentMethodPresent);
+    set('gpay', res.result ? (res.paymentMethodPresent ? 'YES — supported AND a card is saved in this Google account' : 'Supported, but NO card saved in this Google account — Stripe hides Google Pay in that case') : 'No — isReadyToPay = false', res.result ? (res.paymentMethodPresent ? 'ok' : 'warn') : 'bad');
   } catch (e) {
     set('gpay', 'Error: ' + (e && (e.statusMessage || e.message) ? (e.statusMessage || e.message) : JSON.stringify(e)), 'bad');
   }
