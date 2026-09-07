@@ -157,10 +157,11 @@ Route::middleware('auth:sanctum')->prefix('v2')->group(function () {
     Route::post('conversations/{id}/report', [ConversationController::class, 'report']);
     Route::post('users/{id}/reports', [UserReportController::class, 'store']);
 
-    // Diagnostic only — proves Apple Pay works on the Stripe account/domain via
+    // Diagnostic only — proved Apple Pay works on the Stripe account/domain via
     // a hosted Checkout webview, independent of the native app's merchantIdentifier
-    // config. Not linked to any Ad. Remove once the Apple Pay issue is resolved.
-    Route::post('payments/apple-pay-test', [App\Http\Controllers\Api\V2\PaymentDiagnosticsController::class, 'applePayCheckout']);
+    // config. Confirmed working; issue isolated to the app. Disabled, not deleted,
+    // in case it's needed again. See PaymentDiagnosticsController.
+    //Route::post('payments/apple-pay-test', [App\Http\Controllers\Api\V2\PaymentDiagnosticsController::class, 'applePayCheckout']);
 });
 
 Route::post('v2/moderation-appeals', [ModerationAppealController::class, 'store'])

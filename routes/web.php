@@ -52,9 +52,10 @@ Route::get('/admin/{any?}', function () {
 })->where('any', '.*')->name('admin.spa');
 
 // Diagnostic-only landing pages for the Apple Pay Checkout test (see
-// PaymentDiagnosticsController). Remove alongside that endpoint.
-Route::get('/payments/test-success', fn () => response('Payment successful — Apple Pay works on this Stripe account/domain. You can close this window.'));
-Route::get('/payments/test-cancel', fn () => response('Payment cancelled. You can close this window.'));
+// PaymentDiagnosticsController). Confirmed working; disabled, not deleted,
+// in case it's needed again.
+//Route::get('/payments/test-success', fn () => response('Payment successful — Apple Pay works on this Stripe account/domain. You can close this window.'));
+//Route::get('/payments/test-cancel', fn () => response('Payment cancelled. You can close this window.'));
 
 // Fallback آمن للـ API والويب (يعيد 404 حقيقي بدلاً من إرجاع HTML بالخطأ)
 Route::fallback(function (Request $request) {
