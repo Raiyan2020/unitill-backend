@@ -105,7 +105,10 @@ function finish() {
   finished++; if (finished < 2) return;
   let v, cls;
   if (!hasPR) { v = 'Google Pay cannot appear here: this surface has no PaymentRequest API. Stripe Checkout / Payment Links will never show Google Pay in it. Open the URL in Chrome (Custom Tabs) instead.'; cls = 'bad'; }
-  else if (prResult || gpayResult) { v = 'Google Pay CAN appear here. If Stripe Checkout still hides it, the issue is on the Stripe/session side.'; cls = 'ok'; }
+  // Stripe Checkout relies on Google's own readiness check (a card saved in the
+  // Google account), not on Chrome autofill, so the verdict follows gpayResult.
+  else if (gpayResult) { v = 'Google Pay CAN appear here. If Stripe Checkout still hides it, the issue is on the Stripe/session side.'; cls = 'ok'; }
+  else if (prResult) { v = 'Browser supports Google Pay, but the Google account on this device has no card Google Pay accepts. Add a card in Google Wallet (pay.google.com); Chrome autofill cards do not count.'; cls = 'warn'; }
   else { v = 'PaymentRequest exists but Google Pay is not ready on this device/account: sign into Google with a saved card, disable incognito, allow "check for saved payment methods".'; cls = 'warn'; }
   if (isIOS) v += ' (iOS: Google Pay is never offered by Stripe Checkout; only Apple Pay in Safari.)';
   set('verdict', v, 'v verdict ' + cls);
