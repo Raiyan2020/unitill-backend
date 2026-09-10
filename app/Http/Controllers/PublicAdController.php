@@ -43,6 +43,9 @@ class PublicAdController extends Controller
             'ad' => $ad,
             'lang' => $lang,
             'appName' => setting('app_name', 'UniTill'),
+            'iosUrl' => config('app_stores.ios_url'),
+            'androidUrl' => config('app_stores.android_url'),
+            'androidPackage' => config('app_stores.android_package'),
             'images' => $ad->images
                 ->map(fn ($image) => url('/storage/'.ltrim((string) $image->path, '/')))
                 ->values()

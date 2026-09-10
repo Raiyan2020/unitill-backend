@@ -3,9 +3,9 @@
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "com.raiyansoft.usell",
+      "package_name": "uk.unitill.app",
       "sha256_cert_fingerprints": [
-        "CA:56:ED:6E:0C:40:D4:9F:D8:3A:F1:D3:88:31:82:7F:88:80:46:50:0F:E6:B7:02:1F:07:B4:CD:57:0F:35:06"
+        "40:AA:3B:A4:41:71:98:60:83:76:D5:9A:8C:27:6F:F2:BE:BC:1E:13:9C:41:0D:A0:36:FD:A9:D4:23:F1:60:59"
       ]
     }
   }

@@ -24,7 +24,7 @@
 <main>
     <h1>This listing is no longer available</h1>
     <p>It may have been sold, removed by its owner, or the link may be incorrect.</p>
-    <a href="{{ url('/') }}">Go to {{ $appName }}</a>
+    <a href="{{ route('app.download') }}">Get the {{ $appName }} app</a>
 </main>
 </body>
 </html>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AppDownloadController;
 use App\Http\Controllers\PublicAccountDeletionController;
 use App\Http\Controllers\PublicAdController;
 use App\Mail\OtpMail;
@@ -37,6 +38,11 @@ Route::get('email', function () {
 Route::get('/ads/{publicId}', [PublicAdController::class, 'show'])
     ->where('publicId', '[A-Za-z0-9_-]+')
     ->name('ads.public');
+
+// Smart "get the app" landing page: detects iOS/Android client-side and sends
+// the visitor straight to the right store listing (Play Store tries to open
+// the installed app first via an intent:// fallback URL).
+Route::get('/download', [AppDownloadController::class, 'show'])->name('app.download');
 
 Route::get('/delete-account', [PublicAccountDeletionController::class, 'create'])
     ->name('delete-account.create');
