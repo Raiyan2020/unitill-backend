@@ -37,15 +37,22 @@ class PublicAdController extends Controller
             ], 404);
         }
 
+        // If we're handling this request at all, the OS did NOT hand the tap
+        // straight to the app (not installed, or Universal/App Link verification
+        // isn't active) — so send a real phone straight to the app/store before
+        // rendering anything, instead of flashing the web preview first. Link-
+        // preview crawlers (WhatsApp, iMessage, social cards) must still get the
+        // HTML with its Open Graph tags, so they're excluded below.
+        if ($redirect = $this->appOrStoreRedirect($request)) {
+            return $redirect;
+        }
+
         $lang = $request->query('lang', 'en');
 
         return response()->view('public.ad', [
             'ad' => $ad,
             'lang' => $lang,
             'appName' => setting('app_name', 'UniTill'),
-            'iosUrl' => config('app_stores.ios_url'),
-            'androidUrl' => config('app_stores.android_url'),
-            'androidPackage' => config('app_stores.android_package'),
             'images' => $ad->images
                 ->map(fn ($image) => url('/storage/'.ltrim((string) $image->path, '/')))
                 ->values()
@@ -74,5 +81,32 @@ class PublicAdController extends Controller
                 ->values()
                 ->all(),
         ]);
+    }
+
+    private function appOrStoreRedirect(Request $request): ?\Illuminate\Http\RedirectResponse
+    {
+        $ua = (string) $request->userAgent();
+
+        if ($ua === '' || preg_match('/bot|crawl|spider|facebookexternalhit|whatsapp|telegrambot|slackbot|discordbot|linkedinbot|twitterbot|applebot|googlebot|bingbot|pinterest|skypeuripreview|embedly|quora link preview|vkshare|w3c_validator/i', $ua)) {
+            return null;
+        }
+
+        if (preg_match('/iPhone|iPad|iPod/i', $ua)) {
+            return redirect()->away(config('app_stores.ios_url'));
+        }
+
+        if (preg_match('/Android/i', $ua)) {
+            // One shot at opening the already-installed app to this exact ad via
+            // its own /ads/* intent filter, before giving up and going to the
+            // Play Store — works even if App Link domain verification hasn't
+            // kicked in yet for this install.
+            $intentUrl = 'intent://'.$request->getHost().$request->getRequestUri()
+                .'#Intent;scheme=https;package='.config('app_stores.android_package')
+                .';S.browser_fallback_url='.rawurlencode(config('app_stores.android_url')).';end';
+
+            return redirect()->away($intentUrl);
+        }
+
+        return null;
     }
 }

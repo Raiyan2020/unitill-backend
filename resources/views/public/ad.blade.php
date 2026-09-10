@@ -115,31 +115,5 @@
         <a class="cta" href="{{ route('app.download') }}">Get the {{ $appName }} app</a>
     </footer>
 </div>
-<script>
-    (function () {
-        // This page only ever renders on a phone when the OS did NOT hand the
-        // /ads/* link straight to the app (app not installed, or Universal/App
-        // Link verification isn't active) — so a mobile visitor here should be
-        // sent to the store, not left reading a bare web page.
-        var ua = navigator.userAgent || '';
-        var isIOS = /iPad|iPhone|iPod/.test(ua)
-            || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-        var isAndroid = /Android/.test(ua);
-
-        if (isIOS) {
-            window.location.replace(@json($iosUrl));
-            return;
-        }
-
-        if (isAndroid) {
-            // One more attempt to open the already-installed app directly to this
-            // ad before giving up and falling back to the Play Store listing.
-            var intentUrl = 'intent://' + location.host + location.pathname
-                + '#Intent;scheme=https;package=' + @json($androidPackage)
-                + ';S.browser_fallback_url=' + encodeURIComponent(@json($androidUrl)) + ';end';
-            window.location.replace(intentUrl);
-        }
-    })();
-</script>
 </body>
 </html>
