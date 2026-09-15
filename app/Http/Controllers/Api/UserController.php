@@ -132,7 +132,7 @@ class UserController extends Controller
         \Illuminate\Support\Facades\Cache::put('deletion_otp_' . $user->id, $otp, now()->addMinutes(15));
 
         try {
-            Mail::to($user->email)->send(new OtpMail($otp));
+            Mail::to($user->student_email)->send(new OtpMail($otp));
         } catch (\Throwable $e) {
             Log::error('Delete-account OTP mail failed', ['error' => $e->getMessage()]);
         }
