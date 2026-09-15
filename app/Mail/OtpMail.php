@@ -14,12 +14,17 @@ class OtpMail extends Mailable
     use Queueable, SerializesModels;
 
     public $otp;
+    public $title;
+    public $subtitle;
+
     /**
      * Create a new message instance.
      */
-    public function __construct($otp)
+    public function __construct($otp, $title = 'Your verification code', $subtitle = 'Enter this code in the UniTill app to continue.')
     {
         $this->otp = $otp;
+        $this->title = $title;
+        $this->subtitle = $subtitle;
     }
 
     /**
@@ -28,7 +33,7 @@ class OtpMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'OTP Verification',
+            subject: $this->title === 'Your verification code' ? 'OTP Verification' : $this->title,
         );
     }
 
@@ -40,7 +45,11 @@ class OtpMail extends Mailable
     {
         return new Content(
             view: 'emails.otp',
-            with: ['otp' => $this->otp],
+            with: [
+                'otp' => $this->otp,
+                'title' => $this->title,
+                'subtitle' => $this->subtitle,
+            ],
         );
     }
     /**

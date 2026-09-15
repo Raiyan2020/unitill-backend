@@ -27,14 +27,14 @@
                             <tr>
                                 <td align="center" style="padding-bottom:8px;">
                                     <h1 style="margin:0; font-size:20px; line-height:1.3; color:#142338; font-weight:700;">
-                                        Your verification code
+                                        {{ $title ?? 'Your verification code' }}
                                     </h1>
                                 </td>
                             </tr>
                             <tr>
                                 <td align="center" style="padding-bottom:24px;">
                                     <p style="margin:0; font-size:14px; line-height:1.6; color:#5B6B80;">
-                                        Enter this code in the UniTill app to continue.
+                                        {{ $subtitle ?? 'Enter this code in the UniTill app to continue.' }}
                                     </p>
                                 </td>
                             </tr>

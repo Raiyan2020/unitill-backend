@@ -132,7 +132,11 @@ class UserController extends Controller
         \Illuminate\Support\Facades\Cache::put('deletion_otp_' . $user->id, $otp, now()->addMinutes(15));
 
         try {
-            Mail::to($user->student_email)->send(new OtpMail($otp));
+            Mail::to($user->student_email)->send(new OtpMail(
+                $otp, 
+                'Account Deletion Code', 
+                'Enter this code to permanently delete your account. This action cannot be undone.'
+            ));
         } catch (\Throwable $e) {
             Log::error('Delete-account OTP mail failed', ['error' => $e->getMessage()]);
         }
@@ -236,7 +240,7 @@ class UserController extends Controller
 
         return sendResponse(
             ['deleted_at' => $deletedAt->toIso8601String()],
-            __('api.account.deleted_restorable')
+            __('account_v2.deleted_permanently')
         );
     }
 
