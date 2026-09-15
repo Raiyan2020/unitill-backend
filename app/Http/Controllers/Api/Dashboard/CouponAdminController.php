@@ -182,7 +182,7 @@ class CouponAdminController extends Controller
             'max_discount' => $data['max_discount'] ?? null,
             'min_amount' => $data['min_amount'] ?? null,
             'max_redemptions' => $data['max_redemptions'] ?? null,
-            'max_uses_per_user' => $data['max_uses_per_user'] ?? 1,
+            'max_uses_per_user' => array_key_exists('max_uses_per_user', $data) ? $data['max_uses_per_user'] : 1,
             'starts_at' => $data['starts_at'] ?? null,
             'expires_at' => $data['expires_at'] ?? null,
             'is_active' => $data['is_active'] ?? true,
