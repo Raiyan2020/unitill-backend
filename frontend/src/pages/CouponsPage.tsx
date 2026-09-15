@@ -132,7 +132,7 @@ export function CouponsPage() {
       max_discount: row.max_discount != null ? String(row.max_discount) : '',
       min_amount: row.min_amount != null ? String(row.min_amount) : '',
       max_redemptions: row.max_redemptions != null ? String(row.max_redemptions) : '',
-      max_uses_per_user: row.max_uses_per_user != null ? String(row.max_uses_per_user) : '1',
+      max_uses_per_user: row.max_uses_per_user != null ? String(row.max_uses_per_user) : '',
       starts_at: row.starts_at ? row.starts_at.slice(0, 10) : '',
       expires_at: row.expires_at ? row.expires_at.slice(0, 10) : '',
       is_active: row.is_active,
