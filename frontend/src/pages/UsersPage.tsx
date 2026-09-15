@@ -17,6 +17,7 @@ type UserRow = {
   last_name: string | null;
   name: string | null;
   email: string | null;
+  student_email: string | null;
   phone: string | null;
   country_code: string | null;
   status: UserStatus;
@@ -256,7 +257,16 @@ export function UsersPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3">{row.last_name || '-'}</td>
-                      <td className="px-4 py-3">{row.email || '-'}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-col gap-1">
+                          <span>{row.email || '-'}</span>
+                          {row.student_email && (
+                            <span className="text-xs text-[#8a8da8] dark:text-[#a2a5be] flex items-center gap-1">
+                              🎓 {row.student_email}
+                            </span>
+                          )}
+                        </div>
+                      </td>
                       <td className="px-4 py-3">
                         <span dir="ltr" className="inline-block">
                           {`${row.country_code || ''} ${row.phone || ''}`.trim() || '-'}

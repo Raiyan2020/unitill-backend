@@ -14,6 +14,7 @@ class Coupon extends Model
         'max_discount',
         'min_amount',
         'max_redemptions',
+        'max_uses_per_user',
         'redemptions_count',
         'starts_at',
         'expires_at',
@@ -50,9 +51,15 @@ class Coupon extends Model
             && $this->redemptions_count >= $this->max_redemptions;
     }
 
-    public function redeemedBy(int $userId): bool
+    public function hasReachedUserLimit(int $userId): bool
     {
-        return $this->redemptions()->where('user_id', $userId)->exists();
+        if ($this->max_uses_per_user === null) {
+            return false;
+        }
+
+        $uses = $this->redemptions()->where('user_id', $userId)->count();
+        
+        return $uses >= $this->max_uses_per_user;
     }
 
     /**

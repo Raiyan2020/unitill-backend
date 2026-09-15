@@ -176,7 +176,7 @@ return [
         'not_active_yet' => 'This code is not active yet',
         'expired' => 'This code has expired',
         'limit_reached' => 'This code has reached its usage limit',
-        'already_used' => 'You have already used this code',
+        'already_used' => 'You have reached your usage limit for this code',
         'invalid' => 'Invalid discount code',
         'min_amount' => 'This code requires a minimum of £:amount',
     ],

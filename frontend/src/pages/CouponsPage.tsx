@@ -20,6 +20,7 @@ type CouponRow = {
   max_discount: number | null;
   min_amount: number | null;
   max_redemptions: number | null;
+  max_uses_per_user: number;
   redemptions_count: number;
   starts_at: string | null;
   expires_at: string | null;
@@ -50,6 +51,7 @@ const emptyForm = {
   max_discount: '',
   min_amount: '',
   max_redemptions: '',
+  max_uses_per_user: '1',
   starts_at: '',
   expires_at: '',
   is_active: true,
@@ -130,6 +132,7 @@ export function CouponsPage() {
       max_discount: row.max_discount != null ? String(row.max_discount) : '',
       min_amount: row.min_amount != null ? String(row.min_amount) : '',
       max_redemptions: row.max_redemptions != null ? String(row.max_redemptions) : '',
+      max_uses_per_user: row.max_uses_per_user != null ? String(row.max_uses_per_user) : '1',
       starts_at: row.starts_at ? row.starts_at.slice(0, 10) : '',
       expires_at: row.expires_at ? row.expires_at.slice(0, 10) : '',
       is_active: row.is_active,
@@ -149,6 +152,7 @@ export function CouponsPage() {
         max_discount: form.max_discount || null,
         min_amount: form.min_amount || null,
         max_redemptions: form.max_redemptions || null,
+        max_uses_per_user: form.max_uses_per_user || null,
         starts_at: form.starts_at || null,
         expires_at: form.expires_at || null,
         is_active: form.is_active,
@@ -367,6 +371,10 @@ export function CouponsPage() {
                 <label className="text-sm">
                   <span className="text-xs text-[#8a8da8]">{t.totalUsesHint}</span>
                   <Input className="mt-1" type="number" value={form.max_redemptions} onChange={(e) => field('max_redemptions', e.target.value)} />
+                </label>
+                <label className="text-sm">
+                  <span className="text-xs text-[#8a8da8]">Max Uses Per User</span>
+                  <Input className="mt-1" type="number" min="1" value={form.max_uses_per_user} onChange={(e) => field('max_uses_per_user', e.target.value)} />
                 </label>
                 <label className="text-sm">
                   <span className="text-xs text-[#8a8da8]">{t.startsAtOptional}</span>

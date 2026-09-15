@@ -42,7 +42,7 @@ class CouponRedemptionService
             return ['error' => 'exhausted'];
         }
 
-        if ($coupon->redeemedBy($user->id)) {
+        if ($coupon->hasReachedUserLimit($user->id)) {
             return ['error' => 'already_used'];
         }
 
@@ -102,11 +102,6 @@ class CouponRedemptionService
                 ];
             });
         } catch (QueryException $e) {
-            // Unique violation: the user already redeemed this coupon.
-            if ((int) ($e->errorInfo[1] ?? 0) === 1062) {
-                return ['error' => 'already_used'];
-            }
-
             throw $e;
         }
     }
