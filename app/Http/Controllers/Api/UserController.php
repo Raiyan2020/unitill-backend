@@ -128,7 +128,9 @@ class UserController extends Controller
     public function sendDeletionOtp(Request $request)
     {
         $user = Auth::user();
-        $otp = 123456; // fixed for testing
+        $otp = (string) rand(100000, 999999);
+        \Illuminate\Support\Facades\Cache::put('deletion_otp_' . $user->id, $otp, now()->addMinutes(15));
+
         try {
             Mail::to($user->email)->send(new OtpMail($otp));
         } catch (\Throwable $e) {
@@ -216,7 +218,9 @@ class UserController extends Controller
 
         // Deletion must be confirmed with the OTP sent to the personal email.
         $otp = (string) $request->input('otp', '');
-        if ($otp !== '123456') {
+        $cachedOtp = \Illuminate\Support\Facades\Cache::get('deletion_otp_' . $user->id);
+
+        if (!$cachedOtp || $otp !== $cachedOtp) {
             return sendError(
                 __('api.account.invalid_confirmation_code'),
                 [],
@@ -224,9 +228,11 @@ class UserController extends Controller
             );
         }
 
-        // Soft delete, cascaded to the user's ads and chats so they disappear
-        // everywhere at once and come back together on reactivation.
-        $deletedAt = app(AccountDeletionService::class)->delete($user);
+        // Clear the OTP from cache
+        \Illuminate\Support\Facades\Cache::forget('deletion_otp_' . $user->id);
+
+        // Perform hard delete (purge) instead of soft delete, as requested
+        $deletedAt = app(\App\Services\V2\AccountClosureService::class)->purge($user);
 
         return sendResponse(
             ['deleted_at' => $deletedAt->toIso8601String()],
