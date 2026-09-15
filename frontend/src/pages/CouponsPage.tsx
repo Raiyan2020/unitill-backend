@@ -373,7 +373,7 @@ export function CouponsPage() {
                   <Input className="mt-1" type="number" value={form.max_redemptions} onChange={(e) => field('max_redemptions', e.target.value)} />
                 </label>
                 <label className="text-sm">
-                  <span className="text-xs text-[#8a8da8]">Max Uses Per User</span>
+                  <span className="text-xs text-[#8a8da8]">{t.maxUsesPerUser}</span>
                   <Input className="mt-1" type="number" min="1" value={form.max_uses_per_user} onChange={(e) => field('max_uses_per_user', e.target.value)} />
                 </label>
                 <label className="text-sm">

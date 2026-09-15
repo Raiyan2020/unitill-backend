@@ -15,6 +15,7 @@ type UserDetails = {
   first_name: string | null;
   last_name: string | null;
   email: string | null;
+  student_email: string | null;
   phone: string | null;
   country_code: string | null;
   city_id: number | null;
@@ -134,6 +135,7 @@ export function UserDetailsPage() {
               <Item label={t.firstName} value={user.first_name || '-'} />
               <Item label={t.lastName} value={user.last_name || '-'} />
               <Item label={t.email} value={user.email || '-'} />
+              <Item label={t.studentEmail} value={user.student_email || '-'} />
               <Item label={t.phone} value={`${user.country_code || ''} ${user.phone || ''}`.trim() || '-'} />
               <Item label={t.cityId} value={user.city_id?.toString() || '-'} />
               <div>

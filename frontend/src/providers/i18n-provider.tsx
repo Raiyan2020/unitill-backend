@@ -95,6 +95,8 @@ export type Dictionary = {
   disabled: string;
   firstName: string;
   lastName: string;
+  studentEmail: string;
+  maxUsesPerUser: string;
   phone: string;
   countryCode: string;
   save: string;
@@ -513,7 +515,10 @@ const dictionaries: Record<Locale, Dictionary> = {
     pending: 'Pending',
     disabled: 'Disabled',
     firstName: 'First name',
-    lastName: 'Last name',
+    lastName: 'Last Name',
+    email: 'Email',
+    studentEmail: 'University Email',
+    maxUsesPerUser: 'Max Uses Per User',
     phone: 'Phone',
     countryCode: 'Country code',
     save: 'Save',
@@ -911,6 +916,8 @@ const dictionaries: Record<Locale, Dictionary> = {
     login: 'تسجيل الدخول',
     logout: 'تسجيل الخروج',
     email: 'البريد الإلكتروني',
+    studentEmail: 'الإيميل الجامعي',
+    maxUsesPerUser: 'أقصى حد للاستخدام لكل مستخدم',
     password: 'كلمة المرور',
     welcomeBack: 'أهلا بعودتك',
     signInSubtitle: 'سجل الدخول ببيانات الأدمن.',
