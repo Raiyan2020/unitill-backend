@@ -516,7 +516,6 @@ const dictionaries: Record<Locale, Dictionary> = {
     disabled: 'Disabled',
     firstName: 'First name',
     lastName: 'Last Name',
-    email: 'Email',
     studentEmail: 'University Email',
     maxUsesPerUser: 'Max Uses Per User',
     phone: 'Phone',
