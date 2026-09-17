@@ -38,7 +38,25 @@ class AdController extends Controller
         }
 
         if (! in_array($ad->status, ['draft', 'pending', 'paused', 'expired', 'published'], true)) {
-            return sendError(__('api.ad.cannot_publish_in_status'), ['status' => $ad->status], 422);
+            return sendError(__('api.ad.cannot_publish_in_status'), [
+                'error_code' => 'invalid_status',
+                'status' => $ad->status,
+            ], 422);
+        }
+
+        // A paused/expired ad already has its own free-or-extend reactivation
+        // path (POST /v2/my-ads/{id}/activate). Letting it fall through to
+        // startPublication() here would treat it like a brand-new listing and
+        // charge the full listing fee again, even though the paid period may
+        // still be open — this is the "Pay now fails on an inactive ad" bug.
+        if (in_array($ad->status, ['paused', 'expired'], true)) {
+            return sendError(
+                $ad->status === 'paused'
+                    ? __('api.ad.paused_use_activate')
+                    : __('api.ad.expired_use_activate'),
+                ['error_code' => 'invalid_status', 'status' => $ad->status],
+                422
+            );
         }
 
         if ($ad->images()->count() === 0) {
@@ -49,7 +67,11 @@ class AdController extends Controller
 
         $publication = $this->startPublication($ad->fresh(), $request->input('coupon_code'), null, 'listing', $request->has('coupon_code'));
         if (isset($publication['coupon_error'])) {
-            return sendError(__('api.ad.coupon_failed'), ['coupon_code' => $publication['coupon_error']], 422);
+            return sendError(__('api.ad.coupon_failed'), [
+                'coupon_code' => $publication['coupon_error'],
+                'coupon_error' => $publication['coupon_error'],
+                'publication' => $publication,
+            ], 422);
         }
 
         $ad->load([

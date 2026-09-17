@@ -9,10 +9,11 @@ class CategoryResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $lang = $request->header('lang', 'ar');
+        $lang = $request->header('lang', 'en');
 
         $data = [
             'id' => $this->id,
+            'slug' => $this->slug,
             'name' => $this->nameForLanguageCode($lang),
             'status' => $this->status,
         ];
@@ -25,10 +26,10 @@ class CategoryResource extends JsonResource
             $data['image'] = $this->image
                 ? (str_starts_with($this->image, 'http')
                     ? $this->image
-                    : asset('storage/' . ltrim($this->image, '/')))
+                    : asset('storage/'.ltrim($this->image, '/')))
                 : null;
             $data['listing_fee'] = $this->resolvedListingFee();
-            $data['formatted_listing_fee'] = '£' . number_format($this->resolvedListingFee(), 2);
+            $data['formatted_listing_fee'] = '£'.number_format($this->resolvedListingFee(), 2);
             $data['children'] = CategoryResource::collection($this->whenLoaded('children'));
 
             // Per-category attribute definitions power the post-ad dynamic
@@ -40,9 +41,12 @@ class CategoryResource extends JsonResource
                         'slug' => $definition->slug,
                         'label' => $definition->labelForLanguageCode($lang),
                         'input_type' => $definition->input_type,
+                        'filter_control' => $definition->resolvedFilterControl(),
+                        'post_control' => $definition->resolvedPostControl(),
                         // Labels follow the `lang` header; `value` stays the raw
                         // key the app submits and filters with.
                         'options' => $definition->optionsForLanguageCode($lang),
+                        'config' => $definition->config ?? [],
                         'is_required' => (bool) $definition->is_required,
                     ])
                     ->values()

@@ -42,6 +42,7 @@ use App\Http\Controllers\Api\HomeController;
 use App\Http\Controllers\Api\LanguageController as AppLanguageController;
 use App\Http\Controllers\Api\MyAdController;
 use App\Http\Controllers\Api\PostcodeController;
+use App\Http\Controllers\Api\PrivacyController;
 use App\Http\Controllers\Api\SellerController;
 use App\Http\Controllers\Api\SettingController;
 use App\Http\Controllers\Api\StripeWebhookController;
@@ -90,6 +91,7 @@ Route::get('chat-report-reasons', [ConversationController::class, 'reportReasons
 Route::get('v2/chat-report-reasons', [ConversationController::class, 'reportReasons']);
 Route::get('legal-affairs', [App\Http\Controllers\Api\LegalAffairController::class, 'index']);
 Route::get('terms/current', [TermsController::class, 'current']);
+Route::get('privacy/current', PrivacyController::class);
 
 // Public-safe seller profile. GET /show-profile/{id} returns the owner-facing
 // shape and must not be used to look at other people; these two carry only what
@@ -151,6 +153,8 @@ Route::middleware('auth:sanctum')->prefix('v2')->group(function () {
     Route::post('ads/{id}/publish', [App\Http\Controllers\Api\V2\AdController::class, 'publish'])->middleware('feature.available:posting');
     Route::post('my-ads/{id}/activate', [MyAdController::class, 'activate'])->middleware('feature.available:posting');
     Route::post('my-ads/{id}/sell-again', [MyAdController::class, 'sellAgain'])->middleware('feature.available:posting');
+    Route::post('my-ads/{id}/reactivate', [MyAdController::class, 'reactivate'])->middleware('feature.available:posting');
+    Route::put('my-ads/{id}', [MyAdController::class, 'update'])->middleware('feature.available:posting');
     Route::post('my-ads/{id}/extend', [App\Http\Controllers\Api\V2\MyAdController::class, 'extend'])->middleware('feature.available:posting');
     Route::post('conversations', [ConversationController::class, 'store'])->middleware('feature.available:messaging');
     Route::post('conversations/{id}/messages', [ConversationController::class, 'sendMessage'])->middleware('feature.available:messaging');
@@ -161,7 +165,7 @@ Route::middleware('auth:sanctum')->prefix('v2')->group(function () {
     // a hosted Checkout webview, independent of the native app's merchantIdentifier
     // config. Confirmed working; issue isolated to the app. Disabled, not deleted,
     // in case it's needed again. See PaymentDiagnosticsController.
-    //Route::post('payments/apple-pay-test', [App\Http\Controllers\Api\V2\PaymentDiagnosticsController::class, 'applePayCheckout']);
+    // Route::post('payments/apple-pay-test', [App\Http\Controllers\Api\V2\PaymentDiagnosticsController::class, 'applePayCheckout']);
 });
 
 Route::post('v2/moderation-appeals', [ModerationAppealController::class, 'store'])

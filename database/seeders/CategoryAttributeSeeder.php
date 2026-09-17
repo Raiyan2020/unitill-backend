@@ -45,7 +45,8 @@ class CategoryAttributeSeeder extends Seeder
                 ['slug' => 'payment_term', 'label' => ['en' => 'Payment term', 'ar' => 'مدة الدفع'], 'options' => ['Per week', 'Per month']],
                 ['slug' => 'furnishing', 'label' => ['en' => 'Furnishing', 'ar' => 'الفرش'], 'options' => ['Furnished', 'Unfurnished', 'Part-furnished']],
                 ['slug' => 'bills_included', 'label' => ['en' => 'Bills included', 'ar' => 'الفواتير مشمولة'], 'input_type' => 'boolean', 'filter_control' => 'toggle', 'post_control' => 'toggle'],
-                ['slug' => 'availability_from', 'label' => ['en' => 'Available from', 'ar' => 'متاح من'], 'input_type' => 'string', 'filter_control' => 'date', 'post_control' => 'date'],
+                ['slug' => 'availability_from', 'label' => ['en' => 'Available from', 'ar' => 'متاح من'], 'input_type' => 'date', 'filter_control' => 'date', 'post_control' => 'date'],
+                ['slug' => 'availability_until', 'label' => ['en' => 'Available until', 'ar' => 'متاح حتى'], 'input_type' => 'date', 'filter_control' => 'date', 'post_control' => 'date'],
                 ['slug' => 'features', 'label' => ['en' => 'Features', 'ar' => 'المميزات'], 'filter_control' => 'multiselect', 'post_control' => 'multiselect', 'options' => ['Parking', 'Garden', 'Balcony']],
             ],
             'Cars' => [

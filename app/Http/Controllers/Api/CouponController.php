@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Ad;
 use App\Models\Category;
 use App\Services\CouponRedemptionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class CouponController extends Controller
 {
@@ -21,10 +23,18 @@ class CouponController extends Controller
         $validated = $request->validate([
             'code' => 'required|string|max:40',
             'main_category_id' => 'sometimes|nullable|integer|exists:categories,id',
+            'ad_id' => [
+                'sometimes',
+                'nullable',
+                'integer',
+                Rule::exists('ads', 'id')->where('user_id', Auth::id()),
+            ],
         ]);
 
         $ar = $request->header('lang') === 'ar';
-        $category = isset($validated['main_category_id'])
+        $ad = isset($validated['ad_id']) ? Ad::find($validated['ad_id']) : null;
+        $category = $ad?->mainCategory;
+        $category ??= isset($validated['main_category_id'])
             ? Category::find($validated['main_category_id'])
             : null;
         $amount = $category ? $category->resolvedListingFee() : (float) setting('post_price', '0.99');
@@ -34,12 +44,16 @@ class CouponController extends Controller
         if (isset($result['error'])) {
             return sendError(
                 $this->errorMessage($result, $ar),
-                ['code' => $result['error']],
+                [
+                    'coupon_error' => $result['error'],
+                    'code' => strtoupper(trim($validated['code'])),
+                ],
                 422
             );
         }
 
         unset($result['coupon']);
+        $result['applied'] = true;
         $result['formatted_discount'] = '£'.number_format($result['discount_amount'], 2);
         $result['formatted_final'] = '£'.number_format($result['final_amount'], 2);
 

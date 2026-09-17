@@ -146,8 +146,13 @@ return Application::configure(basePath: dirname(__DIR__))
 
             if ($e instanceof ValidationException) {
                 if ($request->is('api/*') || $request->expectsJson()) {
+                    $availabilityError = collect($e->errors())->keys()
+                        ->contains(fn (string $key) => str_starts_with($key, 'attributes.availability_'));
+
                     return sendError(
-                        $e->validator->errors()->first(),
+                        $availabilityError
+                            ? __('api.ad_form.availability_invalid')
+                            : $e->validator->errors()->first(),
                         $e->errors(),
                         422
                     );

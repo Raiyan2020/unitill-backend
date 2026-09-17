@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Models\Category;
 use App\Models\CategoryAttributeDefinition;
 use App\Models\City;
+use App\Support\AdAvailabilityRules;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
@@ -77,7 +78,7 @@ class StoreAdRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+        return array_merge([
             'images' => 'required|array|min:1|max:10',
             'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
             'main_category_id' => 'required|integer|exists:categories,id',
@@ -85,11 +86,11 @@ class StoreAdRequest extends FormRequest
             'title' => 'required|string|max:255',
             'subtitle' => 'nullable|string|max:255',
             'license_plate' => [
-                Rule::requiredIf(fn() => $this->isCarsCategory()),
+                Rule::requiredIf(fn () => $this->isCarsCategory()),
                 'nullable',
                 'string',
                 'regex:/^[A-Z]{2}[0-9]{2}[A-Z]{3}$/',
-                'max:7'
+                'max:7',
             ],
             'description' => 'required|string|max:5000',
             'price' => 'required|numeric|min:0',
@@ -119,8 +120,7 @@ class StoreAdRequest extends FormRequest
                     }
                 },
             ],
-            
-        ];
+        ], AdAvailabilityRules::rules());
     }
 
     public function withValidator($validator): void
@@ -166,9 +166,9 @@ class StoreAdRequest extends FormRequest
             $specCategoryId = (int) ($this->input('sub_category_id') ?: $mainCategoryId);
             $attributes = (array) $this->input('attributes', []);
 
-            // If attributes are empty (e.g. from mobile app), we bypass strict validation 
+            // If attributes are empty (e.g. from mobile app), we bypass strict validation
             // so the ad creation cycle completes successfully.
-            if ($this->has('attributes') && !empty($attributes)) {
+            if ($this->has('attributes') && ! empty($attributes)) {
                 $definitions = CategoryAttributeDefinition::query()
                     ->where('category_id', $specCategoryId)
                     ->where('is_active', true)
@@ -216,9 +216,14 @@ class StoreAdRequest extends FormRequest
 
     protected function failedValidation(Validator $validator): void
     {
+        $availabilityError = collect($validator->errors()->keys())
+            ->contains(fn (string $key) => str_starts_with($key, 'attributes.availability_'));
+
         throw new HttpResponseException(
             sendError(
-                $validator->errors()->first(),
+                $availabilityError
+                    ? __('api.ad_form.availability_invalid')
+                    : $validator->errors()->first(),
                 $validator->errors()->toArray(),
                 422
             )
@@ -229,7 +234,7 @@ class StoreAdRequest extends FormRequest
     {
         $ar = $this->header('lang') === 'ar';
 
-        return [
+        return array_merge([
             'images.required' => __('api.ad.image_required'),
             'images.min' => __('api.ad.image_required'),
             'images.max' => __('api.ad_form.images_max'),
@@ -239,6 +244,6 @@ class StoreAdRequest extends FormRequest
             'title.required' => __('api.ad_form.title_required'),
             'price.required' => __('api.ad_form.price_required'),
             'city_id.required' => __('api.ad_form.city_required'),
-        ];
+        ], AdAvailabilityRules::messages());
     }
 }

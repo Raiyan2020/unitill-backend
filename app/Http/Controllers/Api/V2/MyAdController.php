@@ -41,7 +41,11 @@ class MyAdController extends Controller
         if (isset($publication['coupon_error'])) {
             return sendError(
                 __('api.ad.coupon_failed'),
-                ['coupon_code' => $publication['coupon_error']],
+                [
+                    'coupon_code' => $publication['coupon_error'],
+                    'coupon_error' => $publication['coupon_error'],
+                    'publication' => $publication,
+                ],
                 422
             );
         }

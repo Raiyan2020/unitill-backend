@@ -82,7 +82,10 @@ class MyAdResource extends JsonResource
             'sold' => [
                 'label' => __('api.my_ad.status_sold'),
                 'badge' => 'sold',
-                'actions' => ['see_details', 'relist'],
+                // 'reactivate' is new: same-id reactivation (free inside the
+                // paid window, extend fee outside it). 'relist' is the older
+                // sell-again path — new ad id, always the full listing fee.
+                'actions' => ['see_details', 'reactivate', 'relist'],
             ],
             'pending' => [
                 'label' => __('api.my_ad.status_pending'),

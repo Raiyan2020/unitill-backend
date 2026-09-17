@@ -3,19 +3,24 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UpdateAdRequest;
+use App\Http\Resources\AdDetailResource;
 use App\Http\Resources\MyAdResource;
 use App\Models\Ad;
 use App\Models\AdAttributeValue;
 use App\Models\AdImage;
+use App\Models\CategoryAttributeDefinition;
+use App\Models\City;
 use App\Models\Conversation;
 use App\Models\Payment;
-use App\Models\User;
 use App\Services\ChatService;
 use App\Services\ListingPaymentService;
+use App\Support\AdAvailabilityRules;
 use App\Traits\HandlesListingPayments;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -240,7 +245,11 @@ class MyAdController extends Controller
         if (isset($publication['coupon_error'])) {
             return sendError(
                 __('api.ad.coupon_failed'),
-                ['coupon_code' => $publication['coupon_error']],
+                [
+                    'coupon_code' => $publication['coupon_error'],
+                    'coupon_error' => $publication['coupon_error'],
+                    'publication' => $publication,
+                ],
                 422
             );
         }
@@ -251,6 +260,63 @@ class MyAdController extends Controller
                 'publication' => $publication,
             ],
             __('api.ad.activated')
+        );
+    }
+
+    /**
+     * Sold → Active, on the ad's own id (unlike sell-again, which copies it
+     * into a brand-new ad). New v2-only action, deliberately not folded into
+     * activate() since that method is shared with the frozen v1 routes.
+     * Same money logic as activate(): free inside the paid period, the extend
+     * fee (not a full new-listing fee) outside it.
+     */
+    public function reactivate(Request $request, string $id)
+    {
+        $ad = $this->findOwnedAd($id);
+
+        if (! $ad || $ad->status !== 'sold') {
+            return sendError(__('api.ad.only_sold_can_reactivate'), [], 422);
+        }
+
+        $ad->update([
+            'sold_at' => null,
+            'sold_to_user_id' => null,
+            'is_sold_outside' => false,
+        ]);
+
+        if ($this->hasUnexpiredPaidPeriod($ad)) {
+            $ad->update(['status' => 'published']);
+            $resumed = $ad->fresh();
+
+            return sendResponse(
+                [
+                    'ad' => new MyAdResource($resumed),
+                    'publication' => app(ListingPaymentService::class)->publicationState($resumed),
+                ],
+                __('api.ad.reactivated')
+            );
+        }
+
+        $publication = $this->startExtension($ad->fresh(), $request->input('coupon_code'), $request->has('coupon_code'));
+
+        if (isset($publication['coupon_error'])) {
+            return sendError(
+                __('api.ad.coupon_failed'),
+                [
+                    'coupon_code' => $publication['coupon_error'],
+                    'coupon_error' => $publication['coupon_error'],
+                    'publication' => $publication,
+                ],
+                422
+            );
+        }
+
+        return sendResponse(
+            [
+                'ad' => new MyAdResource($ad->fresh()),
+                'publication' => $publication,
+            ],
+            $publication['published'] ? __('api.ad.reactivated') : __('api.ad.payment_required')
         );
     }
 
@@ -357,6 +423,23 @@ class MyAdController extends Controller
             );
         }
 
+        $availabilityAttributes = $ad->attributeValues()
+            ->with('definition:id,slug')
+            ->get()
+            ->filter(fn (AdAttributeValue $value) => in_array(
+                $value->definition?->slug,
+                ['availability_from', 'availability_until'],
+                true
+            ))
+            ->mapWithKeys(fn (AdAttributeValue $value) => [$value->definition->slug => $value->value])
+            ->all();
+
+        Validator::make(
+            ['attributes' => $availabilityAttributes],
+            AdAvailabilityRules::rules(),
+            AdAvailabilityRules::messages()
+        )->validate();
+
         $copy = DB::transaction(function () use ($ad) {
             $publicId = strtoupper(Str::random(10));
 
@@ -405,7 +488,11 @@ class MyAdController extends Controller
         if (isset($publication['coupon_error'])) {
             return sendError(
                 __('api.ad.coupon_failed'),
-                ['coupon_code' => $publication['coupon_error']],
+                [
+                    'coupon_code' => $publication['coupon_error'],
+                    'coupon_error' => $publication['coupon_error'],
+                    'publication' => $publication,
+                ],
                 422
             );
         }
@@ -418,6 +505,99 @@ class MyAdController extends Controller
             ],
             __('api.ad.relisted')
         );
+    }
+
+    /**
+     * Updates listing content only. Publication, coupon, payment and image state
+     * are deliberately untouched: an edit is not a second publish operation.
+     */
+    public function update(UpdateAdRequest $request, string $id)
+    {
+        $ad = Ad::query()
+            ->where(fn ($query) => $query->where('id', $id)->orWhere('public_id', $id))
+            ->first();
+
+        if (! $ad) {
+            return sendError(__('api.ad.not_found'), [], 404);
+        }
+
+        if ((int) $ad->user_id !== (int) Auth::id()) {
+            return sendError(__('api.ad.not_owner'), ['error_code' => 'not_owner'], 403);
+        }
+
+        if ($ad->status === 'sold') {
+            return sendError(__('api.ad.sold_cannot_edit'), ['error_code' => 'sold_listing'], 409);
+        }
+
+        $data = $request->validated();
+        $attributes = (array) ($data['attributes'] ?? []);
+        $definitionCategoryIds = array_values(array_filter([
+            (int) $data['main_category_id'],
+            (int) ($data['sub_category_id'] ?? 0),
+        ]));
+
+        DB::transaction(function () use ($ad, $data, $attributes, $definitionCategoryIds): void {
+            $city = City::query()->findOrFail($data['city_id']);
+
+            $ad->update([
+                'main_category_id' => $data['main_category_id'],
+                'sub_category_id' => $data['sub_category_id'] ?? null,
+                'title' => $data['title'],
+                'subtitle' => $data['subtitle'] ?? null,
+                'license_plate' => $data['license_plate'] ?? null,
+                'price' => $data['price'],
+                'description' => $data['description'],
+                'currency' => strtoupper($data['currency'] ?? 'GBP'),
+                'country_id' => $city->country_id,
+                'city_id' => $city->id,
+                'postcode' => $data['postcode'] ?? null,
+                'region' => $data['region'] ?? null,
+                'location_name' => $data['location_name'] ?? null,
+                'latitude' => $data['latitude'] ?? null,
+                'longitude' => $data['longitude'] ?? null,
+                'is_negotiable' => (bool) ($data['is_negotiable'] ?? false),
+                'slug' => Str::slug($data['title'].'-'.$ad->public_id),
+            ]);
+
+            $definitions = CategoryAttributeDefinition::query()
+                ->whereIn('category_id', $definitionCategoryIds)
+                ->where('is_active', true)
+                ->get()
+                ->sortBy(fn (CategoryAttributeDefinition $definition) => $definition->category_id === (int) ($data['sub_category_id'] ?? 0) ? 1 : 0
+                )
+                ->keyBy('slug');
+
+            $ad->attributeValues()->delete();
+            foreach ($attributes as $slug => $rawValue) {
+                $definition = $definitions->get($slug);
+                if (! $definition) {
+                    continue;
+                }
+
+                $values = array_values(array_unique(array_filter(
+                    is_array($rawValue) ? $rawValue : [$rawValue],
+                    static fn ($value) => is_scalar($value) && (string) $value !== ''
+                )));
+
+                foreach ($values as $value) {
+                    AdAttributeValue::create([
+                        'ad_id' => $ad->id,
+                        'category_attribute_definition_id' => $definition->id,
+                        'value' => (string) $value,
+                    ]);
+                }
+            }
+        });
+
+        $ad->refresh()->load([
+            'images',
+            'city.translations',
+            'mainCategory.translations',
+            'subCategory.translations',
+            'attributeValues.definition.translations',
+        ]);
+
+        return sendResponse(['ad' => new AdDetailResource($ad)], __('api.ad.updated'));
     }
 
     public function destroy(Request $request, string $id)

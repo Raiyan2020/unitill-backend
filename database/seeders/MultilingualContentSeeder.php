@@ -209,7 +209,7 @@ class MultilingualContentSeeder extends Seeder
     // ------------------------------------------------------------------- content
 
     /** English category name => [locale => name]. */
-    private const CATEGORY_NAMES = [
+    public const CATEGORY_NAMES = [
         'Accommodation' => ['fr' => 'Logement', 'es' => 'Alojamiento', 'zh' => '住宿'],
         'Rooms for rent' => ['fr' => 'Chambres à louer', 'es' => 'Habitaciones en alquiler', 'zh' => '出租房间'],
         'Shared flats' => ['fr' => 'Colocations', 'es' => 'Pisos compartidos', 'zh' => '合租公寓'],
@@ -259,7 +259,7 @@ class MultilingualContentSeeder extends Seeder
      * Attribute label per locale. Keyed by slug, or by "English category.slug"
      * where the same slug is labelled differently per category.
      */
-    private const ATTRIBUTE_LABELS = [
+    public const ATTRIBUTE_LABELS = [
         'condition' => ['fr' => 'État', 'es' => 'Estado', 'zh' => '成色'],
         'collection_delivery' => ['fr' => 'Retrait ou livraison', 'es' => 'Recogida o entrega', 'zh' => '自取或配送'],
         'contract_type' => ['fr' => 'Type de contrat', 'es' => 'Tipo de contrato', 'zh' => '合同类型'],
@@ -270,6 +270,7 @@ class MultilingualContentSeeder extends Seeder
         'furnishing' => ['fr' => 'Ameublement', 'es' => 'Amueblado', 'zh' => '家具情况'],
         'bills_included' => ['fr' => 'Charges comprises', 'es' => 'Facturas incluidas', 'zh' => '含账单'],
         'availability_from' => ['fr' => 'Disponible à partir du', 'es' => 'Disponible desde', 'zh' => '可入住日期'],
+        'availability_until' => ['fr' => "Disponible jusqu'au", 'es' => 'Disponible hasta', 'zh' => '可住至'],
         'features' => ['fr' => 'Équipements', 'es' => 'Características', 'zh' => '设施'],
         'listing_type' => ['fr' => 'Type d\'annonce', 'es' => 'Tipo de anuncio', 'zh' => '广告类型'],
         'make' => ['fr' => 'Marque', 'es' => 'Marca', 'zh' => '品牌'],
@@ -306,7 +307,7 @@ class MultilingualContentSeeder extends Seeder
      * categories. A value missing here keeps its English text, which is correct
      * for brand names, sizes and numbers.
      */
-    private const OPTION_LABELS = [
+    public const OPTION_LABELS = [
         'Other' => ['ar' => 'أخرى', 'fr' => 'Autre', 'es' => 'Otro', 'zh' => '其他'],
         'Others' => ['ar' => 'أخرى', 'fr' => 'Autres', 'es' => 'Otros', 'zh' => '其他'],
         'Both' => ['ar' => 'كلاهما', 'fr' => 'Les deux', 'es' => 'Ambos', 'zh' => '两者皆可'],

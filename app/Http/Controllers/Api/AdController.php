@@ -16,6 +16,7 @@ use App\Services\CouponRedemptionService;
 use App\Services\ListingPaymentService;
 use App\Services\PostcodeService;
 use App\Services\StripeService;
+use App\Support\AdAvailabilityRules;
 use App\Support\AdFilters;
 use App\Support\AdSort;
 use App\Traits\HandlesListingPayments;
@@ -455,7 +456,11 @@ class AdController extends Controller
         // free quota, zeroed by a coupon, or paid via Stripe.
         $publication = $this->startPublication($ad, $request->input('coupon_code'), null, 'listing', $request->has('coupon_code'));
         if (isset($publication['coupon_error'])) {
-            return sendError(__('api.ad.coupon_failed'), ['coupon_code' => $publication['coupon_error']], 422);
+            return sendError(__('api.ad.coupon_failed'), [
+                'coupon_code' => $publication['coupon_error'],
+                'coupon_error' => $publication['coupon_error'],
+                'publication' => $publication,
+            ], 422);
         }
         $appliedCoupon = $publication['coupon'] ?? null;
         if ($publication !== null) {
@@ -568,7 +573,7 @@ class AdController extends Controller
             }
         }
 
-        $validated = $request->validate([
+        $validated = $request->validate(array_merge([
             'main_category_id' => 'required|integer|exists:categories,id',
             'sub_category_id' => 'nullable|integer|exists:categories,id',
             'title' => 'required|string|max:255',
@@ -607,7 +612,7 @@ class AdController extends Controller
             // stored when supplied. publishDraft() is what insists on at least one.
             'images' => 'nullable|array|max:10',
             'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
-        ]);
+        ], AdAvailabilityRules::rules()), AdAvailabilityRules::messages());
 
         $attributes = (array) ($validated['attributes'] ?? []);
         // Attribute definitions live on the main category, so resolve them from
@@ -735,7 +740,10 @@ class AdController extends Controller
         // The only way to settle an outstanding fee, so it must accept every
         // state that can owe one — not just drafts.
         if (! in_array($ad->status, ['draft', 'pending', 'paused', 'expired', 'published'], true)) {
-            return sendError(__('api.ad.cannot_publish_in_status'), ['status' => $ad->status], 422);
+            return sendError(__('api.ad.cannot_publish_in_status'), [
+                'error_code' => 'invalid_status',
+                'status' => $ad->status,
+            ], 422);
         }
 
         if ($ad->images()->count() === 0) {
@@ -744,7 +752,11 @@ class AdController extends Controller
 
         $publication = $this->startPublication($ad, $request->input('coupon_code'), null, 'listing', $request->has('coupon_code'));
         if (isset($publication['coupon_error'])) {
-            return sendError(__('api.ad.coupon_failed'), ['coupon_code' => $publication['coupon_error']], 422);
+            return sendError(__('api.ad.coupon_failed'), [
+                'coupon_code' => $publication['coupon_error'],
+                'coupon_error' => $publication['coupon_error'],
+                'publication' => $publication,
+            ], 422);
         }
 
         $ad->load([

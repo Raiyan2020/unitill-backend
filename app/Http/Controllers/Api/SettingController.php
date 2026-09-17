@@ -6,13 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\LegalAffairResource;
 use App\Models\Language;
 use App\Models\LegalAffair;
+use App\Services\LegalDocumentService;
 use Illuminate\Http\Request;
 
 class SettingController extends Controller
 {
+    public function __construct(private readonly LegalDocumentService $documents) {}
+
     public function __invoke(Request $request)
     {
-        $lang = $request->header('lang') === 'en' ? 'en' : 'ar';
+        $lang = (string) $request->header('lang', 'en');
         $popupImage = setting('login_popup_image');
         $appLogo = setting('app_logo');
 
@@ -40,9 +43,8 @@ class SettingController extends Controller
             'post_price' => setting('post_price'),
             'free_ads_per_user' => (int) setting('free_ads_per_user', '0'),
             'post_duration' => setting('post_duration', '30'),
-            'terms_conditions' => $lang === 'en'
-                ? setting('terms_conditions_en')
-                : setting('terms_conditions'),
+            'terms_conditions' => $this->documents->get('terms_of_service', $lang)['content']
+                ?? ($lang === 'ar' ? setting('terms_conditions') : setting('terms_conditions_en')),
             'policies' => LegalAffairResource::collection($policies),
             'contact_email' => setting('contact_email'),
             'contact_phone' => setting('contact_phone'),

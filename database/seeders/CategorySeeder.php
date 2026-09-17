@@ -7,6 +7,7 @@ use App\Models\CategoryTranslation;
 use App\Models\Language;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class CategorySeeder extends Seeder
 {
@@ -162,11 +163,15 @@ class CategorySeeder extends Seeder
             ->value('category_id');
 
         if ($existingId) {
-            return Category::find($existingId);
+            $category = Category::find($existingId);
+            $category->update(['slug' => $this->slugFor($en, $parentId)]);
+
+            return $category;
         }
 
         $category = Category::create([
             'parent_id' => $parentId,
+            'slug' => $this->slugFor($en, $parentId),
             'image' => null,
             'status' => 'active',
             'filter_group_id' => null,
@@ -186,5 +191,17 @@ class CategorySeeder extends Seeder
         }
 
         return $category;
+    }
+
+    private function slugFor(string $englishName, ?int $parentId): string
+    {
+        $slug = Str::slug($englishName);
+        if (! $parentId) {
+            return $slug;
+        }
+
+        $parentSlug = Category::query()->whereKey($parentId)->value('slug') ?: 'category-'.$parentId;
+
+        return $parentSlug.'-'.$slug;
     }
 }
