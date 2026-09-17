@@ -208,7 +208,7 @@ export function CountriesPage() {
                     <td className="px-4 py-3">{row.id}</td>
                     <td className="px-4 py-3">{row.country_code}</td>
                     <td className="px-4 py-3">{row.translations?.en || row.translations?.ar || Object.values(row.translations || {})[0] || '-'}</td>
-                    <td className="px-4 py-3">{row.status}</td>
+                    <td className="px-4 py-3"><span className={row.status === 'active' ? 'text-[#28c76f]' : 'text-[#ea5455]'}>{row.status === 'active' ? t.active : t.inactive}</span></td>
                     <td className="px-4 py-3">{row.sort}</td>
                     <td className="px-4 py-3">
                       <div className="flex gap-2">

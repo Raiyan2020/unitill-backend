@@ -119,6 +119,21 @@ export function LegalAffairsPage() {
       notify.error(t.titleRequired);
       return;
     }
+    if (!form.section.trim()) {
+      notify.error(t.sectionRequired);
+      return;
+    }
+    if (!form.sort_order.trim()) {
+      notify.error(t.sortRequired);
+      return;
+    }
+    const hasIncompleteTranslation = Object.values(form.translations).some(
+      (value) => value?.title?.trim() && (!value?.subtitle?.trim() || !value?.description?.trim())
+    );
+    if (hasIncompleteTranslation) {
+      notify.error(t.subtitleDescriptionRequired);
+      return;
+    }
 
     setSaving(true);
     try {

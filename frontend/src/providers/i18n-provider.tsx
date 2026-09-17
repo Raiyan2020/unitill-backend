@@ -370,7 +370,14 @@ export type Dictionary = {
   nameEnRequired: string;
   slugRequired: string;
   imageRequired: string;
+  sortRequired: string;
+  sectionRequired: string;
+  subtitleDescriptionRequired: string;
   viewImage: string;
+  open: string;
+  closed: string;
+  close: string;
+  reopen: string;
   allUsers: string;
   singleUser: string;
   selectUser: string;
@@ -787,7 +794,14 @@ const dictionaries: Record<Locale, Dictionary> = {
     nameEnRequired: "The English name is required.",
     slugRequired: "The slug is required.",
     imageRequired: "An image is required.",
+    sortRequired: "The sort order is required.",
+    sectionRequired: "The section is required.",
+    subtitleDescriptionRequired: "Subtitle and description are required for every language with a title.",
     viewImage: "View image",
+    open: "Open",
+    closed: "Closed",
+    close: "Close",
+    reopen: "Reopen",
     allUsers: "All users",
     singleUser: "A single user",
     selectUser: "Select a user",
@@ -1201,7 +1215,14 @@ const dictionaries: Record<Locale, Dictionary> = {
     nameEnRequired: "الاسم بالإنجليزية مطلوب.",
     slugRequired: "المُعرّف (slug) مطلوب.",
     imageRequired: "الصورة مطلوبة.",
+    sortRequired: "الترتيب مطلوب.",
+    sectionRequired: "القسم مطلوب.",
+    subtitleDescriptionRequired: "العنوان الفرعي والوصف مطلوبان لكل لغة تم إدخال عنوان لها.",
     viewImage: "عرض الصورة",
+    open: "مفتوح",
+    closed: "مغلق",
+    close: "إغلاق",
+    reopen: "إعادة فتح",
     allUsers: "جميع المستخدمين",
     singleUser: "مستخدم واحد",
     selectUser: "اختر المستخدم",

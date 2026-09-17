@@ -55,13 +55,17 @@ class LegalAffairController extends Controller
         $validator = Validator::make($request->all(), [
             'key' => 'nullable|string|max:100|unique:legal_affairs,key',
             'translations' => 'required|array|min:1',
-            'section' => 'nullable|string|max:100',
+            'section' => 'required|string|max:100',
             'is_active' => 'boolean',
-            'sort_order' => 'nullable|integer|min:0',
+            'sort_order' => 'required|integer|min:0',
         ]);
 
         if ($validator->fails()) {
             return sendError($validator->errors()->first(), $validator->errors()->toArray(), 422);
+        }
+
+        if ($error = $this->validateTranslationsComplete($request->input('translations', []))) {
+            return sendError($error, [], 422);
         }
 
         $data = $validator->validated();
@@ -116,6 +120,25 @@ class LegalAffairController extends Controller
 
         $row->delete();
         return sendResponse([], 'Legal affair deleted');
+    }
+
+    private function validateTranslationsComplete(array $translations): ?string
+    {
+        foreach ($translations as $payload) {
+            $title = trim((string) (is_array($payload) ? ($payload['title'] ?? '') : ''));
+            if ($title === '') {
+                continue;
+            }
+
+            $subtitle = trim((string) (is_array($payload) ? ($payload['subtitle'] ?? '') : ''));
+            $description = trim((string) (is_array($payload) ? ($payload['description'] ?? '') : ''));
+
+            if ($subtitle === '' || $description === '') {
+                return 'Subtitle and description are required for every language with a title.';
+            }
+        }
+
+        return null;
     }
 
     private function upsertTranslations(LegalAffair $row, array $translations): void

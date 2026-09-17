@@ -63,8 +63,8 @@ class CategoryAdminController extends Controller
             'parent_id' => 'nullable|integer|exists:categories,id',
             'translations' => 'required|array|min:1',
             'status' => ['required', Rule::in(['active', 'inactive'])],
-            'sort' => 'nullable|integer|min:0',
-            'image' => 'nullable|image|max:5120',
+            'sort' => 'required|integer|min:0',
+            'image' => 'required|image|max:5120',
             'listing_fee' => 'nullable|numeric|min:0',
         ]);
 
@@ -74,10 +74,7 @@ class CategoryAdminController extends Controller
 
         $data = $validator->validated();
 
-        $imagePath = null;
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('categories', 'public');
-        }
+        $imagePath = $request->file('image')->store('categories', 'public');
 
         $row = Category::create([
             'parent_id' => $data['parent_id'] ?? null,

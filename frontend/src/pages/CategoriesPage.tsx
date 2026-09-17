@@ -112,6 +112,14 @@ export function CategoriesPage() {
       notify.error(t.nameRequiredAnyLanguage);
       return;
     }
+    if (!editing && !imageFile) {
+      notify.error(t.imageRequired);
+      return;
+    }
+    if (!form.sort.trim()) {
+      notify.error(t.sortRequired);
+      return;
+    }
 
     setSaving(true);
     try {

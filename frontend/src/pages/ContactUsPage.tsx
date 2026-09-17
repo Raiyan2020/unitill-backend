@@ -90,8 +90,8 @@ export function ContactUsPage() {
         <div className="flex items-center gap-2">
           <select value={status} onChange={(e) => { setPage(1); setStatus(e.target.value); }} className="h-9 rounded-lg border border-[#dbdbe8] bg-white px-2 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]">
             <option value="">{t.allStatuses}</option>
-            <option value="open">Open</option>
-            <option value="closed">Closed</option>
+            <option value="open">{t.open}</option>
+            <option value="closed">{t.closed}</option>
           </select>
           <select value={pageSize} onChange={(e) => { setPage(1); setPageSize(Number(e.target.value)); }} className="h-9 rounded-lg border border-[#dbdbe8] bg-white px-2 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]">
             {[10, 25, 50, 100].map((size) => <option key={size} value={size}>{size}</option>)}
@@ -129,8 +129,8 @@ export function ContactUsPage() {
                     <td className="px-4 py-3">{row.reason}</td>
                     <td className="px-4 py-3 max-w-[420px] whitespace-pre-wrap break-words">{row.message}</td>
                     <td className="px-4 py-3">{row.created_at || '-'}</td>
-                    <td className="px-4 py-3">{row.status}</td>
-                    <td className="px-4 py-3"><Button size="sm" variant="secondary" onClick={() => updateStatus(row)}>{row.status === 'closed' ? 'Reopen' : 'Close'}</Button></td>
+                    <td className="px-4 py-3"><span className={row.status === 'open' ? 'text-[#28c76f]' : 'text-[#ea5455]'}>{row.status === 'open' ? t.open : t.closed}</span></td>
+                    <td className="px-4 py-3"><Button size="sm" variant="secondary" onClick={() => updateStatus(row)}>{row.status === 'closed' ? t.reopen : t.close}</Button></td>
                   </tr>
                 ))}
               </tbody>
