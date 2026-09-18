@@ -36,7 +36,6 @@ class ChatReportReason
             self::INAPPROPRIATE_CONTENT,
             self::THREATS_OR_VIOLENCE,
             self::IMPERSONATION,
-            self::PAYMENT_OUTSIDE_APP,
             self::OTHER,
         ];
     }
@@ -57,9 +56,9 @@ class ChatReportReason
         return array_merge(self::legacyAllowed(), self::seriousSafety());
     }
 
-    public static function options(string $lang = 'en', bool $includeSeriousSafety = true): array
+    private static function translations(): array
     {
-        $translations = [
+        return [
             self::HARASSMENT_OR_ABUSE => [
                 'en' => 'Harassment or abuse',
                 'ar' => 'تحرّش أو إساءة',
@@ -145,7 +144,11 @@ class ChatReportReason
                 'zh' => '其他',
             ],
         ];
+    }
 
+    public static function options(string $lang = 'en', bool $includeSeriousSafety = true): array
+    {
+        $translations = self::translations();
         $results = [];
         $allowed = $includeSeriousSafety ? self::allowed() : self::legacyAllowed();
         foreach ($allowed as $value) {
@@ -164,12 +167,8 @@ class ChatReportReason
             return null;
         }
 
-        foreach (self::options($lang) as $option) {
-            if ($option['value'] === $value) {
-                return $option['label'];
-            }
-        }
+        $translations = self::translations();
 
-        return $value;
+        return $translations[$value][$lang] ?? $translations[$value]['en'] ?? $value;
     }
 }
