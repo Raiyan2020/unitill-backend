@@ -10,7 +10,6 @@ use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class StoreAdRequest extends FormRequest
@@ -22,20 +21,6 @@ class StoreAdRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
-        // TEMP DEBUG: remove after diagnosing the "images.0 failed to upload" issue.
-        Log::info('StoreAdRequest debug: raw $_FILES', ['files' => $_FILES]);
-        Log::info('StoreAdRequest debug: images files', [
-            'images' => collect($this->file('images', []))->map(fn ($f) => $f ? [
-                'isValid' => $f->isValid(),
-                'error' => $f->getError(),
-                'errorMessage' => $f->getErrorMessage(),
-                'clientOriginalName' => $f->getClientOriginalName(),
-                'clientMimeType' => $f->getClientMimeType(),
-                'size' => $f->getSize(),
-                'path' => $f->getRealPath(),
-            ] : 'null')->all(),
-        ]);
-
         if (is_string($this->input('attributes'))) {
             $decoded = json_decode($this->input('attributes'), true);
             if (is_array($decoded)) {
