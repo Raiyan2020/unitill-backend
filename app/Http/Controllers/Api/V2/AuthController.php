@@ -153,15 +153,12 @@ class AuthController extends Controller
 
     protected function sendLoginOtp(User $user, string $target): void
     {
-        // A fixed code is honoured only under the testing environment. Reading
-        // it unconditionally meant a misconfigured or simply un-set production
-        // environment fell back to a hard-coded default and accepted the same
-        // OTP for every account.
-        $fixed = app()->environment('testing')
-            ? config('mobile_auth.login_otp_test_code')
-            : null;
+        // MOBILE_LOGIN_OTP_TEST_CODE is unset by default: OTPs are random and
+        // actually emailed. Setting it (e.g. to 123456) fixes the OTP to that
+        // value and skips sending the email — deliberate ops/QA opt-in only.
+        $fixed = config('mobile_auth.login_otp_test_code');
 
-        $otp = (int) ($fixed ?: random_int(100000, 999999));
+        $otp = $fixed !== null && $fixed !== '' ? (int) $fixed : random_int(100000, 999999);
 
         $user->forceFill([
             'login_otp' => (string) $otp,
@@ -169,10 +166,12 @@ class AuthController extends Controller
             'login_otp_sent_at' => now(),
         ])->save();
 
-        try {
-            Mail::to($target)->send(new OtpMail($otp));
-        } catch (\Throwable $e) {
-            Log::error('Login OTP mail failed', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+        if ($fixed === null || $fixed === '') {
+            try {
+                Mail::to($target)->send(new OtpMail($otp));
+            } catch (\Throwable $e) {
+                Log::error('Login OTP mail failed', ['user_id' => $user->id, 'error' => $e->getMessage()]);
+            }
         }
     }
 

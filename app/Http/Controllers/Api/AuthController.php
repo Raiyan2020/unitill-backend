@@ -111,10 +111,8 @@ class AuthController extends Controller
             return sendError(__('api.auth.no_student_email'), [], 422);
         }
 
-        $fixed = app()->environment('testing')
-            ? config('mobile_auth.login_otp_test_code')
-            : null;
-        $otp = (int) ($fixed ?: random_int(100000, 999999));
+        $fixed = config('mobile_auth.login_otp_test_code');
+        $otp = $fixed !== null && $fixed !== '' ? (int) $fixed : random_int(100000, 999999);
 
         $user->forceFill([
             'activation_code' => (string) $otp,
@@ -122,13 +120,15 @@ class AuthController extends Controller
             'activation_sent_at' => now(),
         ])->save();
 
-        try {
-            Mail::to($user->student_email)->send(new OtpMail($otp));
-        } catch (\Throwable $e) {
-            Log::error('Forced reverification OTP mail failed', [
-                'user_id' => $user->id,
-                'error' => $e->getMessage(),
-            ]);
+        if ($fixed === null || $fixed === '') {
+            try {
+                Mail::to($user->student_email)->send(new OtpMail($otp));
+            } catch (\Throwable $e) {
+                Log::error('Forced reverification OTP mail failed', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
         return sendResponse([
@@ -331,10 +331,8 @@ class AuthController extends Controller
             'device_type' => $data['device_type'] ?? null,
         ];
 
-        $fixed = app()->environment('testing')
-            ? config('mobile_auth.login_otp_test_code')
-            : null;
-        $otp = (int) ($fixed ?: random_int(100000, 999999));
+        $fixed = config('mobile_auth.login_otp_test_code');
+        $otp = $fixed !== null && $fixed !== '' ? (int) $fixed : random_int(100000, 999999);
         $user = User::create(array_merge($base, [
             'student_email' => $data['student_email'] ?? null,
             'status' => '2',
@@ -349,12 +347,14 @@ class AuthController extends Controller
             $data['terms_version'] ?? null,
             'registration'
         );
-        try {
-            // OTP must be sent to the UNIVERSITY email (.ac.uk) — that is what
-            // proves the user owns a valid student account.
-            Mail::to($user->student_email)->send(new OtpMail($otp));
-        } catch (\Throwable $e) {
-            Log::error('Registration OTP mail failed', ['error' => $e->getMessage()]);
+        if ($fixed === null || $fixed === '') {
+            try {
+                // OTP must be sent to the UNIVERSITY email (.ac.uk) — that is what
+                // proves the user owns a valid student account.
+                Mail::to($user->student_email)->send(new OtpMail($otp));
+            } catch (\Throwable $e) {
+                Log::error('Registration OTP mail failed', ['error' => $e->getMessage()]);
+            }
         }
 
         return sendResponse([
@@ -480,21 +480,21 @@ class AuthController extends Controller
             }
         }
 
-        $fixed = app()->environment('testing')
-            ? config('mobile_auth.login_otp_test_code')
-            : null;
-        $otp = (int) ($fixed ?: random_int(100000, 999999));
+        $fixed = config('mobile_auth.login_otp_test_code');
+        $otp = $fixed !== null && $fixed !== '' ? (int) $fixed : random_int(100000, 999999);
         $user->activation_code = (string) $otp;
         $user->activation_code_expires_at = now()->addMinutes(15);
         $user->activation_sent_at = now();
         $user->save();
 
-        try {
-            // Resend to the university email (fall back to personal only for
-            // legacy accounts created before the student email was mandatory).
-            Mail::to($user->student_email ?: $user->email)->send(new OtpMail($otp));
-        } catch (\Throwable $e) {
-            Log::error('Resend OTP mail failed', ['error' => $e->getMessage()]);
+        if ($fixed === null || $fixed === '') {
+            try {
+                // Resend to the university email (fall back to personal only for
+                // legacy accounts created before the student email was mandatory).
+                Mail::to($user->student_email ?: $user->email)->send(new OtpMail($otp));
+            } catch (\Throwable $e) {
+                Log::error('Resend OTP mail failed', ['error' => $e->getMessage()]);
+            }
         }
 
         return sendResponse([
@@ -533,23 +533,24 @@ class AuthController extends Controller
             }
         }
 
-        // The Salman implementation pinned this to a literal 123456, which lets
+        // The Salman implementation pinned this to a literal 123456, which let
         // anyone holding a session reconfirm student status without access to
-        // the university inbox. Fixed codes are honoured under testing only.
-        $fixed = app()->environment('testing')
-            ? config('mobile_auth.login_otp_test_code')
-            : null;
-        $otp = (int) ($fixed ?: random_int(100000, 999999));
+        // the university inbox. A fixed code is only used when MOBILE_LOGIN_OTP_TEST_CODE
+        // is deliberately set on the server, and mail is skipped in that case.
+        $fixed = config('mobile_auth.login_otp_test_code');
+        $otp = $fixed !== null && $fixed !== '' ? (int) $fixed : random_int(100000, 999999);
 
         $user->activation_code = (string) $otp;
         $user->activation_code_expires_at = now()->addMinutes(15);
         $user->activation_sent_at = now();
         $user->save();
 
-        try {
-            Mail::to($user->student_email)->send(new OtpMail($otp));
-        } catch (\Throwable $e) {
-            Log::error('Reverify OTP mail failed', ['error' => $e->getMessage()]);
+        if ($fixed === null || $fixed === '') {
+            try {
+                Mail::to($user->student_email)->send(new OtpMail($otp));
+            } catch (\Throwable $e) {
+                Log::error('Reverify OTP mail failed', ['error' => $e->getMessage()]);
+            }
         }
 
         return sendResponse([
@@ -653,17 +654,15 @@ class AuthController extends Controller
             return sendError(__('api.auth.user_not_found'), [], 404);
         }
 
-        $fixed = app()->environment('testing')
-            ? config('mobile_auth.login_otp_test_code')
-            : null;
-        $otp = (int) ($fixed ?: random_int(100000, 999999));
+        $fixed = config('mobile_auth.login_otp_test_code');
+        $otp = $fixed !== null && $fixed !== '' ? (int) $fixed : random_int(100000, 999999);
 
         $user->reset_code = (string) $otp;
 
         $user->reset_code_expire = now()->addMinutes(10);
         $user->save();
 
-        if (! empty($user->email)) {
+        if (($fixed === null || $fixed === '') && ! empty($user->email)) {
             Mail::to($user->email)->send(new OtpMail($otp));
         }
 

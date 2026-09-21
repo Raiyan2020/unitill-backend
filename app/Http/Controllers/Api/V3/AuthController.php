@@ -154,10 +154,8 @@ class AuthController extends Controller
             return sendError(__('api.auth.no_student_email'), [], 422);
         }
 
-        $fixed = app()->environment('testing')
-            ? config('mobile_auth.login_otp_test_code')
-            : null;
-        $otp = (int) ($fixed ?: random_int(100000, 999999));
+        $fixed = config('mobile_auth.login_otp_test_code');
+        $otp = $fixed !== null && $fixed !== '' ? (int) $fixed : random_int(100000, 999999);
 
         $user->forceFill([
             'activation_code' => (string) $otp,
@@ -165,13 +163,15 @@ class AuthController extends Controller
             'activation_sent_at' => now(),
         ])->save();
 
-        try {
-            Mail::to($user->student_email)->send(new OtpMail($otp));
-        } catch (\Throwable $e) {
-            Log::error('V3 forced reverification OTP mail failed', [
-                'user_id' => $user->id,
-                'error' => $e->getMessage(),
-            ]);
+        if ($fixed === null || $fixed === '') {
+            try {
+                Mail::to($user->student_email)->send(new OtpMail($otp));
+            } catch (\Throwable $e) {
+                Log::error('V3 forced reverification OTP mail failed', [
+                    'user_id' => $user->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
         return sendResponse([
