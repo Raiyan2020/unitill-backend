@@ -222,7 +222,10 @@ class ConversationController extends Controller
         $perPage = (int) ($validated['per_page'] ?? 30);
 
         $query = $conversation->messages()
-            ->with('sender:id,first_name,last_name,name,image,last_seen_at')
+            ->with([
+                'sender:id,first_name,last_name,name,image,last_seen_at',
+                'replyTo.sender:id,first_name,last_name,name,image,last_seen_at',
+            ])
             ->orderByDesc('id');
 
         if (! empty($validated['before_id'])) {
@@ -240,6 +243,14 @@ class ConversationController extends Controller
 
     public function sendMessage(Request $request, string $id)
     {
+        $lang = $request->header('lang') === 'ar';
+
+        $conversation = $this->findParticipantConversation($id);
+
+        if (! $conversation) {
+            return sendError(__('api.chat.not_found'), [], 404);
+        }
+
         $validated = $request->validate([
             'body' => 'nullable|string|max:5000',
             // Whitelisted rather than open: an unrestricted upload is served
@@ -251,18 +262,20 @@ class ConversationController extends Controller
                 'mimes:jpg,jpeg,png,gif,webp,heic,heif,pdf,doc,docx,xls,xlsx,txt',
             ],
             'client_message_id' => 'nullable|string|max:64',
+            // Must belong to this conversation — otherwise a crafted request
+            // could quote a message out of a stranger's conversation, and the
+            // quote (sender name + body) would render verbatim for the other
+            // participant.
+            'reply_to_message_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('messages', 'id')->where('conversation_id', $conversation->id),
+            ],
         ], [
             'attachment.max' => __('api.chat.attachment_too_large'),
             'attachment.mimes' => __('api.chat.attachment_type_not_allowed'),
+            'reply_to_message_id.exists' => __('api.chat.reply_target_invalid'),
         ]);
-
-        $lang = $request->header('lang') === 'ar';
-
-        $conversation = $this->findParticipantConversation($id);
-
-        if (! $conversation) {
-            return sendError(__('api.chat.not_found'), [], 404);
-        }
 
         if (empty(trim($validated['body'] ?? '')) && ! $request->hasFile('attachment')) {
             return sendError(__('api.chat.message_empty'), [], 422);
@@ -283,7 +296,8 @@ class ConversationController extends Controller
                 $validated['body'] ?? '',
                 $attachmentPath,
                 $attachmentType,
-                $validated['client_message_id'] ?? null
+                $validated['client_message_id'] ?? null,
+                $validated['reply_to_message_id'] ?? null
             );
         } catch (\InvalidArgumentException $e) {
             return match ($e->getMessage()) {

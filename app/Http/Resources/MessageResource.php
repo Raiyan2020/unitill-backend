@@ -24,6 +24,18 @@ class MessageResource extends JsonResource
                 ? new ChatParticipantResource($this->sender)
                 : null,
             'is_mine' => $request->user()?->id === $this->sender_id,
+            'reply_to' => $this->whenLoaded('replyTo', function () {
+                return $this->replyTo ? [
+                    'id' => $this->replyTo->id,
+                    'sender_id' => $this->replyTo->sender_id,
+                    'sender_name' => $this->replyTo->sender
+                        ? (new ChatParticipantResource($this->replyTo->sender))->displayName()
+                        : '',
+                    'body' => (string) $this->replyTo->body,
+                    'attachment_type' => $this->replyTo->attachment_type,
+                    'is_deleted' => $this->replyTo->trashed(),
+                ] : null;
+            }, null),
             'read_at' => $this->read_at?->toIso8601String(),
             'created_at' => $this->created_at?->toIso8601String(),
         ];

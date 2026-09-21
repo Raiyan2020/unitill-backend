@@ -115,6 +115,8 @@ return [
         'started' => 'Conversation started',
         'not_found' => 'Conversation not found',
         'message_empty' => 'Message is empty',
+        'reply_target_invalid' => 'The message is not in this conversation.',
+        'reply_target_invalid_message' => 'The selected reply target is invalid.',
         'user_unavailable' => 'This user is no longer available. You can still read the conversation, but cannot send new messages.',
         'messaging_disabled_sold' => 'Messaging disabled: item sold',
         'cannot_send' => 'Cannot send message',

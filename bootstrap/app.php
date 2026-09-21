@@ -150,9 +150,11 @@ return Application::configure(basePath: dirname(__DIR__))
                         ->contains(fn (string $key) => str_starts_with($key, 'attributes.availability_'));
 
                     return sendError(
-                        $availabilityError
-                            ? __('api.ad_form.availability_invalid')
-                            : $e->validator->errors()->first(),
+                        match (true) {
+                            $availabilityError => __('api.ad_form.availability_invalid'),
+                            array_key_exists('reply_to_message_id', $e->errors()) => __('api.chat.reply_target_invalid_message'),
+                            default => $e->validator->errors()->first(),
+                        },
                         $e->errors(),
                         422
                     );

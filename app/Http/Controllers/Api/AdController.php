@@ -9,6 +9,7 @@ use App\Http\Resources\AdResource;
 use App\Models\Ad;
 use App\Models\AdAttributeValue;
 use App\Models\AdImage;
+use App\Models\AdView;
 use App\Models\Category;
 use App\Models\CategoryAttributeDefinition;
 use App\Models\City;
@@ -261,9 +262,37 @@ class AdController extends Controller
             );
         }
 
+        $this->recordAdView($ad, $request, $userId, $isOwner);
+        $ad->loadCount('views');
+
         $this->attachFavoriteIds($request);
 
         return sendResponse(new AdDetailResource($ad));
+    }
+
+    /**
+     * One row per (ad, viewer): a repeat open by the same viewer must not
+     * move the count. Guests are deduped by an IP+user-agent fingerprint
+     * within a rolling day rather than permanently — see ad_views migration.
+     * The write must never be able to fail the read, so a duplicate (the
+     * normal case, via the unique indexes) is swallowed here.
+     */
+    protected function recordAdView(Ad $ad, Request $request, ?int $userId, bool $isOwner): void
+    {
+        if ($isOwner) {
+            return;
+        }
+
+        try {
+            AdView::create([
+                'ad_id' => $ad->id,
+                'user_id' => $userId,
+                'guest_key' => $userId ? null : hash('sha256', $request->ip().'|'.$request->userAgent()),
+                'viewed_on' => $userId ? null : now()->toDateString(),
+            ]);
+        } catch (\Throwable $e) {
+            // Unique-index race or a duplicate view within the dedup window.
+        }
     }
 
     /**

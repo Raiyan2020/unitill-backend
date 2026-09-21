@@ -31,7 +31,7 @@ class ChatParticipantResource extends JsonResource
             && $this->last_seen_at->gt(now()->subMinutes(2));
     }
 
-    protected function displayName(): string
+    public function displayName(): string
     {
         $firstName = trim((string) ($this->first_name ?: explode(' ', (string) $this->name)[0] ?? ''));
         $lastName = trim((string) $this->last_name);

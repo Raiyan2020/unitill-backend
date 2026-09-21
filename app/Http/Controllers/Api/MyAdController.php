@@ -46,6 +46,7 @@ class MyAdController extends Controller
         $query = Ad::query()
             ->where('user_id', $user->id)
             ->with(['soldToUser:id,first_name,last_name,name'])
+            ->withCount('views')
             ->orderByDesc('updated_at');
 
         match ($validated['status']) {

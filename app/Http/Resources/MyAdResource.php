@@ -21,6 +21,10 @@ class MyAdResource extends JsonResource
             'currency' => $this->currency,
             'formatted_price' => $this->formattedPrice(),
             'cover_image_url' => $this->coverImageUrl(),
+            // Set by MyAdController::index() via withCount('views'); other call
+            // sites (mark-sold, pause, activate, etc.) haven't loaded it, so
+            // fall back to a fresh count.
+            'views_count' => (int) ($this->views_count ?? $this->views()->count()),
             'status' => $this->status,
             'status_label' => $statusMeta['label'],
             'status_badge' => $statusMeta['badge'],

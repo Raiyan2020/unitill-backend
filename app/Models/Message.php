@@ -4,12 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Message extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'conversation_id',
         'sender_id',
+        'reply_to_message_id',
         'body',
         'attachment_path',
         'attachment_type',
@@ -37,6 +41,13 @@ class Message extends Model
     public function sender(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sender_id');
+    }
+
+    // withTrashed(): a quoted original must still resolve after it is deleted,
+    // so the reply can render "Message deleted" instead of losing the quote.
+    public function replyTo(): BelongsTo
+    {
+        return $this->belongsTo(Message::class, 'reply_to_message_id')->withTrashed();
     }
 
     public function isSystem(): bool

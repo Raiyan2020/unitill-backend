@@ -87,6 +87,7 @@ class ChatService
         ?string $attachmentPath = null,
         ?string $attachmentType = null,
         ?string $clientMessageId = null,
+        ?int $replyToMessageId = null,
     ): Message {
         if (! $conversation->isParticipant($sender->id)) {
             throw new \InvalidArgumentException('not_participant');
@@ -125,10 +126,11 @@ class ChatService
         $preview = mb_strlen($previewText) > 120 ? mb_substr($previewText, 0, 117).'...' : $previewText;
 
         try {
-            $message = DB::transaction(function () use ($conversation, $sender, $body, $attachmentPath, $attachmentType, $clientMessageId, $preview) {
+            $message = DB::transaction(function () use ($conversation, $sender, $body, $attachmentPath, $attachmentType, $clientMessageId, $replyToMessageId, $preview) {
                 $message = Message::create([
                     'conversation_id' => $conversation->id,
                     'sender_id' => $sender->id,
+                    'reply_to_message_id' => $replyToMessageId,
                     'body' => $body,
                     'attachment_path' => $attachmentPath,
                     'attachment_type' => $attachmentType,
@@ -143,7 +145,10 @@ class ChatService
                     'seller_deleted_at' => null,
                 ]);
 
-                return $message->load('sender:id,first_name,last_name,name,image,last_seen_at');
+                return $message->load([
+                    'sender:id,first_name,last_name,name,image,last_seen_at',
+                    'replyTo.sender:id,first_name,last_name,name,image,last_seen_at',
+                ]);
             });
         } catch (QueryException $e) {
             // Two retries racing each other: the unique index rejects the loser,
@@ -183,7 +188,10 @@ class ChatService
             ->where('conversation_id', $conversation->id)
             ->where('sender_id', $sender->id)
             ->where('client_message_id', $clientMessageId)
-            ->with('sender:id,first_name,last_name,name,image,last_seen_at')
+            ->with([
+                'sender:id,first_name,last_name,name,image,last_seen_at',
+                'replyTo.sender:id,first_name,last_name,name,image,last_seen_at',
+            ])
             ->first();
     }
 

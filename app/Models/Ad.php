@@ -156,6 +156,11 @@ class Ad extends Model
         return $this->hasMany(Conversation::class);
     }
 
+    public function views(): HasMany
+    {
+        return $this->hasMany(AdView::class);
+    }
+
     /**
      * Ads visible to the public.
      *

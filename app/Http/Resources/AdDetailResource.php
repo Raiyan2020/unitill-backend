@@ -45,6 +45,10 @@ class AdDetailResource extends JsonResource
             'currency' => $this->currency,
             'formatted_price' => $this->formattedPrice(),
             'is_negotiable' => (bool) $this->is_negotiable,
+            // Set by AdController::show() via loadCount('views') so the count
+            // already reflects the view just recorded; other call sites (create/
+            // update/publish) haven't loaded it, so fall back to a fresh count.
+            'views_count' => (int) ($this->views_count ?? $this->views()->count()),
             'cover_image_url' => $this->coverImageUrl(),
             'images' => $this->whenLoaded('images', function () {
                 return $this->images->map(function ($image) {
