@@ -157,9 +157,9 @@ export function TrustedSellerApplicationsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-2xl font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">{t.userVerifications}</h2>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <select
             value={pageSize}
             onChange={(e) => {
@@ -172,7 +172,7 @@ export function TrustedSellerApplicationsPage() {
               <option key={size} value={size}>{size}</option>
             ))}
           </select>
-          <Input className="h-9 w-[240px]" placeholder={t.search} value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Input className="h-9 w-full sm:w-[240px]" placeholder={t.search} value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
       </div>
 
@@ -238,8 +238,8 @@ export function TrustedSellerApplicationsPage() {
       </Card>
 
       {details && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
-          <Card className="w-full max-w-3xl">
+        <div className="fixed inset-0 z-40 flex items-start justify-center overflow-y-auto bg-black/35 p-4 py-8 sm:items-center">
+          <Card className="w-full max-w-3xl my-auto">
             <CardContent className="space-y-4 p-5">
               <h3 className="text-lg font-semibold">{t.verificationRequest} #{details.id}</h3>
               <div className="grid gap-3 md:grid-cols-3">

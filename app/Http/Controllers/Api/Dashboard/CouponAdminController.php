@@ -75,7 +75,7 @@ class CouponAdminController extends Controller
 
     public function store(Request $request)
     {
-        $validator = Validator::make($request->all(), $this->rules($request), $this->messages());
+        $validator = Validator::make($request->all(), $this->rules($request), $this->messages($request));
 
         if ($validator->fails()) {
             return sendError($validator->errors()->first(), $validator->errors()->toArray(), 422);
@@ -94,7 +94,7 @@ class CouponAdminController extends Controller
             return sendError('Coupon not found', [], 404);
         }
 
-        $validator = Validator::make($request->all(), $this->rules($request, $coupon->id), $this->messages());
+        $validator = Validator::make($request->all(), $this->rules($request, $coupon->id), $this->messages($request));
 
         if ($validator->fails()) {
             return sendError($validator->errors()->first(), $validator->errors()->toArray(), 422);
@@ -163,14 +163,16 @@ class CouponAdminController extends Controller
      * The default max/min messages come out as raw translation keys in this
      * project, so the coupon-specific ones are spelled out.
      */
-    private function messages(): array
+    private function messages(Request $request): array
     {
+        $ar = $request->header('lang') === 'ar';
+
         return [
             "value.max" => "A percentage discount cannot be more than 100%.",
             "value.min" => "The discount value must be greater than zero.",
             "code.regex" => "The code may only contain letters, numbers, hyphens and underscores.",
-            "code.unique" => "This code already exists.",
-            "expires_at.after" => "The expiry date must be after the start date.",
+            "code.unique" => $ar ? "هذا الكود مستخدم بالفعل." : "This code already exists.",
+            "expires_at.after" => $ar ? "يجب أن يكون تاريخ الانتهاء بعد تاريخ البدء." : "The expiry date must be after the start date.",
         ];
     }
     private function payload(array $data): array

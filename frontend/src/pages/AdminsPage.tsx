@@ -214,9 +214,9 @@ export function AdminsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-2xl font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">{t.admins}</h2>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <select
             value={pageSize}
             onChange={(e) => {
@@ -231,7 +231,7 @@ export function AdminsPage() {
               </option>
             ))}
           </select>
-          <Input className="h-9 w-[220px]" placeholder={t.search} value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Input className="h-9 w-full sm:w-[220px]" placeholder={t.search} value={search} onChange={(e) => setSearch(e.target.value)} />
           <Button size="sm" onClick={openCreate}>
             + {t.add} {t.admin}
           </Button>
@@ -298,8 +298,8 @@ export function AdminsPage() {
       </Card>
 
       {formOpen && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
-          <Card className="w-full max-w-xl">
+        <div className="fixed inset-0 z-40 flex items-start justify-center overflow-y-auto bg-black/35 p-4 py-8 sm:items-center">
+          <Card className="w-full max-w-xl my-auto">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle>{editing ? `${t.edit} ${t.admin}` : `${t.add} ${t.admin}`}</CardTitle>
               <Button
@@ -379,8 +379,8 @@ export function AdminsPage() {
       )}
 
       {deleting && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
-          <Card className="w-full max-w-md">
+        <div className="fixed inset-0 z-40 flex items-start justify-center overflow-y-auto bg-black/35 p-4 py-8 sm:items-center">
+          <Card className="w-full max-w-md my-auto">
             <CardHeader><CardTitle>{t.confirmDeletion}</CardTitle></CardHeader>
             <CardContent>
               <p className="text-sm">{t.deleteAdminConfirmation}</p>

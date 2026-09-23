@@ -64,7 +64,7 @@ class LegalAffairController extends Controller
             return sendError($validator->errors()->first(), $validator->errors()->toArray(), 422);
         }
 
-        if ($error = $this->validateTranslationsComplete($request->input('translations', []))) {
+        if ($error = $this->validateTranslationsComplete($request->input('translations', []), $request)) {
             return sendError($error, [], 422);
         }
 
@@ -102,6 +102,12 @@ class LegalAffairController extends Controller
         }
 
         $data = $validator->validated();
+
+        if (array_key_exists('translations', $data)
+            && ($error = $this->validateTranslationsComplete($data['translations'], $request))) {
+            return sendError($error, [], 422);
+        }
+
         $row->update($data);
 
         if (array_key_exists('translations', $data)) {
@@ -122,7 +128,7 @@ class LegalAffairController extends Controller
         return sendResponse([], 'Legal affair deleted');
     }
 
-    private function validateTranslationsComplete(array $translations): ?string
+    private function validateTranslationsComplete(array $translations, Request $request): ?string
     {
         foreach ($translations as $payload) {
             $title = trim((string) (is_array($payload) ? ($payload['title'] ?? '') : ''));
@@ -134,7 +140,11 @@ class LegalAffairController extends Controller
             $description = trim((string) (is_array($payload) ? ($payload['description'] ?? '') : ''));
 
             if ($subtitle === '' || $description === '') {
-                return 'Subtitle and description are required for every language with a title.';
+                $ar = $request->header('lang') === 'ar';
+
+                return $ar
+                    ? 'العنوان الفرعي والوصف مطلوبان لكل لغة تم إدخال عنوان لها.'
+                    : 'Subtitle and description are required for every language with a title.';
             }
         }
 

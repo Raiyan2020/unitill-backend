@@ -161,7 +161,7 @@ export function CouponsPage() {
         ? await api.put(`/admin/coupons/${editingId}`, body)
         : await api.post('/admin/coupons', body);
       ensureApiSuccess(res, t.actionFailed);
-      notify.success(editingId ? 'Coupon updated.' : 'Coupon created.');
+      notify.success(editingId ? t.updatedSuccessfully : t.createdSuccessfully);
       setForm(null);
       setEditingId(null);
       fetchRows();

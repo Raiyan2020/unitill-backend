@@ -153,9 +153,9 @@ export function LanguagesPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-2xl font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">{t.languages}</h2>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <select
             value={pageSize}
             onChange={(e) => {
@@ -170,7 +170,7 @@ export function LanguagesPage() {
               </option>
             ))}
           </select>
-          <Input className="h-9 w-[220px]" placeholder={t.search} value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Input className="h-9 w-full sm:w-[220px]" placeholder={t.search} value={search} onChange={(e) => setSearch(e.target.value)} />
           <Button size="sm" onClick={openCreate}>+ {t.add} {t.language}</Button>
         </div>
       </div>
@@ -231,8 +231,8 @@ export function LanguagesPage() {
       </Card>
 
       {formOpen && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
-          <Card className="w-full max-w-xl">
+        <div className="fixed inset-0 z-40 flex items-start justify-center overflow-y-auto bg-black/35 p-4 py-8 sm:items-center">
+          <Card className="w-full max-w-xl my-auto">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle>{editing ? `${t.edit}: ${editing.name || editing.code}` : `${t.add} ${t.language}`}</CardTitle>
               <Button variant="ghost" size="icon" onClick={() => setFormOpen(false)}><X className="h-4 w-4" /></Button>
@@ -285,8 +285,8 @@ export function LanguagesPage() {
       )}
 
       {deleting && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
-          <Card className="w-full max-w-md">
+        <div className="fixed inset-0 z-40 flex items-start justify-center overflow-y-auto bg-black/35 p-4 py-8 sm:items-center">
+          <Card className="w-full max-w-md my-auto">
             <CardHeader><CardTitle>{t.confirmDeletion}</CardTitle></CardHeader>
             <CardContent>
               <p className="mb-4 text-sm">{t.deleteConfirmation}</p>

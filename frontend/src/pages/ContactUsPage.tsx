@@ -85,9 +85,9 @@ export function ContactUsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-2xl font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">{t.contactUs}</h2>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <select value={status} onChange={(e) => { setPage(1); setStatus(e.target.value); }} className="h-9 rounded-lg border border-[#dbdbe8] bg-white px-2 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]">
             <option value="">{t.allStatuses}</option>
             <option value="open">{t.open}</option>
@@ -96,7 +96,7 @@ export function ContactUsPage() {
           <select value={pageSize} onChange={(e) => { setPage(1); setPageSize(Number(e.target.value)); }} className="h-9 rounded-lg border border-[#dbdbe8] bg-white px-2 text-sm dark:border-[#4a4f68] dark:bg-[#2f3349]">
             {[10, 25, 50, 100].map((size) => <option key={size} value={size}>{size}</option>)}
           </select>
-          <Input className="h-9 w-[260px]" placeholder={t.search} value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Input className="h-9 w-full sm:w-[260px]" placeholder={t.search} value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
       </div>
 

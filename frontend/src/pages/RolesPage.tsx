@@ -114,9 +114,9 @@ export function RolesPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-2xl font-semibold text-[#2f2b3d] dark:text-[#d7d8ea]">{t.roles}</h2>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <select
             value={pageSize}
             onChange={(e) => {
@@ -130,7 +130,7 @@ export function RolesPage() {
             ))}
           </select>
           <Input
-            className="h-9 w-[220px]"
+            className="h-9 w-full sm:w-[220px]"
             placeholder={t.search}
             value={search}
             onChange={(e) => {
@@ -193,8 +193,8 @@ export function RolesPage() {
       </Card>
 
       {formOpen && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
-          <Card className="w-full max-w-2xl">
+        <div className="fixed inset-0 z-40 flex items-start justify-center overflow-y-auto bg-black/35 p-4 py-8 sm:items-center">
+          <Card className="w-full max-w-2xl my-auto">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle>{editing ? `${t.edit}: ${editing.name}` : `${t.add} ${t.role}`}</CardTitle>
               <Button variant="ghost" size="icon" onClick={() => { setEditing(null); setFormOpen(false); setForm({ name: '', permissions: [] }); }}>
@@ -243,8 +243,8 @@ export function RolesPage() {
       )}
 
       {viewing && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
-          <Card className="w-full max-w-2xl">
+        <div className="fixed inset-0 z-40 flex items-start justify-center overflow-y-auto bg-black/35 p-4 py-8 sm:items-center">
+          <Card className="w-full max-w-2xl my-auto">
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
               <CardTitle>{`${t.rolePermissions}: ${viewing.name}`}</CardTitle>
               <Button variant="ghost" size="icon" onClick={() => setViewing(null)}>
@@ -283,8 +283,8 @@ export function RolesPage() {
       )}
 
       {deleting && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/35 p-4">
-          <Card className="w-full max-w-md">
+        <div className="fixed inset-0 z-40 flex items-start justify-center overflow-y-auto bg-black/35 p-4 py-8 sm:items-center">
+          <Card className="w-full max-w-md my-auto">
             <CardHeader><CardTitle>{t.confirmDeletion}</CardTitle></CardHeader>
             <CardContent>
               <p className="text-sm">{t.deleteRoleConfirmation}</p>
